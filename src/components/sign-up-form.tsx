@@ -60,13 +60,16 @@ export function SignUpForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-[2rem] border border-border bg-white/80 p-6 shadow-[0_18px_50px_rgba(13,92,82,0.06)]"
+      className="rounded-[2.2rem] border border-border bg-white/82 p-6 shadow-[0_24px_60px_rgba(13,92,82,0.08)]"
     >
       <div className="space-y-2">
         <p className="text-sm font-medium text-muted">Parent registration</p>
-        <h2 className="text-2xl font-semibold text-foreground">
+        <h2 className="text-3xl font-semibold tracking-tight text-foreground">
           Create your parent account
         </h2>
+        <p className="text-sm leading-7 text-muted">
+          Start with one account so you can follow progress, reports, and class updates in one place.
+        </p>
       </div>
       <div className="mt-6 grid gap-4">
         <label className="space-y-2">
@@ -75,7 +78,7 @@ export function SignUpForm() {
             value={fullName}
             onChange={(event) => setFullName(event.target.value)}
             required
-            className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-teal"
+            className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-teal focus:ring-2 focus:ring-[#d7efe9]"
           />
         </label>
         <label className="space-y-2">
@@ -85,7 +88,7 @@ export function SignUpForm() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
-            className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-teal"
+            className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-teal focus:ring-2 focus:ring-[#d7efe9]"
           />
         </label>
         <label className="space-y-2">
@@ -95,14 +98,14 @@ export function SignUpForm() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
-            className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-teal"
+            className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-teal focus:ring-2 focus:ring-[#d7efe9]"
           />
         </label>
       </div>
       <button
         type="submit"
         disabled={isPending}
-        className={`mt-6 w-full rounded-full bg-teal px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#09443c] ${
+        className={`mt-6 w-full rounded-full bg-teal px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(13,92,82,0.18)] transition hover:-translate-y-0.5 hover:bg-[#09443c] ${
           isPending ? "cursor-not-allowed opacity-60" : ""
         }`}
       >
