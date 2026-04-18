@@ -1,26 +1,103 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f5f1e8;
+  --foreground: #11261f;
+  --surface: rgba(255, 251, 244, 0.76);
+  --surface-strong: #fffaf1;
+  --border: rgba(17, 38, 31, 0.12);
+  --muted: #5f6f67;
+  --teal: #0d5c52;
+  --teal-soft: #d7efe9;
+  --gold: #d28b2b;
+  --gold-soft: #f5dfb7;
+  --coral: #de6f52;
+  --shadow: 0 22px 60px rgba(21, 48, 39, 0.08);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-teal: var(--teal);
+  --color-teal-soft: var(--teal-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-coral: var(--coral);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 7% 10%, rgba(210, 139, 43, 0.18), transparent 20%),
+    radial-gradient(circle at 78% 8%, rgba(13, 92, 82, 0.18), transparent 22%),
+    radial-gradient(circle at 88% 28%, rgba(207, 252, 109, 0.22), transparent 18%),
+    linear-gradient(180deg, #fffdf8 0%, #f7f1e6 46%, #eedec6 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(210, 139, 43, 0.25);
+}
+
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+
+.metric-bar {
+  background: linear-gradient(90deg, var(--teal) 0%, var(--gold) 100%);
+}
+
+.page-grid {
+  background-image:
+    linear-gradient(rgba(17, 38, 31, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 38, 31, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.fade-up {
+  animation: fadeUp 0.7s ease-out both;
+}
+
+.landing-hero {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.76), transparent 30%),
+    radial-gradient(circle at 82% 16%, rgba(207, 252, 109, 0.2), transparent 20%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(250, 255, 246, 0.92) 48%, rgba(236, 255, 243, 0.9) 100%);
+  backdrop-filter: blur(20px);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

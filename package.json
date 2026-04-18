@@ -6,9 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "db:validate": "prisma validate",
+    "db:seed": "node --import tsx prisma/seed.ts",
+    "db:setup": "npm run db:push && npm run db:generate && npm run db:seed"
   },
   "dependencies": {
+    "@prisma/client": "^6.18.0",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.103.3",
     "next": "16.2.2",
     "react": "19.2.4",
     "react-dom": "19.2.4"
@@ -20,7 +28,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
+    "prisma": "^6.18.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

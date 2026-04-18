@@ -1,0 +1,578 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  TUTOR
+  STUDENT
+  PARENT
+}
+
+enum AccountStatus {
+  INVITED
+  ACTIVE
+  DISABLED
+}
+
+enum ClassType {
+  LIVE_ONLINE
+  HYBRID
+  REVISION_CLINIC
+  COMMUNITY_SESSION
+}
+
+enum ClassStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  PAUSED
+  EXITED
+}
+
+enum ClassSessionStatus {
+  SCHEDULED
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum ApprovalStatus {
+  DRAFT
+  TUTOR_REVIEWED
+  APPROVED
+  ASSIGNED
+  ARCHIVED
+}
+
+enum HomeworkLifecycleStatus {
+  DRAFT
+  APPROVED
+  ASSIGNED
+  SUBMITTED
+  OVERDUE
+  ARCHIVED
+}
+
+enum StudyPlanStatus {
+  ACTIVE
+  LOCKED
+  ARCHIVED
+}
+
+enum PartnershipType {
+  PIBG
+  SCHOOL
+  COMMUNITY
+}
+
+enum PartnershipStatus {
+  LEAD
+  PILOT
+  ACTIVE
+  ARCHIVED
+}
+
+enum IntakeStatus {
+  NEW
+  REVIEWING
+  CONTACTED
+  CONVERTED
+  ARCHIVED
+}
+
+model User {
+  id                    String             @id @default(cuid())
+  email                 String             @unique
+  fullName              String
+  role                  UserRole
+  phoneNumber           String?
+  passwordHash          String?
+  accountStatus         AccountStatus      @default(INVITED)
+  onboardingCompleted   Boolean            @default(false)
+  profileData           Json?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  taughtClasses         Class[]            @relation("TutorClasses")
+  classEnrollments      ClassEnrollment[]  @relation("StudentEnrollments")
+  aiActivityLogs        AiActivityLog[]
+  authSessions          AuthSession[]
+  parentLinks           ParentStudentLink[] @relation("ParentLinks")
+  studentParentLinks    ParentStudentLink[] @relation("StudentParentLinks")
+}
+
+model Subject {
+  id          String      @id @default(cuid())
+  code        String      @unique
+  name        String
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  classes     Class[]
+  lessonPlans LessonPlan[]
+  masteryRecords StudentMastery[]
+  readinessChecks ReadinessCheckSubmission[]
+}
+
+model Class {
+  id                  String               @id @default(cuid())
+  tutorId             String
+  subjectId           String
+  title               String
+  description         String?
+  schedule            String
+  classType           ClassType
+  status              ClassStatus          @default(DRAFT)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  tutor               User                 @relation("TutorClasses", fields: [tutorId], references: [id])
+  subject             Subject              @relation(fields: [subjectId], references: [id])
+  enrollments         ClassEnrollment[]
+  sessions            ClassSession[]
+  lessonPlans         LessonPlan[]
+  classSummaries      ClassSummary[]
+  homeworkAssignments HomeworkAssignment[]
+  parentReports       ParentReport[]
+  studyPlans          StudyPlan[]
+  readinessChecks     ReadinessCheckSubmission[]
+
+  @@index([tutorId])
+  @@index([subjectId])
+}
+
+model ClassEnrollment {
+  id        String           @id @default(cuid())
+  classId    String
+  studentId  String
+  status     EnrollmentStatus @default(ACTIVE)
+  joinedAt   DateTime         @default(now())
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  class      Class            @relation(fields: [classId], references: [id])
+  student    User             @relation("StudentEnrollments", fields: [studentId], references: [id])
+
+  @@unique([classId, studentId])
+  @@index([studentId])
+}
+
+model ParentStudentLink {
+  id            String   @id @default(cuid())
+  parentId      String
+  studentId     String
+  relationship  String   @default("Parent")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  parent        User     @relation("ParentLinks", fields: [parentId], references: [id])
+  student       User     @relation("StudentParentLinks", fields: [studentId], references: [id])
+
+  @@unique([parentId, studentId])
+  @@index([studentId])
+}
+
+model AuthSession {
+  id                String   @id @default(cuid())
+  userId            String
+  sessionTokenHash  String   @unique
+  expiresAt         DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model ClassSession {
+  id                String             @id @default(cuid())
+  classId           String
+  lessonPlanId      String?
+  title             String
+  startsAt          DateTime
+  endsAt            DateTime?
+  liveRoomUrl       String?
+  participationRate Float?
+  status            ClassSessionStatus @default(SCHEDULED)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  class             Class              @relation(fields: [classId], references: [id])
+  lessonPlan        LessonPlan?        @relation(fields: [lessonPlanId], references: [id])
+  attendanceRecords AttendanceRecord[]
+  classSummaries    ClassSummary[]
+
+  @@index([classId, startsAt])
+}
+
+model LessonPlan {
+  id                  String               @id @default(cuid())
+  classId             String
+  tutorId             String
+  subjectId           String
+  title               String
+  objectives          Json
+  aiDraft             Json?
+  tutorEditedContent  Json?
+  approvalStatus      ApprovalStatus       @default(DRAFT)
+  generatedByAiAt     DateTime?
+  reviewedByTutorAt   DateTime?
+  approvedByTutorId   String?
+  approvedAt          DateTime?
+  versionHistory      Json?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  class               Class                @relation(fields: [classId], references: [id])
+  subject             Subject              @relation(fields: [subjectId], references: [id])
+  sessions            ClassSession[]
+  homeworkAssignments HomeworkAssignment[]
+
+  @@index([classId])
+  @@index([tutorId])
+  @@index([approvalStatus])
+}
+
+model ClassSummary {
+  id                String         @id @default(cuid())
+  classId           String
+  classSessionId    String
+  tutorId           String
+  aiDraft           Json?
+  tutorEditedContent Json?
+  approvalStatus    ApprovalStatus @default(DRAFT)
+  generatedByAiAt   DateTime?
+  reviewedByTutorAt DateTime?
+  approvedByTutorId String?
+  approvedAt        DateTime?
+  versionHistory    Json?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  class             Class          @relation(fields: [classId], references: [id])
+  classSession      ClassSession   @relation(fields: [classSessionId], references: [id])
+
+  @@unique([classSessionId])
+  @@index([classId])
+}
+
+model StudyPlan {
+  id                  String          @id @default(cuid())
+  classId             String?
+  tutorId             String
+  studentId           String
+  subjectId           String
+  title               String
+  planType            String          @default("REVISION")
+  status              StudyPlanStatus @default(ACTIVE)
+  approvalStatus      ApprovalStatus  @default(DRAFT)
+  aiDraft             Json?
+  tutorEditedContent  Json?
+  generatedByAiAt     DateTime?
+  reviewedByTutorAt   DateTime?
+  approvedByTutorId   String?
+  approvedAt          DateTime?
+  versionHistory      Json?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  class               Class?          @relation(fields: [classId], references: [id])
+  revisionTopics      StudyPlanTopic[]
+  homeworkAssignments HomeworkAssignment[]
+
+  @@index([studentId])
+  @@index([subjectId])
+  @@index([approvalStatus])
+}
+
+model StudyPlanTopic {
+  id             String    @id @default(cuid())
+  studyPlanId    String
+  topicKey       String
+  topicLabel     String
+  accessApproved Boolean   @default(false)
+  sequenceOrder  Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  studyPlan      StudyPlan @relation(fields: [studyPlanId], references: [id])
+
+  @@index([studyPlanId, sequenceOrder])
+}
+
+model StudentMastery {
+  id                String   @id @default(cuid())
+  studentId         String
+  subjectId         String
+  topicId           String
+  topicLabel        String
+  masteryScore      Float
+  updatedByAiAt     DateTime?
+  reviewedByTutorAt DateTime?
+  tutorReviewNotes  String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  subject           Subject  @relation(fields: [subjectId], references: [id])
+
+  @@unique([studentId, subjectId, topicId])
+  @@index([studentId, subjectId])
+}
+
+model HomeworkAssignment {
+  id                 String                  @id @default(cuid())
+  classId            String
+  lessonPlanId       String?
+  studyPlanId        String?
+  studentId          String
+  tutorId            String
+  generatedByAi      Boolean                 @default(true)
+  approvedByTutor    Boolean                 @default(false)
+  assignmentContent  Json
+  dueDate            DateTime
+  status             HomeworkLifecycleStatus @default(DRAFT)
+  approvalStatus     ApprovalStatus          @default(DRAFT)
+  generatedByAiAt    DateTime?
+  reviewedByTutorAt  DateTime?
+  approvedByTutorId  String?
+  approvedAt         DateTime?
+  versionHistory     Json?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  class              Class                   @relation(fields: [classId], references: [id])
+  lessonPlan         LessonPlan?             @relation(fields: [lessonPlanId], references: [id])
+  studyPlan          StudyPlan?              @relation(fields: [studyPlanId], references: [id])
+  submissions        HomeworkSubmission[]
+
+  @@index([classId, dueDate])
+  @@index([studentId])
+  @@index([approvalStatus])
+}
+
+model HomeworkSubmission {
+  id                   String             @id @default(cuid())
+  homeworkAssignmentId String
+  studentId            String
+  submittedAt          DateTime?
+  submissionContent    Json?
+  score                Float?
+  tutorFeedback        String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  homeworkAssignment   HomeworkAssignment @relation(fields: [homeworkAssignmentId], references: [id])
+
+  @@unique([homeworkAssignmentId, studentId])
+  @@index([studentId])
+}
+
+model ReadinessCheckSubmission {
+  id                String         @id @default(cuid())
+  classId           String
+  subjectId         String
+  studentId         String
+  tutorId           String
+  responses         Json
+  score             Float
+  readinessLevel    String
+  weakTopics        Json?
+  aiSummary         Json?
+  approvalStatus    ApprovalStatus @default(DRAFT)
+  generatedByAiAt   DateTime?
+  reviewedByTutorAt DateTime?
+  approvedByTutorId String?
+  approvedAt        DateTime?
+  versionHistory    Json?
+  submittedAt       DateTime       @default(now())
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  class             Class          @relation(fields: [classId], references: [id])
+  subject           Subject        @relation(fields: [subjectId], references: [id])
+
+  @@unique([classId, studentId])
+  @@index([tutorId, approvalStatus])
+  @@index([studentId, submittedAt])
+}
+
+model ParentReport {
+  id                String         @id @default(cuid())
+  classId           String?
+  studentId         String
+  tutorId           String
+  aiSummary         Json?
+  tutorNotes        String?
+  approvalStatus    ApprovalStatus @default(DRAFT)
+  generatedByAiAt   DateTime?
+  reviewedByTutorAt DateTime?
+  approvedByTutorId String?
+  approvedAt        DateTime?
+  versionHistory    Json?
+  sentAt            DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  class             Class?         @relation(fields: [classId], references: [id])
+
+  @@index([studentId, tutorId])
+  @@index([approvalStatus])
+}
+
+model ParentMessage {
+  id                 String         @id @default(cuid())
+  parentId           String
+  studentId          String
+  tutorId            String
+  messageChannel     String
+  aiDraft            Json?
+  tutorEditedContent Json?
+  approvalStatus     ApprovalStatus @default(DRAFT)
+  generatedByAiAt    DateTime?
+  reviewedByTutorAt  DateTime?
+  approvedByTutorId  String?
+  approvedAt         DateTime?
+  versionHistory     Json?
+  sentAt             DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([parentId, studentId])
+  @@index([approvalStatus])
+}
+
+model AttendanceRecord {
+  id                 String           @id @default(cuid())
+  classSessionId     String
+  studentId          String
+  status             AttendanceStatus @default(PRESENT)
+  participationScore Float?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  classSession       ClassSession     @relation(fields: [classSessionId], references: [id])
+
+  @@unique([classSessionId, studentId])
+  @@index([studentId])
+}
+
+model AiActivityLog {
+  id               String   @id @default(cuid())
+  userId           String
+  role             UserRole
+  featureUsed      String
+  inputType        String
+  outputType       String
+  approvalRequired Boolean  @default(true)
+  approvedBy       String?
+  sourceEntityType String?
+  sourceEntityId   String?
+  moderationStatus String?
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([featureUsed])
+}
+
+model SchoolPartnership {
+  id              String            @id @default(cuid())
+  name            String
+  partnershipType PartnershipType
+  status          PartnershipStatus @default(LEAD)
+  contactName     String?
+  contactEmail    String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([status, partnershipType])
+}
+
+model TuitionSubscription {
+  id              String   @id @default(cuid())
+  tutorId         String
+  planName        String
+  activeSeatCount Int      @default(0)
+  billingCycle    String
+  status          String
+  startedAt       DateTime @default(now())
+  renewedAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([tutorId, status])
+}
+
+model ReferralEvent {
+  id               String   @id @default(cuid())
+  referrerUserId   String
+  referredUserId   String?
+  referralCode     String
+  conversionStatus String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([referrerUserId, referralCode])
+}
+
+model BookingRequest {
+  id                String       @id @default(cuid())
+  parentUserId      String?
+  parentName        String
+  parentEmail       String
+  parentPhone       String?
+  studentName       String
+  studentEmail      String?
+  studentLevel      String
+  subjectFocus      String
+  preferredTime     String?
+  notes             String?
+  status            IntakeStatus @default(NEW)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([parentEmail, createdAt])
+  @@index([status, createdAt])
+}
+
+model TutorApplication {
+  id                String       @id @default(cuid())
+  fullName          String
+  email             String
+  phoneNumber       String?
+  primarySubject    String
+  levelsTaught      String?
+  availability      String?
+  teachingExperience String?
+  notes             String?
+  status            IntakeStatus @default(NEW)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([email, createdAt])
+  @@index([status, createdAt])
+}
+
+model EnrollmentDraft {
+  id               String   @id @default(cuid())
+  bookingRequestId String   @unique
+  parentUserId     String?
+  studentId        String?
+  matchedTutorId   String?
+  classId          String?
+  studentName      String
+  studentLevel     String
+  subjectFocus     String
+  preferredTime    String?
+  notes            String?
+  status           String   @default("PENDING_MATCH")
+  fulfilledAt      DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([studentId])
+}

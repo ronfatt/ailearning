@@ -1,0 +1,94 @@
+import Link from "next/link";
+import { AccessGuard } from "@/components/access-guard";
+import { PageShell } from "@/components/page-shell";
+import { TutorDashboardLive } from "@/components/tutor-dashboard-live";
+import { canAccessRole, getCurrentSession } from "@/lib/auth-session";
+import { platformSummary } from "@/lib/mvp-data";
+import { redirect } from "next/navigation";
+
+export default async function TutorPage() {
+  const session = await getCurrentSession();
+  const tutorDashboardId = session.user.id ?? "tutor_farrah_01";
+  const tutorDashboardName =
+    session.isAuthenticated ? session.user.name : "Tutor workspace";
+  const quickStartSteps = [
+    {
+      label: "Start here",
+      title: "Open the live class workspace",
+      detail:
+        "See who needs attention first, open the room, and run the class from one screen.",
+      href: "#live-workspace",
+      cta: "Go to Live Class",
+    },
+    {
+      label: "Next",
+      title: "Clear today’s approval queue",
+      detail:
+        "Review lesson drafts, homework, and parent updates that are blocking follow-up.",
+      href: "#approval-center",
+      cta: "Open Approvals",
+    },
+    {
+      label: "Finish strong",
+      title: "Close the loop after class",
+      detail:
+        "Handle follow-up students, mini revision tasks, and parent notes before you log off.",
+      href: "#after-class-follow-up",
+      cta: "Open Follow-Up",
+    },
+  ] as const;
+
+  if (
+    !canAccessRole({
+      currentRole: session.user.role,
+      allowedRoles: ["Tutor"],
+    })
+  ) {
+    return (
+      <AccessGuard
+        allowedRoles={["Tutor"]}
+        currentRole={session.user.role}
+        currentUserName={session.user.name}
+        title="Tutor Dashboard"
+      />
+    );
+  }
+
+  if (!session.user.onboardingCompleted) {
+    redirect("/welcome");
+  }
+
+  return (
+    <PageShell
+      title={`Tutor Dashboard for ${tutorDashboardName}`}
+      description="Plan lessons, run live classes, approve follow-up, and keep parents informed from one workspace."
+      action={
+        <div className="rounded-[1.5rem] bg-teal px-5 py-4 text-sm font-semibold text-white">
+          Next class: {platformSummary.className} at 8:00 PM
+        </div>
+      }
+    >
+      <section className="grid gap-4 lg:grid-cols-3">
+        {quickStartSteps.map((step) => (
+          <article key={step.title} className="glass-panel rounded-[1.75rem] p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal">
+              {step.label}
+            </p>
+            <h2 className="mt-3 text-lg font-semibold text-foreground">
+              {step.title}
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-muted">{step.detail}</p>
+            <Link
+              href={step.href}
+              className="mt-5 inline-flex rounded-full bg-teal px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#09443c]"
+            >
+              {step.cta}
+            </Link>
+          </article>
+        ))}
+      </section>
+
+      <TutorDashboardLive tutorId={tutorDashboardId} />
+    </PageShell>
+  );
+}
