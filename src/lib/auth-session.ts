@@ -159,3 +159,11 @@ export async function revokeAuthSession(rawToken?: string | null) {
     },
   });
 }
+
+export async function revokeAllAuthSessionsForUser(userId: string) {
+  await prisma.authSession.deleteMany({
+    where: {
+      userId,
+    },
+  });
+}

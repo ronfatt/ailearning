@@ -17,6 +17,7 @@ The current build now includes:
 - Parent portal for tutor-approved progress reporting
 - Admin oversight console for permissions, approvals, and AI logs
 - Architecture page for schema, compliance, workflow, and roadmap
+- Public auth flows for register, sign in, account activation, and password reset
 
 ## Getting Started
 
@@ -117,6 +118,16 @@ If `db:push` is blocked by your local network or the current execution environme
 npm run db:generate
 npm run db:seed
 ```
+
+For production auth flows, set these as well:
+
+```bash
+APP_BASE_URL="https://your-domain.com"
+RESEND_API_KEY="re_..."
+AUTH_EMAIL_FROM="AI Learning OS <noreply@your-domain.com>"
+```
+
+These are used for password reset emails. Without email configuration, password reset still works in local development and can return a debug reset link outside production.
 
 Notes:
 

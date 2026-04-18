@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -56,13 +57,16 @@ export function SignInForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-[2rem] border border-border bg-white/80 p-6 shadow-[0_18px_50px_rgba(13,92,82,0.06)]"
+      className="rounded-[2.2rem] border border-border bg-white/82 p-6 shadow-[0_24px_60px_rgba(13,92,82,0.08)]"
     >
       <div className="space-y-2">
-        <p className="text-sm font-medium text-muted">Invited account sign in</p>
-        <h2 className="text-2xl font-semibold text-foreground">
+        <p className="text-sm font-medium text-muted">Account sign in</p>
+        <h2 className="text-3xl font-semibold tracking-tight text-foreground">
           Continue to your workspace
         </h2>
+        <p className="text-sm leading-7 text-muted">
+          Parents can sign in after registering. Tutors, students, and invited users can sign in after activation.
+        </p>
       </div>
       <label className="mt-6 block space-y-2">
         <span className="text-sm font-medium text-muted">Email address</span>
@@ -71,7 +75,7 @@ export function SignInForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="name@example.com"
-          className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm text-foreground outline-none transition focus:border-teal"
+          className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm text-foreground outline-none transition focus:border-teal focus:ring-2 focus:ring-[#d7efe9]"
           required
         />
       </label>
@@ -82,14 +86,14 @@ export function SignInForm() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Enter your password"
-          className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm text-foreground outline-none transition focus:border-teal"
+          className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm text-foreground outline-none transition focus:border-teal focus:ring-2 focus:ring-[#d7efe9]"
           required
         />
       </label>
       <button
         type="submit"
         disabled={isPending}
-        className={`mt-6 w-full rounded-full bg-teal px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#09443c] ${
+        className={`mt-6 w-full rounded-full bg-teal px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(13,92,82,0.18)] transition hover:-translate-y-0.5 hover:bg-[#09443c] ${
           isPending ? "cursor-not-allowed opacity-60" : ""
         }`}
       >
@@ -98,10 +102,26 @@ export function SignInForm() {
       {error ? (
         <p className="mt-4 text-sm leading-7 text-coral">{error}</p>
       ) : null}
-      <p className="mt-4 text-sm leading-7 text-muted">
-        Use the email and password attached to your tutor, student, parent, or
-        admin account.
-      </p>
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm leading-7 text-muted">
+        <span>
+          Need an account?{" "}
+          <Link className="font-semibold text-teal" href="/signup">
+            Register
+          </Link>
+        </span>
+        <span>
+          Invited user?{" "}
+          <Link className="font-semibold text-teal" href="/activate-account">
+            Activate account
+          </Link>
+        </span>
+        <span>
+          Forgot password?{" "}
+          <Link className="font-semibold text-teal" href="/forgot-password">
+            Reset it
+          </Link>
+        </span>
+      </div>
     </form>
   );
 }

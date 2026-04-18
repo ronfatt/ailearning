@@ -34,7 +34,7 @@ export default async function LoginPage() {
   return (
     <PageShell
       title="Sign in to your workspace"
-      description="Use your invited account email to open the correct tutor, student, parent, or admin workspace."
+      description="Sign in with your account to open the right parent, tutor, student, or admin workspace."
       eyebrow="Secure Access"
     >
       <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">

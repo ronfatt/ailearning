@@ -6,17 +6,15 @@ import { useState, useTransition } from "react";
 
 import { passwordRequirementText } from "@/lib/auth-validation";
 
-type RegisterResponse = {
+type ResetPasswordResponse = {
   data?: {
     redirectTo?: string;
   };
   error?: string;
 };
 
-export function SignUpForm() {
+export function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter();
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -32,34 +30,31 @@ export function SignUpForm() {
     }
 
     startTransition(() => {
-      void fetch("/api/auth/register", {
+      void fetch("/api/auth/password-reset/confirm", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          fullName,
-          email,
+          token,
           password,
         }),
       })
         .then(async (response) => {
           const payload = (await response.json().catch(() => null)) as
-            | RegisterResponse
+            | ResetPasswordResponse
             | null;
 
           if (!response.ok) {
-            throw new Error(payload?.error ?? "Unable to create account.");
+            throw new Error(payload?.error ?? "Unable to reset password.");
           }
 
-          router.push(payload?.data?.redirectTo ?? "/parent");
+          router.push(payload?.data?.redirectTo ?? "/login");
           router.refresh();
         })
         .catch((reason: unknown) => {
           setError(
-            reason instanceof Error
-              ? reason.message
-              : "Unable to create account.",
+            reason instanceof Error ? reason.message : "Unable to reset password.",
           );
         });
     });
@@ -71,36 +66,17 @@ export function SignUpForm() {
       className="rounded-[2.2rem] border border-border bg-white/82 p-6 shadow-[0_24px_60px_rgba(13,92,82,0.08)]"
     >
       <div className="space-y-2">
-        <p className="text-sm font-medium text-muted">Parent registration</p>
+        <p className="text-sm font-medium text-muted">New password</p>
         <h2 className="text-3xl font-semibold tracking-tight text-foreground">
-          Create your parent account
+          Choose a new password
         </h2>
         <p className="text-sm leading-7 text-muted">
-          Start with one account so you can follow progress, reports, and class updates in one place.
+          Once saved, you will be signed in automatically.
         </p>
       </div>
       <div className="mt-6 grid gap-4">
         <label className="space-y-2">
-          <span className="text-sm font-medium text-muted">Full name</span>
-          <input
-            value={fullName}
-            onChange={(event) => setFullName(event.target.value)}
-            required
-            className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-teal focus:ring-2 focus:ring-[#d7efe9]"
-          />
-        </label>
-        <label className="space-y-2">
-          <span className="text-sm font-medium text-muted">Email</span>
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-            className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-teal focus:ring-2 focus:ring-[#d7efe9]"
-          />
-        </label>
-        <label className="space-y-2">
-          <span className="text-sm font-medium text-muted">Password</span>
+          <span className="text-sm font-medium text-muted">New password</span>
           <input
             type="password"
             value={password}
@@ -128,13 +104,13 @@ export function SignUpForm() {
           isPending ? "cursor-not-allowed opacity-60" : ""
         }`}
       >
-        {isPending ? "Creating account..." : "Create Account"}
+        {isPending ? "Saving new password..." : "Save new password"}
       </button>
       {error ? <p className="mt-4 text-sm leading-7 text-coral">{error}</p> : null}
       <p className="mt-4 text-sm leading-7 text-muted">
-        Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-teal">
-          Sign in
+        Need a fresh link?{" "}
+        <Link href="/forgot-password" className="font-semibold text-teal">
+          Request another reset
         </Link>
       </p>
     </form>

@@ -7,6 +7,12 @@ import {
   sessionCookieName,
 } from "@/lib/auth-session";
 import { hashPassword } from "@/lib/auth-security";
+import {
+  isValidEmail,
+  normalizeEmail,
+  validateFullName,
+  validatePassword,
+} from "@/lib/auth-validation";
 import { prisma } from "@/lib/prisma";
 import {
   ApiError,
@@ -24,11 +30,26 @@ export async function POST(request: Request) {
 
     const body = assertRecord(await request.json());
     const fullName = optionalString(body, "fullName")?.trim();
-    const email = optionalString(body, "email")?.trim().toLowerCase();
+    const emailInput = optionalString(body, "email");
     const password = optionalString(body, "password");
+    const email = emailInput ? normalizeEmail(emailInput) : undefined;
 
     if (!fullName || !email || !password) {
       throw new ApiError("Full name, email, and password are required.");
+    }
+
+    const fullNameError = validateFullName(fullName);
+    if (fullNameError) {
+      throw new ApiError(fullNameError);
+    }
+
+    if (!isValidEmail(email)) {
+      throw new ApiError("Please enter a valid email address.");
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      throw new ApiError(passwordError);
     }
 
     const existingUser = await prisma.user.findUnique({

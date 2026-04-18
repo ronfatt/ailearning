@@ -10,6 +10,7 @@ import {
   sessionCookieName,
 } from "@/lib/auth-session";
 import { verifyPassword } from "@/lib/auth-security";
+import { isValidEmail, normalizeEmail } from "@/lib/auth-validation";
 import { prisma } from "@/lib/prisma";
 import {
   ApiError,
@@ -45,8 +46,9 @@ export async function POST(request: Request) {
     }
 
     const body = assertRecord(await request.json());
-    const email = optionalString(body, "email")?.trim().toLowerCase();
+    const emailInput = optionalString(body, "email");
     const password = optionalString(body, "password");
+    const email = emailInput ? normalizeEmail(emailInput) : undefined;
 
     if (!email) {
       throw new ApiError('Field "email" is required.');
@@ -54,6 +56,10 @@ export async function POST(request: Request) {
 
     if (!password) {
       throw new ApiError('Field "password" is required.');
+    }
+
+    if (!isValidEmail(email)) {
+      throw new ApiError("Please enter a valid email address.");
     }
 
     const user = await prisma.user.findUnique({

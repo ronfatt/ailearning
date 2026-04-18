@@ -14,7 +14,7 @@ export default async function ActivateAccountPage() {
   return (
     <PageShell
       title="Activate your invited account"
-      description="Set a password for the tutor, student, parent, or admin account that has already been created for you."
+      description="Set a password only if an account has already been created for you by the platform."
       eyebrow="Account Activation"
     >
       <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
@@ -28,6 +28,7 @@ export default async function ActivateAccountPage() {
               "Students usually activate an account after a tutor or parent has already started onboarding.",
               "Tutors can activate their workspace after approval.",
               "Parents who already have an invited account can activate it here instead of registering again.",
+              "If your account is already active, sign in instead of using activation.",
             ].map((item) => (
               <div
                 key={item}
