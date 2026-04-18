@@ -1,129 +1,225 @@
 import Link from "next/link";
 
-import { SectionHeading } from "@/components/section-heading";
 import { SiteHeader } from "@/components/site-header";
-import { StatusPill } from "@/components/status-pill";
-import {
-  approvalObjects,
-  businessModels,
-  complianceGuardrails,
-  lessonSuggestions,
-  platformSummary,
-  preDuringPostFlow,
-} from "@/lib/mvp-data";
+
+const platformBenefits = [
+  {
+    title: "For students",
+    points: [
+      "Learn with real teachers",
+      "Get revision based on weak topics",
+      "See progress more clearly",
+    ],
+  },
+  {
+    title: "For tutors",
+    points: [
+      "Plan lessons faster",
+      "See who needs attention before class",
+      "Send homework and reports in less time",
+    ],
+  },
+  {
+    title: "For parents",
+    points: [
+      "Know what your child is weak at",
+      "See updates after class",
+      "Follow progress without guesswork",
+    ],
+  },
+];
+
+const journeySteps = [
+  {
+    step: "01",
+    title: "Start",
+    detail: "Book a class or create a parent account in a few minutes.",
+  },
+  {
+    step: "02",
+    title: "Get matched",
+    detail: "We connect the student with the right tutor-led path.",
+  },
+  {
+    step: "03",
+    title: "Attend and revise",
+    detail: "Students learn in class, then continue with guided follow-up.",
+  },
+  {
+    step: "04",
+    title: "Track improvement",
+    detail: "Tutors and parents stay aligned through simple progress updates.",
+  },
+];
+
+const differentiators = [
+  "Real teachers stay at the center of learning",
+  "Revision follows each student's weak topics",
+  "Parents get clear updates, not confusing data",
+  "Built for steady academic improvement",
+];
+
+const proofCards = [
+  {
+    metric: "+18%",
+    label: "Math score improvement",
+  },
+  {
+    metric: "2x",
+    label: "Homework completion",
+  },
+  {
+    metric: "86%",
+    label: "Parent report open rate",
+  },
+];
 
 export default function ProductPage() {
   return (
     <div className="page-grid min-h-screen">
       <SiteHeader />
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-8 lg:px-10 lg:py-10">
-        <section className="glass-panel fade-up overflow-hidden rounded-[2.5rem] p-8 sm:p-10 lg:p-14">
-          <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-            <div className="space-y-7">
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-teal">
-                How the system works
-              </p>
+      <main className="mx-auto flex w-full max-w-[1440px] flex-col gap-12 px-6 py-8 sm:px-10 lg:gap-14 lg:px-[120px] lg:py-10">
+        <section className="landing-hero fade-up overflow-hidden rounded-[3rem] border border-white/70 px-8 py-10 shadow-[0_28px_100px_rgba(13,92,82,0.12)] sm:px-10 lg:px-14 lg:py-18">
+          <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div className="space-y-8">
+              <div className="inline-flex rounded-full border border-[#0d5c52]/12 bg-white/78 px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-teal shadow-[0_8px_20px_rgba(13,92,82,0.05)]">
+                Product Overview
+              </div>
+
               <div className="space-y-5">
-                <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-foreground sm:text-6xl">
-                  AI Teaching System Architecture for
-                  <span className="text-teal"> teacher-led tuition.</span>
+                <h1 className="max-w-4xl text-5xl font-semibold tracking-[-0.06em] text-foreground sm:text-6xl lg:text-[4.2rem] lg:leading-[0.96]">
+                  A tuition platform built for
+                  <span className="block text-teal"> real progress.</span>
                 </h1>
-                <p className="max-w-2xl text-lg leading-8 text-muted sm:text-xl">
-                  Human tutors remain the educators. The AI Teaching Copilot works before class, during class, and after class, while the AI Study Assistant stays scoped to tutor-approved learning flows.
+                <p className="max-w-2xl text-lg leading-8 text-muted sm:text-[1.1rem]">
+                  Teacher-led classes, smarter revision, and clear parent updates, all in one simple learning flow.
                 </p>
               </div>
-              <div className="flex flex-col gap-4 sm:flex-row">
+
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Link
-                  href="/"
-                  className="rounded-full bg-teal px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#09443c]"
+                  href="/book-class"
+                  className="rounded-full bg-teal px-7 py-3.5 text-sm font-semibold text-white shadow-[0_16px_38px_rgba(13,92,82,0.2)] transition hover:-translate-y-0.5 hover:bg-[#09443c]"
                 >
-                  Back to Homepage
+                  Book a Class
                 </Link>
                 <Link
-                  href="#operational-core"
-                  className="rounded-full border border-border bg-surface-strong px-6 py-3 text-sm font-semibold text-foreground transition hover:border-teal hover:text-teal"
+                  href="/signup"
+                  className="rounded-full border border-[#0d5c52]/18 bg-white/82 px-7 py-3.5 text-sm font-semibold text-foreground transition hover:-translate-y-0.5 hover:border-teal hover:text-teal"
                 >
-                  View Operational Core
+                  Create Account
                 </Link>
               </div>
             </div>
 
-            <div className="glass-panel rounded-[2rem] border-white/40 p-6">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted">System rule</p>
-                  <p className="mt-1 text-2xl font-semibold text-foreground">
-                    Tutor-led by design
+            <div className="rounded-[2.4rem] border border-white/70 bg-white/80 p-5 shadow-[0_24px_90px_rgba(12,58,51,0.14)] backdrop-blur-xl">
+              <div className="rounded-[2rem] border border-[#0d5c52]/10 bg-[#f9fbf6] p-5">
+                <div className="rounded-[1.8rem] bg-[#0f4039] p-6 text-white shadow-[0_18px_50px_rgba(10,45,39,0.22)]">
+                  <p className="text-xs uppercase tracking-[0.24em] text-white/55">
+                    Learning Snapshot
                   </p>
+                  <p className="mt-3 text-3xl font-semibold">
+                    Better teaching. Better follow-up. Better visibility.
+                  </p>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                    {[
+                      ["Tutor-led", "Every class guided by a real teacher"],
+                      ["Personalized", "Revision opens by weak topic"],
+                      ["Parent-ready", "Updates stay simple and clear"],
+                    ].map(([title, detail]) => (
+                      <div key={title} className="rounded-2xl bg-white/10 p-4">
+                        <p className="text-sm font-semibold">{title}</p>
+                        <p className="mt-2 text-xs leading-6 text-white/72">{detail}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="rounded-full bg-gold-soft px-3 py-1 text-xs font-semibold text-[#8b5a13]">
-                  Compliance-first
-                </div>
-              </div>
 
-              <div className="mt-6 space-y-4">
-                {lessonSuggestions.map((item) => (
-                  <article
-                    key={item.title}
-                    className="rounded-[1.5rem] border border-border bg-white/70 p-4"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-foreground">
-                        {item.title}
+                <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                  {proofCards.map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-[1.6rem] border border-[#0d5c52]/10 bg-white p-5 text-center shadow-[0_16px_40px_rgba(13,92,82,0.08)]"
+                    >
+                      <p className="text-3xl font-semibold text-teal">{item.metric}</p>
+                      <p className="mt-2 text-sm font-medium leading-6 text-foreground">
+                        {item.label}
                       </p>
-                      <StatusPill status={item.status} />
                     </div>
-                    <p className="mt-3 text-sm leading-7 text-muted">{item.detail}</p>
-                  </article>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-3">
-          {preDuringPostFlow.map((phase) => (
-            <article key={phase.phase} className="glass-panel rounded-[2rem] p-6">
-              <div className="rounded-full bg-teal-soft px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-teal">
-                {phase.phase}
-              </div>
-              <h2 className="mt-6 text-2xl font-semibold text-foreground">
-                {phase.title}
-              </h2>
-              <div className="mt-5 space-y-3">
-                {phase.tasks.map((task) => (
-                  <p key={task} className="text-sm leading-7 text-muted">
-                    {task}
-                  </p>
+        <section className="grid gap-5 lg:grid-cols-3">
+          {platformBenefits.map((group) => (
+            <article
+              key={group.title}
+              className="rounded-[2.2rem] border border-white/70 bg-white/72 p-7 shadow-[0_18px_50px_rgba(13,92,82,0.05)]"
+            >
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-teal">
+                {group.title}
+              </p>
+              <div className="mt-6 space-y-3">
+                {group.points.map((point) => (
+                  <div
+                    key={point}
+                    className="rounded-[1.4rem] border border-[#0d5c52]/10 bg-[#fbfcf8] px-4 py-4 text-sm font-medium leading-7 text-foreground"
+                  >
+                    {point}
+                  </div>
                 ))}
               </div>
             </article>
           ))}
         </section>
 
-        <section
-          id="operational-core"
-          className="grid gap-8 rounded-[2.5rem] bg-[#103b35] px-8 py-10 text-white sm:px-10 lg:grid-cols-[0.95fr_1.05fr]"
-        >
-          <SectionHeading
-            eyebrow="Operational Core"
-            title="The main differentiator is the Tutor Dashboard."
-            description="This product should feel like a tuition operating system that helps tutors plan better, teach live with support, and approve what students and parents see."
-          />
+        <section className="grid gap-8 rounded-[2.7rem] border border-[#0d5c52]/10 bg-[#103b35] px-8 py-10 text-white shadow-[0_24px_70px_rgba(12,58,51,0.12)] sm:px-10 lg:px-12 lg:py-14">
+          <div className="space-y-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#9ff8e3]">
+              How It Works
+            </p>
+            <h2 className="text-4xl font-semibold tracking-tight">
+              A simple flow from first enquiry to better results
+            </h2>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-4">
+            {journeySteps.map((item) => (
+              <article
+                key={item.step}
+                className="rounded-[2rem] border border-white/10 bg-white/8 p-6"
+              >
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#b5ffda]">
+                  {item.step}
+                </p>
+                <p className="mt-4 text-2xl font-semibold text-white">{item.title}</p>
+                <p className="mt-3 text-sm leading-7 text-white/72">{item.detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-8 rounded-[2.7rem] border border-white/70 bg-white/62 px-8 py-10 shadow-[0_20px_55px_rgba(13,92,82,0.06)] sm:px-10 lg:grid-cols-[0.9fr_1.1fr] lg:px-12 lg:py-14">
+          <div className="space-y-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-teal">
+              Why Families Choose It
+            </p>
+            <h2 className="text-4xl font-semibold tracking-tight text-foreground">
+              Less guesswork. More learning momentum.
+            </h2>
+            <p className="max-w-xl text-base leading-8 text-muted">
+              The platform keeps the human side of tuition strong while making follow-up, revision, and reporting much easier.
+            </p>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              "Today's classes",
-              "Weak topic heatmap by class",
-              "Student readiness indicator",
-              "AI lesson suggestion panel",
-              "One-click warm-up quiz generation",
-              "Assignment approval queue",
-              "Parent report draft queue",
-              "Student risk alerts",
-            ].map((item) => (
+            {differentiators.map((item) => (
               <div
                 key={item}
-                className="rounded-[1.5rem] border border-white/15 bg-white/8 p-5 text-sm font-medium leading-7 text-white/90"
+                className="rounded-[1.7rem] border border-[#0d5c52]/10 bg-[#fbfcf8] p-5 text-sm font-medium leading-7 text-foreground"
               >
                 {item}
               </div>
@@ -131,55 +227,34 @@ export default function ProductPage() {
           </div>
         </section>
 
-        <section
-          id="approval-workflow"
-          className="grid gap-8 lg:grid-cols-[1fr_0.9fr]"
-        >
-          <div className="glass-panel rounded-[2rem] p-8">
-            <SectionHeading
-              eyebrow="Approval Workflow"
-              title="AI drafts fast. Tutors approve deliberately."
-              description="Every teaching-related output passes through a clear workflow so the platform stays teacher-led, compliant, and scalable."
-            />
-            <div className="mt-8 flex flex-wrap gap-3">
-              {approvalObjects.map((item) => (
-                <div
-                  key={item}
-                  className="rounded-full border border-border bg-surface-strong px-4 py-2 text-sm font-medium text-foreground"
-                >
-                  {item}
-                </div>
-              ))}
+        <section className="rounded-[3rem] border border-[#0d5c52]/10 bg-[linear-gradient(135deg,#143d36_0%,#0d5c52_45%,#11937d_100%)] px-8 py-12 text-white shadow-[0_28px_80px_rgba(13,92,82,0.18)] sm:px-10 lg:px-12 lg:py-16">
+          <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="space-y-4">
+              <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#b5ffda]">
+                Get Started
+              </p>
+              <h2 className="text-4xl font-semibold tracking-tight">
+                Ready to see how it works for your family?
+              </h2>
+              <p className="max-w-2xl text-base leading-8 text-white/75">
+                Start with a class enquiry or create your parent account first. We will guide the rest.
+              </p>
+            </div>
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <Link
+                href="/book-class"
+                className="rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-[#12342f] transition hover:bg-[#e7fff2]"
+              >
+                Book a Class
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-full border border-white/28 bg-transparent px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Create Account
+              </Link>
             </div>
           </div>
-          <div className="grid gap-4">
-            {complianceGuardrails.map((rule) => (
-              <article
-                key={rule}
-                className="rounded-[1.75rem] border border-border bg-surface-strong p-6"
-              >
-                <p className="text-sm leading-7 text-muted">{rule}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-5">
-          {businessModels.map((item) => (
-            <article key={item} className="glass-panel rounded-[1.75rem] p-6">
-              <p className="text-sm font-medium leading-7 text-foreground">{item}</p>
-            </article>
-          ))}
-        </section>
-
-        <section className="glass-panel rounded-[2rem] p-8">
-          <p className="text-sm font-medium text-muted">Platform Positioning</p>
-          <h2 className="mt-2 text-3xl font-semibold text-foreground">
-            {platformSummary.positioning}
-          </h2>
-          <p className="mt-4 max-w-3xl text-base leading-8 text-muted">
-            The product is not a fully autonomous AI teaching platform, not a generic ChatGPT wrapper, and not an unsupervised student classroom. It is a tutor productivity and learning follow-up system with strong parent transparency and structured AI assistance.
-          </p>
         </section>
       </main>
     </div>
