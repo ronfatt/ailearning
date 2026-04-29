@@ -65,7 +65,7 @@ export function SignInForm() {
           Continue to your workspace
         </h2>
         <p className="text-sm leading-7 text-muted">
-          Parents can sign in after registering. Tutors, students, and invited users can sign in after activation.
+          Parents can sign in after registration. Tutors, students, and invited users can sign in after activation.
         </p>
       </div>
       <label className="mt-6 block space-y-2">
@@ -104,7 +104,7 @@ export function SignInForm() {
       ) : null}
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm leading-7 text-muted">
         <span>
-          Need an account?{" "}
+          Need a family account?{" "}
           <Link className="font-semibold text-teal" href="/signup">
             Register
           </Link>

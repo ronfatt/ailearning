@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,10 +12,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const editorialSerif = Cormorant_Garamond({
+  variable: "--font-editorial-serif",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
-  title: "AI Learning OS | Teacher-Led Tuition Platform",
+  title: "AI Learning OS | Teacher-led online tuition for Malaysia",
   description:
-    "A teacher-led, AI-assisted tuition operating system for Malaysia with tutor dashboards, approval workflows, and parent transparency.",
+    "Teacher-led online tuition with AI-supported revision, parent-visible progress, and structured follow-up for Malaysian families.",
 };
 
 export default function RootLayout({
@@ -26,7 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${editorialSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

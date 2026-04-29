@@ -13,6 +13,17 @@
   --gold-soft: #f5dfb7;
   --coral: #de6f52;
   --shadow: 0 22px 60px rgba(21, 48, 39, 0.08);
+  --solace-ink: #15352f;
+  --solace-ink-soft: #49605b;
+  --solace-bg: #f6f1e8;
+  --solace-surface: rgba(255, 252, 247, 0.82);
+  --solace-surface-strong: #fffdf9;
+  --solace-line: rgba(21, 53, 47, 0.1);
+  --solace-primary: #173f3a;
+  --solace-primary-soft: #6e8c85;
+  --solace-secondary: #d9e3dd;
+  --solace-accent: #b79a66;
+  --solace-fog: #e8e4db;
 }
 
 @theme inline {
@@ -99,5 +110,74 @@ a {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+.solace-page {
+  color: var(--solace-ink);
+  background:
+    radial-gradient(circle at 10% 12%, rgba(183, 154, 102, 0.12), transparent 18%),
+    radial-gradient(circle at 86% 10%, rgba(23, 63, 58, 0.12), transparent 20%),
+    radial-gradient(circle at 76% 24%, rgba(217, 227, 221, 0.35), transparent 18%),
+    linear-gradient(180deg, #fdfaf5 0%, #f6f1e8 48%, #efe7db 100%);
+}
+
+.solace-shell {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3.5rem;
+}
+
+.solace-panel {
+  background: var(--solace-surface);
+  border: 1px solid var(--solace-line);
+  box-shadow: 0 24px 70px rgba(21, 53, 47, 0.06);
+  backdrop-filter: blur(18px);
+}
+
+.solace-serif {
+  font-family: var(--font-editorial-serif), serif;
+  letter-spacing: -0.04em;
+}
+
+.solace-gradient-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.35)),
+    radial-gradient(circle at top right, rgba(217, 227, 221, 0.8), transparent 45%);
+}
+
+.solace-grid-lines {
+  background-image:
+    linear-gradient(rgba(21, 53, 47, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(21, 53, 47, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.solace-button-primary {
+  background: linear-gradient(135deg, #173f3a 0%, #234e47 100%);
+  box-shadow: 0 16px 38px rgba(23, 63, 58, 0.18);
+}
+
+.solace-button-primary:hover {
+  background: linear-gradient(135deg, #143731 0%, #1c4640 100%);
+}
+
+.solace-button-secondary:hover {
+  border-color: rgba(23, 63, 58, 0.28);
+  color: var(--solace-primary);
+}
+
+@media (min-width: 640px) {
+  .solace-shell {
+    padding-inline: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .solace-shell {
+    padding-inline: 5rem;
+    padding-top: 2.25rem;
+    padding-bottom: 5rem;
   }
 }

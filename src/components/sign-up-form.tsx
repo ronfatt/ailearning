@@ -73,10 +73,10 @@ export function SignUpForm() {
       <div className="space-y-2">
         <p className="text-sm font-medium text-muted">Parent registration</p>
         <h2 className="text-3xl font-semibold tracking-tight text-foreground">
-          Create your parent account
+          Create your family account
         </h2>
         <p className="text-sm leading-7 text-muted">
-          Start with one account so you can follow progress, reports, and class updates in one place.
+          Start with one account so you can book classes, follow progress, and manage class updates in one place.
         </p>
       </div>
       <div className="mt-6 grid gap-4">

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { PageShell } from "@/components/page-shell";
 import { SignUpForm } from "@/components/sign-up-form";
+import { SolacePageShell } from "@/components/solace/page-shell";
 import { getAuthenticatedHomePath, getCurrentSession } from "@/lib/auth-session";
 
 export default async function SignUpPage() {
@@ -13,37 +13,51 @@ export default async function SignUpPage() {
   }
 
   return (
-    <PageShell
-      title="Create your account"
-      description="Create your parent account first, then we will help you connect everything else."
+    <SolacePageShell
+      title="Create your family account"
+      description="Register once to book classes, follow progress, and manage your child’s learning journey in one place."
       eyebrow="Register"
-    >
-      <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <article className="glass-panel rounded-[2.2rem] p-8 shadow-[0_24px_60px_rgba(13,92,82,0.07)]">
-          <p className="text-sm font-medium text-muted">Best for parents</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-            Start with one account, then everything follows
-          </h2>
-          <p className="mt-4 max-w-xl text-sm leading-7 text-muted">
-            Use one place to view reports, follow progress, and stay connected once your child starts class.
+      aside={
+        <div className="rounded-[1.8rem] border border-[var(--solace-line)] bg-[linear-gradient(180deg,#fffdf9_0%,#f5efe4_100%)] p-6 shadow-[0_18px_40px_rgba(21,53,47,0.06)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--solace-primary)]">
+            Best for parents
           </p>
-          <div className="mt-8 space-y-4">
+          <div className="mt-5 space-y-3">
             {[
-              "Track progress and reports in one place.",
-              "Book a class after registration without re-entering everything.",
-              "Connect the student profile during onboarding when your class starts.",
+              "Start with one account for bookings, reports, and class updates.",
+              "Connect the student profile during onboarding or after class matching.",
+              "Use one place to track progress instead of scattered messages.",
             ].map((item) => (
               <div
                 key={item}
-                className="rounded-[1.7rem] border border-border bg-surface-strong p-5 text-base font-medium leading-7 text-foreground"
+                className="rounded-[1.2rem] border border-[var(--solace-line)] bg-white/78 px-4 py-3 text-sm font-medium leading-7 text-[var(--solace-ink)]"
               >
                 {item}
               </div>
             ))}
           </div>
-          <p className="mt-6 text-sm leading-7 text-muted">
+        </div>
+      }
+    >
+      <section className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+        <article className="solace-panel rounded-[2rem] p-6 lg:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--solace-primary)]">
+            Before you continue
+          </p>
+          <h2 className="solace-serif mt-3 text-4xl leading-[1.04] text-[var(--solace-ink)]">
+            Start with one family account, then connect the learning path
+          </h2>
+          <p className="mt-4 text-sm leading-7 text-[var(--solace-ink-soft)]">
+            Registration is simple on purpose. Once the account is ready, you can
+            book a class, connect the student profile, and receive tutor-approved
+            updates in one place.
+          </p>
+          <p className="mt-6 text-sm leading-7 text-[var(--solace-ink-soft)]">
             Already invited?{" "}
-            <Link href="/activate-account" className="font-semibold text-teal">
+            <Link
+              href="/activate-account"
+              className="font-semibold text-[var(--solace-primary)]"
+            >
               Activate your account
             </Link>
           </p>
@@ -51,6 +65,6 @@ export default async function SignUpPage() {
 
         <SignUpForm />
       </section>
-    </PageShell>
+    </SolacePageShell>
   );
 }

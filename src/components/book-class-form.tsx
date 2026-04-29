@@ -105,7 +105,7 @@ export function BookClassForm() {
       <div className="space-y-2">
         <p className="text-sm font-medium text-muted">Parent intake</p>
         <h2 className="text-3xl font-semibold tracking-tight text-foreground">
-          Book a class in under two minutes
+          Tell us what support your child needs
         </h2>
         <p className="text-sm leading-7 text-muted">
           A quick intake so we can recommend the right tutor-led starting point.
@@ -233,7 +233,7 @@ export function BookClassForm() {
           isPending ? "cursor-not-allowed opacity-60" : ""
         }`}
       >
-        {isPending ? "Submitting request..." : "Continue"}
+        {isPending ? "Submitting request..." : "Submit Request"}
       </button>
       {error ? <p className="mt-4 text-sm leading-7 text-coral">{error}</p> : null}
     </form>

@@ -1,5 +1,5 @@
-import { PageShell } from "@/components/page-shell";
 import { BookClassForm } from "@/components/book-class-form";
+import { SolacePageShell } from "@/components/solace/page-shell";
 
 const steps = [
   "Share the student's level and subject.",
@@ -9,30 +9,52 @@ const steps = [
 
 export default function BookClassPage() {
   return (
-    <PageShell
+    <SolacePageShell
       title="Book a class"
-      description="A quick way to get your child started with tutor-led support."
+      description="A simple starting point for matching the right tutor, subject, and class path for your child."
       eyebrow="Start Learning"
-    >
-      <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <article className="glass-panel rounded-[2.2rem] p-8 shadow-[0_24px_60px_rgba(13,92,82,0.07)]">
-          <p className="text-sm font-medium text-muted">Simple steps</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-            From enquiry to first class
-          </h2>
-          <p className="mt-4 max-w-xl text-sm leading-7 text-muted">
-            No long forms, no confusing setup. Just tell us what support your child needs and we will guide the next step.
+      aside={
+        <div className="rounded-[1.8rem] border border-[var(--solace-line)] bg-[linear-gradient(180deg,#fffdf9_0%,#f5efe4_100%)] p-6 shadow-[0_18px_40px_rgba(21,53,47,0.06)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--solace-primary)]">
+            What happens next
           </p>
-          <div className="mt-8 space-y-4">
+          <div className="mt-5 space-y-3">
+            {[
+              "We review the student level and subject focus.",
+              "We match the right tutor and class path.",
+              "We guide the first class setup and learning cycle.",
+            ].map((item) => (
+              <div
+                key={item}
+                className="rounded-[1.2rem] border border-[var(--solace-line)] bg-white/78 px-4 py-3 text-sm font-medium leading-7 text-[var(--solace-ink)]"
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      }
+    >
+      <section className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+        <article className="solace-panel rounded-[2rem] p-6 lg:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--solace-primary)]">
+            From enquiry to first class
+          </p>
+          <h2 className="solace-serif mt-3 text-4xl leading-[1.04] text-[var(--solace-ink)]">
+            Start the learning journey without a complicated intake
+          </h2>
+          <div className="mt-6 space-y-4">
             {steps.map((step, index) => (
               <div
                 key={step}
-                className="rounded-[1.7rem] border border-border bg-surface-strong p-5"
+                className="rounded-[1.4rem] border border-[var(--solace-line)] bg-[var(--solace-surface-strong)] p-5"
               >
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--solace-primary)]">
                   Step {index + 1}
                 </p>
-                <p className="mt-3 text-base font-medium leading-7 text-foreground">{step}</p>
+                <p className="mt-3 text-sm leading-7 text-[var(--solace-ink-soft)]">
+                  {step}
+                </p>
               </div>
             ))}
           </div>
@@ -40,6 +62,6 @@ export default function BookClassPage() {
 
         <BookClassForm />
       </section>
-    </PageShell>
+    </SolacePageShell>
   );
 }
