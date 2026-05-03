@@ -89,7 +89,7 @@ export function SolaceSiteFooter() {
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/book-class"
-              className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#3B6CFF] transition hover:bg-[#f8fbff]"
+              className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold !text-[#2f5bff] shadow-[0_14px_32px_rgba(255,255,255,0.16)] transition hover:bg-[#f8fbff] hover:!text-[#2448d8]"
             >
               Book a Free Trial
             </Link>

@@ -467,6 +467,23 @@ CREATE TABLE "TutorApplication" (
 );
 
 -- CreateTable
+CREATE TABLE "ContactInquiry" (
+    "id" TEXT NOT NULL,
+    "parentUserId" TEXT,
+    "fullName" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "phoneNumber" TEXT,
+    "organization" TEXT,
+    "enquiryType" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "status" "IntakeStatus" NOT NULL DEFAULT 'NEW',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ContactInquiry_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "EnrollmentDraft" (
     "id" TEXT NOT NULL,
     "bookingRequestId" TEXT NOT NULL,
@@ -629,6 +646,12 @@ CREATE INDEX "TutorApplication_email_createdAt_idx" ON "TutorApplication"("email
 CREATE INDEX "TutorApplication_status_createdAt_idx" ON "TutorApplication"("status", "createdAt");
 
 -- CreateIndex
+CREATE INDEX "ContactInquiry_email_createdAt_idx" ON "ContactInquiry"("email", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "ContactInquiry_status_createdAt_idx" ON "ContactInquiry"("status", "createdAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "EnrollmentDraft_bookingRequestId_key" ON "EnrollmentDraft"("bookingRequestId");
 
 -- CreateIndex
@@ -714,4 +737,3 @@ ALTER TABLE "AttendanceRecord" ADD CONSTRAINT "AttendanceRecord_classSessionId_f
 
 -- AddForeignKey
 ALTER TABLE "AiActivityLog" ADD CONSTRAINT "AiActivityLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-

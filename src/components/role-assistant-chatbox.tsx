@@ -204,7 +204,7 @@ export function RoleAssistantChatbox({
 
   return (
     <section
-      className={`sticky top-[7.75rem] z-20 rounded-[2.25rem] border p-6 shadow-[0_18px_48px_rgba(59,108,255,0.08)] lg:top-[8.5rem] ${config.shell}`}
+      className={`rounded-[2.25rem] border p-6 shadow-[0_18px_48px_rgba(59,108,255,0.08)] ${config.shell}`}
     >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
@@ -216,7 +216,7 @@ export function RoleAssistantChatbox({
               Instant role-aware AI
             </div>
             <div className="rounded-full border border-white/80 bg-white/88 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5B6472] shadow-[0_10px_22px_rgba(59,108,255,0.06)]">
-              Sticky helper
+              Top AI helper
             </div>
           </div>
           <h2 className="mt-3 text-[2rem] font-semibold tracking-tight text-[#111827] sm:text-[2.2rem]">

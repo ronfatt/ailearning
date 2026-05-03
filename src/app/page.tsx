@@ -243,7 +243,7 @@ export default function HomePage() {
                 </Link>
                 <Link
                   href="/how-it-works"
-                  className="rounded-full border border-[#dbe7ff] bg-white px-7 py-3.5 text-sm font-semibold text-[#111827] transition hover:border-[#7C5CFF] hover:text-[#3B6CFF]"
+                  className="inline-flex items-center justify-center rounded-full border border-[#dbe7ff] bg-white px-7 py-3.5 text-sm font-semibold !text-[#111827] shadow-[0_10px_24px_rgba(59,108,255,0.08)] transition hover:border-[#7C5CFF] hover:!text-[#3B6CFF]"
                 >
                   See How It Works
                 </Link>
@@ -568,7 +568,7 @@ export default function HomePage() {
             <div className="flex flex-col gap-4 sm:flex-row">
               <Link
                 href="/book-class"
-                className="rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-[#4f46e5] transition hover:bg-[#f8fafc]"
+                className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3.5 text-sm font-semibold !text-[#2f5bff] shadow-[0_14px_32px_rgba(255,255,255,0.16)] transition hover:bg-[#f8fafc] hover:!text-[#2448d8]"
               >
                 Book a Demo
               </Link>

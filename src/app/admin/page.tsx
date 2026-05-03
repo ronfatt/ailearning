@@ -49,7 +49,7 @@ export default async function AdminPage() {
       }
       action={
         isGuestPreview ? (
-          <div className="rounded-[1.5rem] bg-gold-soft px-5 py-4 text-sm font-semibold text-[#8b5a13]">
+          <div className="rounded-full border border-[#fde8bf] bg-[#fff8e8] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6b16]">
             Preview mode · Admin test workspace
           </div>
         ) : (

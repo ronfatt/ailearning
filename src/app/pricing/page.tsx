@@ -127,7 +127,7 @@ export default function PricingPage() {
           </Link>
           <Link
             href="/tutor-apply"
-            className="rounded-full border border-[#dbe7ff] bg-white px-7 py-3.5 text-sm font-semibold text-[#111827] transition hover:border-[#7C5CFF] hover:text-[#3B6CFF]"
+            className="inline-flex items-center justify-center rounded-full border border-[#dbe7ff] bg-white px-7 py-3.5 text-sm font-semibold !text-[#111827] shadow-[0_10px_24px_rgba(59,108,255,0.08)] transition hover:border-[#7C5CFF] hover:!text-[#3B6CFF]"
           >
             Apply as a Tutor
           </Link>

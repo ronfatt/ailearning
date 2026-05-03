@@ -71,7 +71,7 @@ export default async function ParentPage() {
       }
       action={
         isGuestPreview ? (
-          <div className="rounded-[1.5rem] bg-gold-soft px-5 py-4 text-sm font-semibold text-[#8b5a13]">
+          <div className="rounded-full border border-[#fde8bf] bg-[#fff8e8] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6b16]">
             Preview mode · Parent test workspace
           </div>
         ) : (
@@ -85,21 +85,24 @@ export default async function ParentPage() {
     >
       <RoleAssistantChatbox role="parent" roleId={parentDashboardId} />
 
-      {isGuestPreview ? <DemoCasePlaybook role="parent" /> : null}
+      <ParentDashboardLive parentId={parentDashboardId} />
 
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="grid gap-3 lg:grid-cols-3">
         {quickStartSteps.map((step) => (
-          <article key={step.title} className="glass-panel rounded-[1.75rem] p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal">
+          <article
+            key={step.title}
+            className="rounded-[1.5rem] border border-border bg-white/72 p-4 shadow-[0_10px_26px_rgba(59,108,255,0.06)]"
+          >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#20C997]">
               {step.label}
             </p>
-            <h2 className="mt-3 text-lg font-semibold text-foreground">
+            <h2 className="mt-2 text-base font-semibold text-foreground">
               {step.title}
             </h2>
-            <p className="mt-3 text-sm leading-7 text-muted">{step.detail}</p>
+            <p className="mt-2 text-sm leading-6 text-muted">{step.detail}</p>
             <Link
               href={step.href}
-              className="mt-5 inline-flex rounded-full bg-teal px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#09443c]"
+              className="mt-4 inline-flex rounded-full border border-[#cfeee4] bg-white px-3.5 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#20C997] transition hover:border-[#20C997] hover:bg-[#ecfdf5]"
             >
               {step.cta}
             </Link>
@@ -107,7 +110,7 @@ export default async function ParentPage() {
         ))}
       </section>
 
-      <ParentDashboardLive parentId={parentDashboardId} />
+      {isGuestPreview ? <DemoCasePlaybook role="parent" /> : null}
     </PageShell>
   );
 }
