@@ -1,7 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SolacePageShell } from "@/components/solace/page-shell";
 import { SectionShell } from "@/components/solace/section-shell";
+import { createPageMetadata } from "@/lib/site-metadata";
 
 const steps = [
   {
@@ -36,22 +38,35 @@ const supportPrinciples = [
   "Parent reporting stays clear and tutor-reviewed",
 ];
 
+export const metadata: Metadata = createPageMetadata({
+  title: "How It Works",
+  description:
+    "Understand the path from first enquiry to tutor-led classes, AI revision, homework follow-up, and parent progress updates.",
+  path: "/how-it-works",
+  keywords: [
+    "how tuition platform works",
+    "online tuition onboarding",
+    "AI revision workflow",
+  ],
+});
+
 export default function HowItWorksPage() {
   return (
     <SolacePageShell
       eyebrow="How it works"
-      title="A simpler path from enquiry to steady learning."
-      description="The public journey is designed to stay easy for families while the platform handles the heavier operational work behind the scenes."
+      title="A simple path from first enquiry to steady progress."
+      description="Families can move from booking to live classes, revision, homework, and parent reporting without getting lost in admin."
+      heroPanelClassName="border-[#e6ecf5] bg-[radial-gradient(circle_at_18%_12%,rgba(18,207,243,0.14),transparent_30%),radial-gradient(circle_at_86%_18%,rgba(124,92,255,0.1),transparent_28%),linear-gradient(180deg,#f8fbff_0%,#ffffff_100%)] shadow-[0_28px_80px_rgba(59,108,255,0.1)]"
       aside={
-        <div className="rounded-[1.8rem] border border-[var(--solace-line)] bg-[linear-gradient(180deg,#fffdf9_0%,#f5efe4_100%)] p-6 shadow-[0_18px_40px_rgba(21,53,47,0.06)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--solace-primary)]">
+        <div className="rounded-[1.8rem] border border-[#e6ecf5] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] p-6 shadow-[0_18px_40px_rgba(59,108,255,0.08)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#3B6CFF]">
             Core rules
           </p>
           <div className="mt-5 space-y-3">
             {supportPrinciples.map((item) => (
               <div
                 key={item}
-                className="rounded-[1.2rem] border border-[var(--solace-line)] bg-white/78 px-4 py-3 text-sm font-medium leading-7 text-[var(--solace-ink)]"
+                className="rounded-[1.2rem] border border-[#dbe7ff] bg-white px-4 py-3 text-sm font-medium leading-7 text-[#111827]"
               >
                 {item}
               </div>
@@ -68,15 +83,15 @@ export default function HowItWorksPage() {
           {steps.map((item) => (
             <div
               key={item.step}
-              className="rounded-[1.7rem] border border-[var(--solace-line)] bg-[var(--solace-surface-strong)] p-5"
+              className="rounded-[1.7rem] border border-[#e6ecf5] bg-white p-5 shadow-[0_14px_32px_rgba(59,108,255,0.06)]"
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--solace-primary)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#3B6CFF]">
                 {item.step}
               </p>
-              <p className="mt-4 text-2xl font-semibold text-[var(--solace-ink)]">
+              <p className="mt-4 text-2xl font-semibold text-[#111827]">
                 {item.title}
               </p>
-              <p className="mt-3 text-sm leading-7 text-[var(--solace-ink-soft)]">
+              <p className="mt-3 text-sm leading-7 text-[#5B6472]">
                 {item.detail}
               </p>
             </div>
@@ -97,7 +112,7 @@ export default function HowItWorksPage() {
           ].map((item) => (
             <div
               key={item}
-              className="rounded-[1.6rem] border border-[var(--solace-line)] bg-[var(--solace-surface-strong)] p-5 text-sm font-medium leading-7 text-[var(--solace-ink)]"
+              className="rounded-[1.6rem] border border-[#e6ecf5] bg-white p-5 text-sm font-medium leading-7 text-[#111827] shadow-[0_12px_30px_rgba(59,108,255,0.06)]"
             >
               {item}
             </div>
@@ -105,10 +120,10 @@ export default function HowItWorksPage() {
         </div>
       </SectionShell>
 
-      <section className="rounded-[2rem] border border-[rgba(23,63,58,0.1)] bg-[linear-gradient(135deg,#173f3a_0%,#214a43_50%,#355e56_100%)] px-6 py-8 text-white shadow-[0_28px_70px_rgba(21,53,47,0.16)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+      <section className="rounded-[2rem] border border-[#d6e3ff] bg-[linear-gradient(135deg,#3B6CFF_0%,#4F7CFF_42%,#7C5CFF_78%,#12CFF3_100%)] px-6 py-8 text-white shadow-[0_28px_70px_rgba(59,108,255,0.22)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
         <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#dbe6e1]">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/72">
               Begin
             </p>
             <h2 className="solace-serif text-4xl leading-[1.04] sm:text-5xl">
@@ -118,7 +133,7 @@ export default function HowItWorksPage() {
           <div className="flex flex-col gap-4 sm:flex-row">
             <Link
               href="/book-class"
-              className="rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-[var(--solace-primary)] transition hover:bg-[#f1ece2]"
+              className="rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-[#3B6CFF] transition hover:bg-[#f8fbff]"
             >
               Book a Class
             </Link>

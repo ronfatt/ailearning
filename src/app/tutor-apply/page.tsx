@@ -1,53 +1,30 @@
-import { SolacePageShell } from "@/components/solace/page-shell";
-import { TutorApplyForm } from "@/components/tutor-apply-form";
+import type { Metadata } from "next";
 
-const requirements = [
-  "Clear subject ownership and teaching level",
-  "Comfort with live online tuition and follow-up workflows",
-  "Willingness to review AI drafts before anything reaches students or parents",
-];
+import { SolaceLandingHeader } from "@/components/solace/landing-header";
+import { TutorApplyForm } from "@/components/tutor-apply-form";
+import { createPageMetadata } from "@/lib/site-metadata";
+
+export const metadata: Metadata = createPageMetadata({
+  title: "Apply as a Tutor",
+  description:
+    "Apply to teach live classes with AI-supported lesson prep, homework follow-up, and clearer parent communication.",
+  path: "/tutor-apply",
+  keywords: [
+    "tutor application Malaysia",
+    "online tuition tutor job",
+    "AI teaching platform tutors",
+  ],
+});
 
 export default function TutorApplyPage() {
   return (
-    <SolacePageShell
-      title="Apply as a tutor"
-      description="Bring your teaching online with AI support that helps you prepare faster, teach better, and follow up more personally."
-      eyebrow="Tutor Onboarding"
-      aside={
-        <div className="rounded-[1.8rem] border border-[var(--solace-line)] bg-[linear-gradient(180deg,#fffdf9_0%,#f5efe4_100%)] p-6 shadow-[0_18px_40px_rgba(21,53,47,0.06)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--solace-primary)]">
-            We look for
-          </p>
-          <div className="mt-5 space-y-3">
-            {requirements.map((item) => (
-              <div
-                key={item}
-                className="rounded-[1.2rem] border border-[var(--solace-line)] bg-white/78 px-4 py-3 text-sm font-medium leading-7 text-[var(--solace-ink)]"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.16),transparent_18%),radial-gradient(circle_at_top_right,rgba(167,139,250,0.16),transparent_20%),linear-gradient(180deg,#f7fbff_0%,#eef5ff_42%,#ffffff_100%)]">
+      <SolaceLandingHeader />
+      <main className="px-6 py-12 sm:px-8 lg:px-10 lg:py-16">
+        <div className="mx-auto flex min-h-[calc(100vh-12rem)] w-full max-w-[640px] items-center justify-center">
+          <TutorApplyForm />
         </div>
-      }
-    >
-      <section className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-        <article className="solace-panel rounded-[2rem] p-6 lg:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--solace-primary)]">
-            Teacher-led from day one
-          </p>
-          <h2 className="solace-serif mt-3 text-4xl leading-[1.04] text-[var(--solace-ink)]">
-            Teach live, use AI well, and keep follow-up stronger
-          </h2>
-          <p className="mt-4 text-sm leading-7 text-[var(--solace-ink-soft)]">
-            We are building for tutors who want better class preparation, clearer
-            student follow-up, and more visible parent communication without
-            losing the human side of teaching.
-          </p>
-        </article>
-
-        <TutorApplyForm />
-      </section>
-    </SolacePageShell>
+      </main>
+    </div>
   );
 }

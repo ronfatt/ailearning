@@ -15,35 +15,35 @@ export function PricingCard({
 }: PricingCardProps) {
   return (
     <article
-      className={`rounded-[1.8rem] p-6 ${
+      className={`solace-lift rounded-[1.8rem] p-6 ${
         highlight
-          ? "border border-[rgba(183,154,102,0.28)] bg-[linear-gradient(180deg,#fffdf9_0%,#f7f1e8_100%)] shadow-[0_20px_50px_rgba(23,63,58,0.08)]"
-          : "border border-[var(--solace-line)] bg-[var(--solace-surface-strong)]"
+          ? "border border-[#cfe0ff] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] shadow-[0_20px_50px_rgba(59,108,255,0.14)]"
+          : "border border-[#e6ecf5] bg-white shadow-[0_18px_42px_rgba(59,108,255,0.06)]"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--solace-primary)]">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#3B6CFF]">
             {name}
           </p>
-          <p className="mt-4 text-4xl font-semibold text-[var(--solace-ink)]">
+          <p className="mt-4 text-4xl font-semibold text-[#111827]">
             {price}
           </p>
         </div>
         {highlight ? (
-          <span className="rounded-full bg-[rgba(183,154,102,0.16)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--solace-accent)]">
+          <span className="rounded-full bg-[linear-gradient(135deg,#3B6CFF_0%,#7C5CFF_100%)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white">
             Most chosen
           </span>
         ) : null}
       </div>
-      <p className="mt-4 text-sm leading-7 text-[var(--solace-ink-soft)]">
+      <p className="mt-4 text-sm leading-7 text-[#5B6472]">
         {description}
       </p>
       <div className="mt-6 space-y-3">
         {features.map((feature) => (
           <div
             key={feature}
-            className="rounded-[1.2rem] border border-[var(--solace-line)] bg-white/72 px-4 py-3 text-sm font-medium leading-7 text-[var(--solace-ink)]"
+            className="solace-soft-pill rounded-[1.2rem] border border-[#e6ecf5] bg-[#f8fbff] px-4 py-3 text-sm font-medium leading-7 text-[#111827]"
           >
             {feature}
           </div>

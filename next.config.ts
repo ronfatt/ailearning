@@ -6,6 +6,14 @@ import type { NextConfig } from "next";
 const workspaceRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.pexels.com",
+      },
+    ],
+  },
   turbopack: {
     root: workspaceRoot,
   },

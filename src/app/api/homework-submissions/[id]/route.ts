@@ -6,9 +6,11 @@ import { upsertParentReportDraftFromSignals } from "@/lib/server/parent-report-d
 import {
   ApiError,
   assertRecord,
+  optionalJson,
   optionalString,
   requireString,
   toErrorResponse,
+  toPrismaJsonValue,
 } from "@/lib/server/workflow-api";
 
 function mapSubmission(submission: {
@@ -74,9 +76,10 @@ export async function PATCH(
     const tutorId = requireString(body, "tutorId");
     const score = optionalNumber(body, "score");
     const tutorFeedback = optionalString(body, "tutorFeedback");
+    const questionFeedback = optionalJson(body, "questionFeedback");
 
-    if (score === undefined && !tutorFeedback) {
-      throw new ApiError("Provide score, tutorFeedback, or both.");
+    if (score === undefined && !tutorFeedback && questionFeedback === undefined) {
+      throw new ApiError("Provide score, tutorFeedback, questionFeedback, or any combination of them.");
     }
 
     const existing = await prisma.homeworkSubmission.findUnique({
@@ -95,11 +98,30 @@ export async function PATCH(
     }
 
     const updated = await prisma.$transaction(async (transaction) => {
+      const nextSubmissionContent =
+        questionFeedback === undefined
+          ? existing.submissionContent
+          : {
+              ...(typeof existing.submissionContent === "object" &&
+              existing.submissionContent !== null &&
+              !Array.isArray(existing.submissionContent)
+                ? existing.submissionContent
+                : {}),
+              tutorReviewItems: questionFeedback,
+            };
+
       const submission = await transaction.homeworkSubmission.update({
         where: { id },
         data: {
           ...(score !== undefined ? { score } : {}),
           ...(tutorFeedback ? { tutorFeedback } : {}),
+          ...(questionFeedback !== undefined
+            ? {
+                submissionContent: toPrismaJsonValue(
+                  nextSubmissionContent as import("@/lib/server/workflow-api").JsonValue,
+                ),
+              }
+            : {}),
         },
       });
 

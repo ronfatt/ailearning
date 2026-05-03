@@ -70,6 +70,16 @@ type SubmissionReviewItem = {
   score: string;
   tutorFeedback: string;
   needsReview: boolean;
+  submissionPreview?: {
+    summary?: string;
+    lines: string[];
+  };
+  answerDetails: Array<{
+    questionId: string;
+    prompt: string;
+    answer: string;
+    feedback: string;
+  }>;
 };
 
 type TutorClassOverview = {
@@ -206,7 +216,7 @@ type ClassIntelligenceItem = {
   coreQuestions: ClassIntelligenceQuestion[];
 };
 
-type TutorDashboardData = {
+export type TutorDashboardData = {
   summary: {
     lessonPlanDrafts: number;
     studyPlanQueue: number;
@@ -346,6 +356,134 @@ function getDraftPreview(value: Prisma.JsonValue | null) {
     summary,
     lines: lines.slice(0, 5),
   };
+}
+
+function getSubmissionPreview(value: Prisma.JsonValue | null) {
+  const record = getJsonStringRecord(value);
+
+  if (!record) {
+    return undefined;
+  }
+
+  const answerSummary =
+    typeof record.answerSummary === "string"
+      ? record.answerSummary
+      : typeof record.note === "string"
+        ? record.note
+        : undefined;
+  const completedQuestions =
+    typeof record.completedQuestions === "number"
+      ? `${record.completedQuestions} question${record.completedQuestions === 1 ? "" : "s"} completed`
+      : undefined;
+  const workingNotes =
+    typeof record.workingNotes === "string"
+      ? `Working notes: ${record.workingNotes}`
+      : undefined;
+  const reflection =
+    typeof record.reflection === "string"
+      ? `Student reflection: ${record.reflection}`
+      : undefined;
+  const confidence =
+    typeof record.confidence === "number"
+      ? `Confidence level: ${record.confidence}/5`
+      : undefined;
+  const answerLines = getJsonObjectArray(record.answers ?? null)
+    .map((entry, index) => {
+      const answer =
+        typeof entry.answer === "string" ? entry.answer : null;
+
+      if (!answer) {
+        return null;
+      }
+
+      const prompt =
+        typeof entry.prompt === "string"
+          ? entry.prompt
+          : `Question ${index + 1}`;
+
+      return `${prompt}: ${answer}`;
+    })
+    .filter((entry): entry is string => entry !== null);
+
+  const lines = [
+    completedQuestions,
+    ...answerLines,
+    workingNotes,
+    reflection,
+    confidence,
+  ].filter((entry): entry is string => Boolean(entry));
+
+  if (!answerSummary && lines.length === 0) {
+    return undefined;
+  }
+
+  return {
+    summary: answerSummary,
+    lines: lines.slice(0, 5),
+  };
+}
+
+function getSubmissionAnswerDetails(value: Prisma.JsonValue | null) {
+  const record = getJsonStringRecord(value);
+
+  if (!record) {
+    return [];
+  }
+
+  const feedbackByQuestionId = new Map(
+    getJsonObjectArray(record.tutorReviewItems ?? null)
+      .map((entry, index) => {
+        const feedback =
+          typeof entry.feedback === "string" ? entry.feedback : null;
+
+        if (!feedback) {
+          return null;
+        }
+
+        return [
+          typeof entry.questionId === "string"
+            ? entry.questionId
+            : `question-${index + 1}`,
+          feedback,
+        ] as const;
+      })
+      .filter((entry): entry is readonly [string, string] => entry !== null),
+  );
+
+  return getJsonObjectArray(record.answers ?? null)
+    .map((entry, index) => {
+      const answer =
+        typeof entry.answer === "string" ? entry.answer : null;
+
+      if (!answer) {
+        return null;
+      }
+
+      const questionId =
+        typeof entry.questionId === "string"
+          ? entry.questionId
+          : `question-${index + 1}`;
+
+      return {
+        questionId,
+        prompt:
+          typeof entry.prompt === "string"
+            ? entry.prompt
+            : `Question ${index + 1}`,
+        answer,
+        feedback: feedbackByQuestionId.get(questionId) ?? "",
+      };
+    })
+    .filter(
+      (
+        entry,
+      ): entry is {
+        questionId: string;
+        prompt: string;
+        answer: string;
+        feedback: string;
+      } => entry !== null,
+    );
 }
 
 function formatSessionRange(
@@ -1599,6 +1737,8 @@ export async function getTutorDashboardData(
       score: item.score === null ? "Pending" : `${Math.round(item.score)}%`,
       tutorFeedback: item.tutorFeedback ?? "Pending tutor feedback",
       needsReview: item.score === null || item.tutorFeedback === null,
+      submissionPreview: getSubmissionPreview(item.submissionContent),
+      answerDetails: getSubmissionAnswerDetails(item.submissionContent),
     })),
     todaysClasses,
     liveClassWorkspace,

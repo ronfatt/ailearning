@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { ActivateAccountForm } from "@/components/activate-account-form";
-import { PageShell } from "@/components/page-shell";
+import { SolaceLandingHeader } from "@/components/solace/landing-header";
 import { getAuthenticatedHomePath, getCurrentSession } from "@/lib/auth-session";
+import { createPageMetadata } from "@/lib/site-metadata";
+
+export const metadata: Metadata = createPageMetadata({
+  title: "Activate Account",
+  description:
+    "Activate an invited tutor, student, parent, or admin account and continue into the right workspace.",
+  path: "/activate-account",
+});
 
 export default async function ActivateAccountPage() {
   const session = await getCurrentSession();
@@ -12,36 +21,13 @@ export default async function ActivateAccountPage() {
   }
 
   return (
-    <PageShell
-      title="Activate your invited account"
-      description="Set a password only if an account has already been created for you by the platform."
-      eyebrow="Account Activation"
-    >
-      <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <article className="glass-panel rounded-[2rem] p-8">
-          <p className="text-sm font-medium text-muted">When to use this</p>
-          <h2 className="mt-2 text-2xl font-semibold text-foreground">
-            For invited users joining an existing class or workspace
-          </h2>
-          <div className="mt-8 space-y-4">
-            {[
-              "Students usually activate an account after a tutor or parent has already started onboarding.",
-              "Tutors can activate their workspace after approval.",
-              "Parents who already have an invited account can activate it here instead of registering again.",
-              "If your account is already active, sign in instead of using activation.",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-[1.5rem] border border-border bg-surface-strong p-5 text-sm leading-7 text-muted"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <ActivateAccountForm />
-      </section>
-    </PageShell>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.16),transparent_18%),radial-gradient(circle_at_top_right,rgba(167,139,250,0.16),transparent_20%),linear-gradient(180deg,#f7fbff_0%,#eef5ff_42%,#ffffff_100%)]">
+      <SolaceLandingHeader />
+      <main className="px-6 py-12 sm:px-8 lg:px-10 lg:py-16">
+        <div className="mx-auto flex min-h-[calc(100vh-12rem)] w-full max-w-[560px] items-center justify-center">
+          <ActivateAccountForm />
+        </div>
+      </main>
+    </div>
   );
 }

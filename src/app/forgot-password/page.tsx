@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { ForgotPasswordForm } from "@/components/forgot-password-form";
-import { PageShell } from "@/components/page-shell";
+import { SolaceLandingHeader } from "@/components/solace/landing-header";
 import { getAuthenticatedHomePath, getCurrentSession } from "@/lib/auth-session";
+import { createPageMetadata } from "@/lib/site-metadata";
+
+export const metadata: Metadata = createPageMetadata({
+  title: "Forgot Password",
+  description:
+    "Request a secure reset link and get back into your AI Learning OS workspace quickly.",
+  path: "/forgot-password",
+});
 
 export default async function ForgotPasswordPage() {
   const session = await getCurrentSession();
@@ -12,35 +21,13 @@ export default async function ForgotPasswordPage() {
   }
 
   return (
-    <PageShell
-      title="Forgot your password?"
-      description="Request a reset link and get back into your workspace."
-      eyebrow="Password Help"
-    >
-      <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <article className="glass-panel rounded-[2.2rem] p-8 shadow-[0_24px_60px_rgba(13,92,82,0.07)]">
-          <p className="text-sm font-medium text-muted">What happens next</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-            One reset link, then you are back in
-          </h2>
-          <div className="mt-8 space-y-4">
-            {[
-              "Enter the email attached to your account.",
-              "We send a secure reset link if the account exists.",
-              "Choose a new password and continue back to your workspace.",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-[1.7rem] border border-border bg-surface-strong p-5 text-base font-medium leading-7 text-foreground"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <ForgotPasswordForm />
-      </section>
-    </PageShell>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.16),transparent_18%),radial-gradient(circle_at_top_right,rgba(167,139,250,0.16),transparent_20%),linear-gradient(180deg,#f7fbff_0%,#eef5ff_42%,#ffffff_100%)]">
+      <SolaceLandingHeader />
+      <main className="px-6 py-12 sm:px-8 lg:px-10 lg:py-16">
+        <div className="mx-auto flex min-h-[calc(100vh-12rem)] w-full max-w-[560px] items-center justify-center">
+          <ForgotPasswordForm />
+        </div>
+      </main>
+    </div>
   );
 }

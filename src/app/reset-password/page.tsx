@@ -1,13 +1,22 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { PageShell } from "@/components/page-shell";
 import { ResetPasswordForm } from "@/components/reset-password-form";
+import { SolaceLandingHeader } from "@/components/solace/landing-header";
 import { getAuthenticatedHomePath, getCurrentSession } from "@/lib/auth-session";
+import { createPageMetadata } from "@/lib/site-metadata";
 
 type ResetPasswordPageProps = {
   searchParams: Promise<{ token?: string | string[] }>;
 };
+
+export const metadata: Metadata = createPageMetadata({
+  title: "Reset Password",
+  description:
+    "Use your secure reset link to choose a new password and return to your tuition workspace.",
+  path: "/reset-password",
+});
 
 export default async function ResetPasswordPage({
   searchParams,
@@ -23,53 +32,31 @@ export default async function ResetPasswordPage({
   const token = Array.isArray(tokenParam) ? tokenParam[0] : tokenParam;
 
   return (
-    <PageShell
-      title="Reset your password"
-      description="Use the secure reset link from your email to choose a new password."
-      eyebrow="Password Reset"
-    >
-      <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <article className="glass-panel rounded-[2.2rem] p-8 shadow-[0_24px_60px_rgba(13,92,82,0.07)]">
-          <p className="text-sm font-medium text-muted">Secure access</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-            Create a new password and continue
-          </h2>
-          <div className="mt-8 space-y-4">
-            {[
-              "Reset links expire after 1 hour.",
-              "Once used, the old sessions are signed out automatically.",
-              "If your link expires, request a fresh reset.",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-[1.7rem] border border-border bg-surface-strong p-5 text-base font-medium leading-7 text-foreground"
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.16),transparent_18%),radial-gradient(circle_at_top_right,rgba(167,139,250,0.16),transparent_20%),linear-gradient(180deg,#f7fbff_0%,#eef5ff_42%,#ffffff_100%)]">
+      <SolaceLandingHeader />
+      <main className="px-6 py-12 sm:px-8 lg:px-10 lg:py-16">
+        <div className="mx-auto flex min-h-[calc(100vh-12rem)] w-full max-w-[560px] items-center justify-center">
+          {token ? (
+            <ResetPasswordForm token={token} />
+          ) : (
+            <div className="w-full rounded-[2.2rem] border border-[#e6ecf5] bg-white/94 p-8 shadow-[0_24px_60px_rgba(59,108,255,0.1)]">
+              <p className="text-sm font-medium text-[#FF6B6B]">Invalid reset link</p>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[#111827]">
+                This password reset link is missing information
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-[#5B6472]">
+                Request a new password reset link and try again.
+              </p>
+              <Link
+                href="/forgot-password"
+                className="mt-6 inline-flex rounded-full bg-[linear-gradient(135deg,#3B6CFF_0%,#7C5CFF_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(59,108,255,0.2)] transition hover:-translate-y-0.5 hover:opacity-95"
               >
-                {item}
-              </div>
-            ))}
-          </div>
-        </article>
-
-        {token ? (
-          <ResetPasswordForm token={token} />
-        ) : (
-          <div className="rounded-[2.2rem] border border-border bg-white/82 p-8 shadow-[0_24px_60px_rgba(13,92,82,0.08)]">
-            <p className="text-sm font-medium text-coral">Invalid reset link</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-              This password reset link is missing information
-            </h2>
-            <p className="mt-4 text-sm leading-7 text-muted">
-              Request a new password reset link and try again.
-            </p>
-            <Link
-              href="/forgot-password"
-              className="mt-6 inline-flex rounded-full bg-teal px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(13,92,82,0.18)] transition hover:-translate-y-0.5 hover:bg-[#09443c]"
-            >
-              Request reset link
-            </Link>
-          </div>
-        )}
-      </section>
-    </PageShell>
+                Request reset link
+              </Link>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }

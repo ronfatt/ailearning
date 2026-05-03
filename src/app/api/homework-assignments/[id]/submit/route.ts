@@ -5,12 +5,17 @@ import { prisma } from "@/lib/prisma";
 import {
   ApiError,
   assertRecord,
+  JsonValue,
   optionalString,
   requireJson,
   requireString,
   toErrorResponse,
   toPrismaJsonValue,
 } from "@/lib/server/workflow-api";
+
+function isRecord(value: JsonValue): value is Record<string, JsonValue> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 export async function POST(
   request: NextRequest,
@@ -35,6 +40,35 @@ export async function POST(
     const submissionContent = requireJson(body, "submissionContent");
     const reflection = optionalString(body, "reflection");
     const submittedAt = new Date();
+    const existingSubmission = await prisma.homeworkSubmission.findUnique({
+      where: {
+        homeworkAssignmentId_studentId: {
+          homeworkAssignmentId: id,
+          studentId,
+        },
+      },
+    });
+    const nextSubmissionContent: JsonValue =
+      existingSubmission?.submissionContent &&
+      isRecord(submissionContent) &&
+      typeof existingSubmission.submissionContent === "object" &&
+      existingSubmission.submissionContent !== null &&
+      !Array.isArray(existingSubmission.submissionContent)
+        ? ({
+            ...submissionContent,
+            submissionVersions: [
+              ...(Array.isArray(existingSubmission.submissionContent.submissionVersions)
+                ? (existingSubmission.submissionContent.submissionVersions as JsonValue[])
+                : []),
+              {
+                submittedAt: existingSubmission.submittedAt?.toISOString() ?? null,
+                score: existingSubmission.score,
+                tutorFeedback: existingSubmission.tutorFeedback,
+                ...(existingSubmission.submissionContent as Record<string, JsonValue>),
+              },
+            ],
+          } as JsonValue)
+        : submissionContent;
 
     const [submission] = await prisma.$transaction([
       prisma.homeworkSubmission.upsert({
@@ -46,7 +80,9 @@ export async function POST(
         },
         update: {
           submittedAt,
-          submissionContent: toPrismaJsonValue(submissionContent),
+          submissionContent: toPrismaJsonValue(nextSubmissionContent),
+          score: null,
+          tutorFeedback: null,
         },
         create: {
           homeworkAssignmentId: id,
@@ -72,7 +108,9 @@ export async function POST(
           approvedBy: existingHomework.tutorId,
           sourceEntityType: "homework_assignment",
           sourceEntityId: id,
-          moderationStatus: reflection ?? "submitted",
+          moderationStatus:
+            reflection ??
+            (existingSubmission?.submittedAt ? "resubmitted" : "submitted"),
         },
       }),
     ]);

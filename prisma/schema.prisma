@@ -570,6 +570,23 @@ model TutorApplication {
   @@index([status, createdAt])
 }
 
+model ContactInquiry {
+  id             String       @id @default(cuid())
+  parentUserId   String?
+  fullName       String
+  email          String
+  phoneNumber    String?
+  organization   String?
+  enquiryType    String
+  message        String
+  status         IntakeStatus @default(NEW)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([email, createdAt])
+  @@index([status, createdAt])
+}
+
 model EnrollmentDraft {
   id               String   @id @default(cuid())
   bookingRequestId String   @unique

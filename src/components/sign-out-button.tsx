@@ -23,7 +23,7 @@ export function SignOutButton() {
       type="button"
       disabled={isPending}
       onClick={handleSignOut}
-      className={`rounded-full border border-border bg-white/70 px-4 py-2.5 text-sm font-semibold text-foreground transition hover:border-teal hover:text-teal ${
+      className={`rounded-full border border-[#dbe7ff] bg-white px-4 py-2.5 text-sm font-semibold text-[#111827] transition hover:-translate-y-0.5 hover:border-[#7C5CFF] hover:text-[#3B6CFF] ${
         isPending ? "cursor-not-allowed opacity-60" : ""
       }`}
     >

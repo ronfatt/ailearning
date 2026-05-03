@@ -1,8 +1,10 @@
 import { AdminIntakePanel } from "@/components/admin-intake-panel";
 import { AccessGuard } from "@/components/access-guard";
+import { DemoCasePlaybook } from "@/components/demo-case-playbook";
 import { MetricCard } from "@/components/metric-card";
 import { PageShell } from "@/components/page-shell";
 import { StatusPill } from "@/components/status-pill";
+import { WorkspaceHeroVisual } from "@/components/workspace-hero-visual";
 import { canAccessRole, getCurrentSession } from "@/lib/auth-session";
 import { getAdminConsoleData, formatIntakeStatus } from "@/lib/server/admin-console";
 import { getSupabaseIntegrationStatus } from "@/lib/supabase/config";
@@ -10,8 +12,11 @@ import { redirect } from "next/navigation";
 
 export default async function AdminPage() {
   const session = await getCurrentSession();
+  const isGuestPreview =
+    process.env.NODE_ENV !== "production" && session.user.role === "Guest";
 
   if (
+    !isGuestPreview &&
     !canAccessRole({
       currentRole: session.user.role,
       allowedRoles: ["Admin"],
@@ -27,7 +32,7 @@ export default async function AdminPage() {
     );
   }
 
-  if (!session.user.onboardingCompleted) {
+  if (!isGuestPreview && !session.user.onboardingCompleted) {
     redirect("/welcome");
   }
 
@@ -36,22 +41,35 @@ export default async function AdminPage() {
 
   return (
     <PageShell
-      title="Admin Oversight Console"
-      description="Admin keeps the system compliant and scalable by monitoring tutors, classes, payments, partnerships, referrals, AI logs, and approval workflows."
-      action={
-        <div className="rounded-[1.5rem] bg-gold-soft px-5 py-4 text-sm font-semibold text-[#8b5a13]">
-          Internal access only
-        </div>
+      title={isGuestPreview ? "Admin Dashboard Preview" : "Admin Oversight Console"}
+      description={
+        isGuestPreview
+          ? "Local preview mode is active, so you can test intake, enrolment, approvals, and AI logs directly."
+          : "Admin keeps the system compliant and scalable by monitoring tutors, classes, payments, partnerships, referrals, AI logs, and approval workflows."
       }
+      action={
+        isGuestPreview ? (
+          <div className="rounded-[1.5rem] bg-gold-soft px-5 py-4 text-sm font-semibold text-[#8b5a13]">
+            Preview mode · Admin test workspace
+          </div>
+        ) : (
+          <div className="rounded-[1.5rem] bg-gold-soft px-5 py-4 text-sm font-semibold text-[#8b5a13]">
+            Internal access only
+          </div>
+        )
+      }
+      visual={<WorkspaceHeroVisual role="admin" />}
       eyebrow="Admin Control Layer"
     >
+      {isGuestPreview ? <DemoCasePlaybook role="admin" /> : null}
+
       {adminData.message ? (
         <section className="glass-panel rounded-[2rem] border border-border p-5 text-sm leading-7 text-muted">
           {adminData.message}
         </section>
       ) : null}
 
-      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
         {adminData.metrics.map((metric) => (
           <MetricCard
             key={metric.label}
@@ -61,6 +79,110 @@ export default async function AdminPage() {
             tone={metric.tone}
           />
         ))}
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <article className="glass-panel rounded-[2rem] p-8">
+          <p className="text-sm font-medium text-muted">Intake Funnel</p>
+          <h2 className="mt-2 text-2xl font-semibold text-foreground">
+            What is moving through ops right now
+          </h2>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {adminData.intakeFunnel.map((item) => {
+              const tone =
+                item.tone === "mint"
+                  ? "from-[#20C997] to-[#12CFF3]"
+                  : item.tone === "gold"
+                    ? "from-[#FFD166] to-[#FF9F1C]"
+                    : item.tone === "purple"
+                      ? "from-[#7C5CFF] to-[#3B6CFF]"
+                      : "from-[#3B6CFF] to-[#12CFF3]";
+
+              return (
+                <article
+                  key={item.label}
+                  className="rounded-[1.75rem] border border-border bg-white/85 p-5"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                    <span className="text-3xl font-semibold text-foreground">
+                      {item.value}
+                    </span>
+                  </div>
+                  <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#eef4ff]">
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${tone}`}
+                      style={{ width: `${Math.min(100, Math.max(item.value * 18, 10))}%` }}
+                    />
+                  </div>
+                  <p className="mt-4 text-sm leading-7 text-muted">{item.note}</p>
+                </article>
+              );
+            })}
+          </div>
+        </article>
+
+        <article className="glass-panel rounded-[2rem] p-8">
+          <p className="text-sm font-medium text-muted">Tutor Workload</p>
+          <h2 className="mt-2 text-2xl font-semibold text-foreground">
+            Which tutors are carrying the current load
+          </h2>
+          <div className="mt-8 space-y-4">
+            {adminData.tutorWorkload.length === 0 ? (
+              <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
+                Tutor workload will appear once classes and student enrollments are active.
+              </div>
+            ) : (
+              adminData.tutorWorkload.map((item) => (
+                <article
+                  key={item.tutorName}
+                  className="rounded-[1.75rem] border border-border bg-white/85 p-5"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-lg font-semibold text-foreground">
+                      {item.tutorName}
+                    </p>
+                    <span className="rounded-full bg-[#eef4ff] px-3 py-1 text-xs font-semibold text-[#2f5bff]">
+                      {item.activeClasses} class{item.activeClasses === 1 ? "" : "es"}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-muted">{item.note}</p>
+                </article>
+              ))
+            )}
+          </div>
+        </article>
+      </section>
+
+      <section className="glass-panel rounded-[2rem] p-8">
+        <p className="text-sm font-medium text-muted">Class Occupancy</p>
+        <h2 className="mt-2 text-2xl font-semibold text-foreground">
+          Which classes are full, light, or still growing
+        </h2>
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          {adminData.classHealth.length === 0 ? (
+            <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted lg:col-span-3">
+              Class occupancy will appear when active classes and enrollments are available.
+            </div>
+          ) : (
+            adminData.classHealth.map((item) => (
+              <article
+                key={item.id}
+                className="rounded-[1.75rem] border border-border bg-white/85 p-5"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-lg font-semibold text-foreground">{item.title}</p>
+                  <span className="rounded-full bg-[#ecfdf5] px-3 py-1 text-xs font-semibold text-[#0f9b74]">
+                    {item.studentCount} student{item.studentCount === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm text-muted">{item.subjectName}</p>
+                <p className="mt-2 text-sm text-muted">Tutor: {item.tutorName}</p>
+                <p className="mt-2 text-sm text-muted">Schedule: {item.schedule}</p>
+              </article>
+            ))
+          )}
+        </div>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
@@ -236,6 +358,10 @@ export default async function AdminPage() {
           status: formatIntakeStatus(item.status),
         }))}
         tutorApplications={adminData.tutorApplications.map((item) => ({
+          ...item,
+          status: formatIntakeStatus(item.status),
+        }))}
+        contactEnquiries={adminData.contactEnquiries.map((item) => ({
           ...item,
           status: formatIntakeStatus(item.status),
         }))}

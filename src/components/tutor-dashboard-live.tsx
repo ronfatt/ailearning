@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 
+import { promptRoleAssistant } from "@/components/role-assistant-chatbox";
 import { StatusPill } from "@/components/status-pill";
 import type { ApprovalStatus } from "@/lib/mvp-data";
 
@@ -82,6 +83,16 @@ type TutorDashboardResponse = {
       score: string;
       tutorFeedback: string;
       needsReview: boolean;
+      submissionPreview?: {
+        summary?: string;
+        lines: string[];
+      };
+      answerDetails: Array<{
+        questionId: string;
+        prompt: string;
+        answer: string;
+        feedback: string;
+      }>;
     }>;
     todaysClasses: Array<{
       id: string;
@@ -513,7 +524,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
   const [isPending, startTransition] = useTransition();
   const [workspaceMode, setWorkspaceMode] = useState<"focus" | "full">("focus");
   const [reviewDrafts, setReviewDrafts] = useState<
-    Record<string, { score: string; tutorFeedback: string }>
+    Record<string, { score: string; tutorFeedback: string; questionFeedback: string[] }>
   >({});
   const [studyPlanDrafts, setStudyPlanDrafts] = useState<
     Record<
@@ -686,16 +697,45 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
 
   function updateReviewDraft(
     submissionId: string,
-    nextValue: Partial<{ score: string; tutorFeedback: string }>,
+    nextValue: Partial<{
+      score: string;
+      tutorFeedback: string;
+      questionFeedback: string[];
+    }>,
   ) {
     setReviewDrafts((current) => ({
       ...current,
       [submissionId]: {
         score: current[submissionId]?.score ?? "",
         tutorFeedback: current[submissionId]?.tutorFeedback ?? "",
+        questionFeedback: current[submissionId]?.questionFeedback ?? [],
         ...nextValue,
       },
     }));
+  }
+
+  function updateQuestionFeedbackDraft(
+    submissionId: string,
+    answerIndex: number,
+    value: string,
+  ) {
+    setReviewDrafts((current) => {
+      const existing = current[submissionId] ?? {
+        score: "",
+        tutorFeedback: "",
+        questionFeedback: [],
+      };
+      const questionFeedback = [...existing.questionFeedback];
+      questionFeedback[answerIndex] = value;
+
+      return {
+        ...current,
+        [submissionId]: {
+          ...existing,
+          questionFeedback,
+        },
+      };
+    });
   }
 
   function updateStudyPlanTopicDraft(
@@ -869,20 +909,22 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
     });
   }
 
-  function submitTutorReview(submissionId: string) {
+  function submitTutorReview(
+    item: TutorDashboardResponse["data"]["submissionReviewQueue"][number],
+  ) {
     if (!tutorId) {
       return;
     }
 
-    const draft = reviewDrafts[submissionId];
+    const draft = reviewDrafts[item.id];
 
     startTransition(() => {
       setState((current) => ({
         ...current,
-        busyId: submissionId,
+        busyId: item.id,
       }));
 
-      void fetch(`/api/homework-submissions/${submissionId}`, {
+      void fetch(`/api/homework-submissions/${item.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -894,6 +936,14 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
               ? Number(draft.score)
               : undefined,
           tutorFeedback: draft?.tutorFeedback,
+          questionFeedback: item.answerDetails.map((detail, index) => ({
+            questionId: detail.questionId,
+            prompt: detail.prompt,
+            answer: detail.answer,
+            feedback:
+              draft?.questionFeedback[index]?.trim() ??
+              detail.feedback,
+          })),
         }),
       })
         .then(async (response) => {
@@ -917,7 +967,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           syncStudyPlanDrafts(payload.data);
           setReviewDrafts((current) => {
             const next = { ...current };
-            delete next[submissionId];
+            delete next[item.id];
             return next;
           });
         })
@@ -1242,6 +1292,25 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
     return null;
   }
 
+  function askTutorAssistant(message: string) {
+    promptRoleAssistant({
+      role: "tutor",
+      message,
+    });
+  }
+
+  function getStudentPriorityTone(priority: "high" | "medium" | "steady") {
+    if (priority === "high") {
+      return "bg-[#fff0f3] text-[#e25575]";
+    }
+
+    if (priority === "medium") {
+      return "bg-[#fff4dd] text-[#a86b00]";
+    }
+
+    return "bg-[#ecfdf5] text-[#0f9b74]";
+  }
+
   const selectedClassIntelligence =
     state.data.classIntelligence.find((item) => item.classId === selectedClassId) ??
     state.data.classIntelligence[0] ??
@@ -1254,6 +1323,12 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
     state.data.afterClassFollowUp.find((item) => item.classId === selectedClassId) ??
     state.data.afterClassFollowUp[0] ??
     null;
+  const selectedClassHeatmap =
+    selectedClassIntelligence
+      ? state.data.weakTopicHeatmap.filter(
+          (item) => item.className === selectedClassIntelligence.className,
+        )
+      : [];
   const selectedIntelligenceDraft = selectedClassIntelligence
     ? intelligenceDrafts[selectedClassIntelligence.classId] ?? {
         aiInsight: selectedClassIntelligence.aiInsight,
@@ -1337,11 +1412,20 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                 Everything the tutor needs during the session
               </h2>
             </div>
-            {selectedLiveWorkspace ? (
-              <span className="rounded-full bg-gold-soft px-4 py-2 text-sm font-semibold text-[#8b5a13]">
-                {selectedLiveWorkspace.sessionStatus}
-              </span>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => askTutorAssistant("Which student needs attention?")}
+                className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]"
+              >
+                Ask AI
+              </button>
+              {selectedLiveWorkspace ? (
+                <span className="rounded-full bg-gold-soft px-4 py-2 text-sm font-semibold text-[#8b5a13]">
+                  {selectedLiveWorkspace.sessionStatus}
+                </span>
+              ) : null}
+            </div>
           </div>
 
           {selectedLiveWorkspace ? (
@@ -1571,6 +1655,174 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
         </article>
       </section>
 
+      <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <article className="glass-panel rounded-[2rem] p-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-muted">Student Growth Panel</p>
+              <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                Who is improving, steady, or stalled right now
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => askTutorAssistant("Which learner is improving and who is stalled?")}
+              className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]"
+            >
+              Ask AI
+            </button>
+          </div>
+
+          {selectedLiveWorkspace ? (
+            <div className="mt-8 grid gap-4">
+              {selectedLiveWorkspace.studentSignals.map((student) => (
+                <article
+                  key={`growth-${student.studentId}`}
+                  className="rounded-[1.5rem] border border-border bg-white/80 p-5"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-semibold text-foreground">
+                        {student.studentName}
+                      </p>
+                      <p className="mt-1 text-sm text-muted">{student.coachNote}</p>
+                    </div>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${getStudentPriorityTone(student.priority)}`}
+                    >
+                      {student.priority === "high"
+                        ? "Needs intervention"
+                        : student.priority === "medium"
+                          ? "Watch this cycle"
+                          : "Steady progress"}
+                    </span>
+                  </div>
+                  <div className="mt-4 grid gap-3 text-sm text-muted sm:grid-cols-2">
+                    <div className="rounded-2xl bg-[#eef4ff] px-4 py-3 text-[#2f5bff]">
+                      {student.readinessLabel}
+                    </div>
+                    <div className="rounded-2xl bg-[#f3f7ff] px-4 py-3">
+                      {student.masteryLabel}
+                    </div>
+                    <div className="rounded-2xl bg-[#ecfdf5] px-4 py-3 text-[#0f9b74]">
+                      {student.attendanceLabel}
+                    </div>
+                    <div className="rounded-2xl bg-[#fff4dd] px-4 py-3 text-[#a86b00]">
+                      {student.homeworkLabel}
+                    </div>
+                  </div>
+                  {student.recentActionLabel ? (
+                    <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-teal">
+                      Latest tutor action: {student.recentActionLabel}
+                    </p>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
+              Student growth signals will appear here once the tutor has a linked class with readiness,
+              attendance, homework, and mastery data.
+            </div>
+          )}
+        </article>
+
+        <article className="glass-panel rounded-[2rem] p-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-muted">Class Trend Panel</p>
+              <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                What the whole class trend looks like this week
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => askTutorAssistant("Summarise the class trend for this week.")}
+              className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]"
+            >
+              Ask AI
+            </button>
+          </div>
+
+          {selectedClassIntelligence ? (
+            <>
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#3B6CFF]">
+                    Readiness Trend
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold text-foreground">
+                    {selectedClassIntelligence.readinessScore}%
+                  </p>
+                  <p className="mt-3 text-sm text-muted">
+                    Current tutor-approved pre-class baseline for the selected class.
+                  </p>
+                </div>
+                <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#20C997]">
+                    Participation Trend
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold text-foreground">
+                    {selectedClassIntelligence.participationScore}%
+                  </p>
+                  <p className="mt-3 text-sm text-muted">
+                    Class energy signal based on recent completed teaching cycles.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-[1.75rem] border border-border bg-[#103b35] p-6 text-white">
+                <p className="text-sm font-medium text-white/70">Tutor takeaway</p>
+                <p className="mt-3 text-lg font-semibold text-white">
+                  {selectedClassIntelligence.teachingPattern}
+                </p>
+                <p className="mt-4 text-sm leading-7 text-white/88">
+                  {selectedClassIntelligence.aiInsight}
+                </p>
+                <p className="mt-3 text-sm leading-7 text-[#b8efe4]">
+                  Next move: {selectedClassIntelligence.nextMove}
+                </p>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                {selectedClassHeatmap.length === 0 ? (
+                  <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
+                    Weak-topic trend cards will appear here when the class has enough mastery or readiness signals.
+                  </div>
+                ) : (
+                  selectedClassHeatmap.slice(0, 3).map((item) => (
+                    <div
+                      key={`${item.className}-${item.topic}-trend`}
+                      className="rounded-[1.5rem] border border-border bg-white/80 p-5"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-base font-semibold text-foreground">
+                          {item.topic}
+                        </p>
+                        <span className="rounded-full bg-[#fff0f3] px-3 py-1 text-xs font-semibold text-[#e25575]">
+                          {item.intensity}% risk
+                        </span>
+                      </div>
+                      <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#eef4ff]">
+                        <div
+                          className="h-full rounded-full bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)]"
+                          style={{ width: `${item.intensity}%` }}
+                        />
+                      </div>
+                      <p className="mt-3 text-sm leading-7 text-muted">{item.note}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
+              Class trend data will appear here once the selected class has live intelligence and weak-topic signals.
+            </div>
+          )}
+        </article>
+      </section>
+
       <section id="after-class-follow-up" className="grid gap-6 xl:grid-cols-[1fr]">
         <article className="glass-panel rounded-[2rem] p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -1756,20 +2008,29 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                 Trigger real tutor-facing actions
               </h2>
             </div>
-            <label className="space-y-2">
-              <span className="text-sm font-medium text-muted">Target class</span>
-              <select
-                value={selectedClassId}
-                onChange={(event) => setSelectedClassId(event.target.value)}
-                className="rounded-xl border border-border bg-white/80 px-3 py-2 text-sm font-medium text-foreground outline-none transition focus:border-teal"
+            <div className="flex flex-wrap items-end gap-3">
+              <button
+                type="button"
+                onClick={() => askTutorAssistant("What should I do first today?")}
+                className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]"
               >
-                {state.data.todaysClasses.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+                Ask AI
+              </button>
+              <label className="space-y-2">
+                <span className="text-sm font-medium text-muted">Target class</span>
+                <select
+                  value={selectedClassId}
+                  onChange={(event) => setSelectedClassId(event.target.value)}
+                  className="rounded-xl border border-border bg-white/80 px-3 py-2 text-sm font-medium text-foreground outline-none transition focus:border-teal"
+                >
+                  {state.data.todaysClasses.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </div>
           <div className="mt-8 grid gap-4 lg:grid-cols-5">
             <button
@@ -2565,10 +2826,21 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
 
       <section className="grid gap-6 xl:grid-cols-[1fr]">
         <article className="glass-panel rounded-[2rem] p-8">
-          <p className="text-sm font-medium text-muted">Homework Reviews</p>
-          <h2 className="mt-2 text-2xl font-semibold text-foreground">
-            Student submissions waiting for tutor feedback
-          </h2>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-muted">Homework Reviews</p>
+              <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                Student submissions waiting for tutor feedback
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => askTutorAssistant("How should I handle follow-up after class?")}
+              className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]"
+            >
+              Ask AI
+            </button>
+          </div>
           <div className="mt-8 space-y-4">
             {state.data.submissionReviewQueue.length === 0 ? (
               <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
@@ -2582,6 +2854,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                     item.tutorFeedback === "Pending tutor feedback"
                       ? ""
                       : item.tutorFeedback,
+                  questionFeedback: item.answerDetails.map((detail) => detail.feedback),
                 };
 
                 return (
@@ -2603,6 +2876,48 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                       </span>
                     </div>
                     <div className="mt-5 grid gap-4 lg:grid-cols-[140px_1fr_auto]">
+                      {item.submissionPreview ? (
+                        <div className="lg:col-span-3">
+                          <DraftPreviewCard
+                            draftPreview={item.submissionPreview}
+                            label="Student submission"
+                          />
+                        </div>
+                      ) : null}
+                      {item.answerDetails.length > 0 ? (
+                        <div className="lg:col-span-3 space-y-3">
+                          {item.answerDetails.map((detail, index) => (
+                            <div
+                              key={`${item.id}-${detail.questionId}`}
+                              className="rounded-[1.5rem] border border-border bg-white/85 p-4"
+                            >
+                              <p className="text-sm font-semibold text-foreground">
+                                {detail.prompt}
+                              </p>
+                              <p className="mt-2 text-sm leading-7 text-muted">
+                                Student answer: {detail.answer}
+                              </p>
+                              <label className="mt-3 block space-y-2">
+                                <span className="text-sm font-medium text-muted">
+                                  Per-question feedback
+                                </span>
+                                <textarea
+                                  rows={2}
+                                  value={draft.questionFeedback[index] ?? ""}
+                                  onChange={(event) =>
+                                    updateQuestionFeedbackDraft(
+                                      item.id,
+                                      index,
+                                      event.target.value,
+                                    )
+                                  }
+                                  className="w-full rounded-2xl border border-border bg-surface-strong px-4 py-3 text-sm text-foreground outline-none transition focus:border-teal"
+                                />
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                       <label className="space-y-2">
                         <span className="text-sm font-medium text-muted">Score</span>
                         <input
@@ -2635,9 +2950,12 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                           disabled={
                             state.busyId === item.id ||
                             (draft.score.trim().length === 0 &&
-                              draft.tutorFeedback.trim().length === 0)
+                              draft.tutorFeedback.trim().length === 0 &&
+                              draft.questionFeedback.every(
+                                (entry) => entry.trim().length === 0,
+                              ))
                           }
-                          onClick={() => submitTutorReview(item.id)}
+                          onClick={() => submitTutorReview(item)}
                           className={`rounded-full bg-teal px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#09443c] ${
                             state.busyId === item.id
                               ? "cursor-not-allowed opacity-60"

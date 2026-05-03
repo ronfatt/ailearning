@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { AccessGuard } from "@/components/access-guard";
+import { DemoCasePlaybook } from "@/components/demo-case-playbook";
 import { PageShell } from "@/components/page-shell";
+import { RoleAssistantChatbox } from "@/components/role-assistant-chatbox";
 import { TutorDashboardLive } from "@/components/tutor-dashboard-live";
+import { WorkspaceHeroVisual } from "@/components/workspace-hero-visual";
 import { canAccessRole, getCurrentSession } from "@/lib/auth-session";
 import { platformSummary } from "@/lib/mvp-data";
 import { redirect } from "next/navigation";
@@ -9,6 +12,8 @@ import { redirect } from "next/navigation";
 export default async function TutorPage() {
   const session = await getCurrentSession();
   const tutorDashboardId = session.user.id ?? "tutor_farrah_01";
+  const isGuestPreview =
+    process.env.NODE_ENV !== "production" && session.user.role === "Guest";
   const tutorDashboardName =
     session.isAuthenticated ? session.user.name : "Tutor workspace";
   const quickStartSteps = [
@@ -39,6 +44,7 @@ export default async function TutorPage() {
   ] as const;
 
   if (
+    !isGuestPreview &&
     !canAccessRole({
       currentRole: session.user.role,
       allowedRoles: ["Tutor"],
@@ -54,20 +60,39 @@ export default async function TutorPage() {
     );
   }
 
-  if (!session.user.onboardingCompleted) {
+  if (!isGuestPreview && !session.user.onboardingCompleted) {
     redirect("/welcome");
   }
 
   return (
     <PageShell
-      title={`Tutor Dashboard for ${tutorDashboardName}`}
-      description="Plan lessons, run live classes, approve follow-up, and keep parents informed from one workspace."
-      action={
-        <div className="rounded-[1.5rem] bg-teal px-5 py-4 text-sm font-semibold text-white">
-          Next class: {platformSummary.className} at 8:00 PM
-        </div>
+      title={
+        isGuestPreview
+          ? "Tutor Dashboard Preview"
+          : `Tutor Dashboard for ${tutorDashboardName}`
       }
+      description={
+        isGuestPreview
+          ? "Local preview mode is active, so you can test live class tools, approvals, and follow-up workflows directly."
+          : "Plan lessons, run live classes, approve follow-up, and keep parents informed from one workspace."
+      }
+      action={
+        isGuestPreview ? (
+          <div className="rounded-[1.5rem] bg-gold-soft px-5 py-4 text-sm font-semibold text-[#8b5a13]">
+            Preview mode · Tutor test workspace
+          </div>
+        ) : (
+          <div className="rounded-[1.5rem] bg-teal px-5 py-4 text-sm font-semibold text-white">
+            Next class: {platformSummary.className} at 8:00 PM
+          </div>
+        )
+      }
+      visual={<WorkspaceHeroVisual role="tutor" />}
     >
+      <RoleAssistantChatbox role="tutor" roleId={tutorDashboardId} />
+
+      {isGuestPreview ? <DemoCasePlaybook role="tutor" /> : null}
+
       <section className="grid gap-4 lg:grid-cols-3">
         {quickStartSteps.map((step) => (
           <article key={step.title} className="glass-panel rounded-[1.75rem] p-6">

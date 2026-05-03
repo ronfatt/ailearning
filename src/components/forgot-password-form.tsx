@@ -62,32 +62,32 @@ export function ForgotPasswordForm() {
 
   if (success) {
     return (
-      <div className="rounded-[2.2rem] border border-border bg-white/82 p-6 shadow-[0_24px_60px_rgba(13,92,82,0.08)]">
-        <p className="text-sm font-medium text-teal">Check your email</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+      <div className="w-full rounded-[2rem] border border-[#e6ecf5] bg-white/96 p-7 shadow-[0_24px_60px_rgba(59,108,255,0.1)] sm:p-8">
+        <p className="text-sm font-medium text-[#3B6CFF]">Check your email</p>
+        <h2 className="mt-2 text-[2rem] font-semibold leading-tight tracking-tight text-[#111827] sm:text-[2.15rem]">
           Password reset started
         </h2>
-        <p className="mt-4 text-sm leading-7 text-muted">{success.message}</p>
+        <p className="mt-4 text-sm leading-7 text-[#5B6472]">{success.message}</p>
         {success.debugResetUrl ? (
-          <div className="mt-5 rounded-[1.5rem] border border-border bg-surface-strong p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal">
+          <div className="mt-5 rounded-[1.5rem] border border-[#e6ecf5] bg-[#f8fbff] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#3B6CFF]">
               Local testing link
             </p>
             <Link
               href={success.debugResetUrl}
-              className="mt-3 block break-all text-sm font-semibold text-teal"
+              className="mt-3 block break-all text-sm font-semibold text-[#3B6CFF]"
             >
               {success.debugResetUrl}
             </Link>
           </div>
         ) : null}
-        <div className="mt-6 flex flex-wrap gap-4 text-sm leading-7 text-muted">
-          <Link href="/login" className="font-semibold text-teal">
+        <div className="mt-6 flex flex-wrap gap-4 text-sm leading-7 text-[#5B6472]">
+          <Link href="/login" className="font-semibold text-[#3B6CFF]">
             Back to login
           </Link>
           <button
             type="button"
-            className="font-semibold text-teal"
+            className="font-semibold text-[#3B6CFF]"
             onClick={() => {
               setSuccess(null);
               setEmail("");
@@ -103,41 +103,41 @@ export function ForgotPasswordForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-[2.2rem] border border-border bg-white/82 p-6 shadow-[0_24px_60px_rgba(13,92,82,0.08)]"
+      className="w-full rounded-[2rem] border border-[#e6ecf5] bg-white/96 p-7 shadow-[0_24px_60px_rgba(59,108,255,0.1)] sm:p-8"
     >
       <div className="space-y-2">
-        <p className="text-sm font-medium text-muted">Password reset</p>
-        <h2 className="text-3xl font-semibold tracking-tight text-foreground">
+        <p className="text-sm font-medium text-[#5B6472]">Password reset</p>
+        <h2 className="text-[2rem] font-semibold leading-tight tracking-tight text-[#111827] sm:text-[2.15rem]">
           Reset your password
         </h2>
-        <p className="text-sm leading-7 text-muted">
+        <p className="text-sm leading-7 text-[#5B6472]">
           Enter your email and we will send reset instructions if the account exists.
         </p>
       </div>
       <label className="mt-6 block space-y-2">
-        <span className="text-sm font-medium text-muted">Email address</span>
+        <span className="text-sm font-medium text-[#5B6472]">Email address</span>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="name@example.com"
-          className="w-full rounded-[1.25rem] border border-border bg-white px-4 py-3 text-sm text-foreground outline-none transition focus:border-teal focus:ring-2 focus:ring-[#d7efe9]"
+          className="w-full rounded-[1.25rem] border border-[#e6ecf5] bg-white px-4 py-3 text-sm text-[#111827] outline-none transition focus:border-[#3B6CFF] focus:ring-2 focus:ring-[#dbeafe]"
           required
         />
       </label>
       <button
         type="submit"
         disabled={isPending}
-        className={`mt-6 w-full rounded-full bg-teal px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(13,92,82,0.18)] transition hover:-translate-y-0.5 hover:bg-[#09443c] ${
+        className={`mt-6 w-full rounded-full bg-[linear-gradient(135deg,#3B6CFF_0%,#7C5CFF_100%)] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(59,108,255,0.2)] transition hover:-translate-y-0.5 hover:opacity-95 ${
           isPending ? "cursor-not-allowed opacity-60" : ""
         }`}
       >
         {isPending ? "Sending reset link..." : "Send reset link"}
       </button>
-      {error ? <p className="mt-4 text-sm leading-7 text-coral">{error}</p> : null}
-      <p className="mt-4 text-sm leading-7 text-muted">
+      {error ? <p className="mt-4 text-sm leading-7 text-[#FF6B6B]">{error}</p> : null}
+      <p className="mt-4 text-sm leading-7 text-[#5B6472]">
         Remembered it?{" "}
-        <Link href="/login" className="font-semibold text-teal">
+        <Link href="/login" className="font-semibold text-[#3B6CFF]">
           Back to login
         </Link>
       </p>

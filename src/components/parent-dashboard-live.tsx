@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { MetricCard } from "@/components/metric-card";
+import { promptRoleAssistant } from "@/components/role-assistant-chatbox";
 import { StatusPill } from "@/components/status-pill";
 
 type ParentDashboardResponse = {
@@ -24,11 +25,32 @@ type ParentDashboardResponse = {
       score: string;
       tutorFeedback: string;
       submittedAt: string;
+      versionCount: number;
+      progressNote: string;
     }>;
     insights: Array<{
       label: string;
       value: string;
       note: string;
+    }>;
+    progressSnapshot: {
+      averageMastery: number | null;
+      attendanceRate: number | null;
+      homeworkCompletionRate: number | null;
+      reviewedHomeworkCount: number;
+    };
+    progressSeries: Array<{
+      label: string;
+      value: number;
+      note: string;
+      tone: "blue" | "mint" | "gold" | "purple";
+    }>;
+    learningHistory: Array<{
+      id: string;
+      title: string;
+      detail: string;
+      dateLabel: string;
+      type: "class" | "homework" | "mastery" | "report";
     }>;
     reportTrace: string[];
     reportWindow: string;
@@ -145,6 +167,61 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
 
   if (!state.data) {
     return null;
+  }
+
+  function askParentAssistant(message: string) {
+    promptRoleAssistant({
+      role: "parent",
+      message,
+    });
+  }
+
+  function getSeriesTone(
+    tone: ParentDashboardResponse["data"]["progressSeries"][number]["tone"],
+  ) {
+    if (tone === "mint") {
+      return {
+        bar: "from-[#20C997] to-[#12CFF3]",
+        chip: "bg-[#ecfdf5] text-[#0f9b74]",
+      };
+    }
+
+    if (tone === "gold") {
+      return {
+        bar: "from-[#FFD166] to-[#FF9F1C]",
+        chip: "bg-[#fff4dd] text-[#a86b00]",
+      };
+    }
+
+    if (tone === "purple") {
+      return {
+        bar: "from-[#7C5CFF] to-[#3B6CFF]",
+        chip: "bg-[#f3e8ff] text-[#7c5cff]",
+      };
+    }
+
+    return {
+      bar: "from-[#3B6CFF] to-[#12CFF3]",
+      chip: "bg-[#e7f0ff] text-[#2f5bff]",
+    };
+  }
+
+  function getHistoryTone(
+    type: ParentDashboardResponse["data"]["learningHistory"][number]["type"],
+  ) {
+    if (type === "class") {
+      return "bg-[#e7f0ff] text-[#2f5bff]";
+    }
+
+    if (type === "homework") {
+      return "bg-[#ecfdf5] text-[#0f9b74]";
+    }
+
+    if (type === "mastery") {
+      return "bg-[#fff4dd] text-[#a86b00]";
+    }
+
+    return "bg-[#f3e8ff] text-[#7c5cff]";
   }
 
   return (
@@ -296,7 +373,16 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
                 Progress summary for {state.data.studentName}
               </h2>
             </div>
-            {state.data.latestReport ? <StatusPill status="approved" /> : null}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => askParentAssistant("Summarise my child's progress")}
+                className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#20C997]"
+              >
+                Ask AI
+              </button>
+              {state.data.latestReport ? <StatusPill status="approved" /> : null}
+            </div>
           </div>
           <div className="mt-8 rounded-[1.75rem] bg-surface-strong p-6">
             <p className="text-sm leading-8 text-muted">
@@ -337,11 +423,158 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
         </div>
       </section>
 
-      <section id="homework-feedback" className="glass-panel rounded-[2rem] p-8">
-        <p className="text-sm font-medium text-muted">Recent Tutor Feedback</p>
+      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <article className="glass-panel rounded-[2rem] p-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-muted">Child Progress Snapshot</p>
+              <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                See the learning trend clearly
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => askParentAssistant("Summarise my child's learning trend.")}
+              className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#20C997]"
+            >
+              Ask AI
+            </button>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#3B6CFF]">
+                Average Mastery
+              </p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {state.data.progressSnapshot.averageMastery !== null
+                  ? `${state.data.progressSnapshot.averageMastery}%`
+                  : "Pending"}
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#20C997]">
+                Attendance
+              </p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {state.data.progressSnapshot.attendanceRate !== null
+                  ? `${state.data.progressSnapshot.attendanceRate}%`
+                  : "Pending"}
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#FF9F1C]">
+                Homework Completion
+              </p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {state.data.progressSnapshot.homeworkCompletionRate !== null
+                  ? `${state.data.progressSnapshot.homeworkCompletionRate}%`
+                  : "Pending"}
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]">
+                Reviewed Homework
+              </p>
+              <p className="mt-3 text-3xl font-semibold text-foreground">
+                {state.data.progressSnapshot.reviewedHomeworkCount}
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article className="glass-panel rounded-[2rem] p-8">
+          <p className="text-sm font-medium text-muted">Progress Chart</p>
+          <h2 className="mt-2 text-2xl font-semibold text-foreground">
+            Parent-friendly view of this learning cycle
+          </h2>
+          <div className="mt-8 grid gap-5 lg:grid-cols-4">
+            {state.data.progressSeries.map((item) => {
+              const tone = getSeriesTone(item.tone);
+
+              return (
+                <div
+                  key={item.label}
+                  className="rounded-[1.75rem] border border-border bg-white/85 p-5"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                    <span
+                      className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${tone.chip}`}
+                    >
+                      {item.value}%
+                    </span>
+                  </div>
+                  <div className="mt-5 flex h-40 items-end">
+                    <div className="relative w-full overflow-hidden rounded-[1.5rem] bg-[#eef4ff]">
+                      <div
+                        className={`w-full rounded-[1.5rem] bg-gradient-to-t ${tone.bar} transition-all duration-500`}
+                        style={{ height: `${Math.max(item.value, 8)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm leading-7 text-muted">{item.note}</p>
+                </div>
+              );
+            })}
+          </div>
+        </article>
+      </section>
+
+      <section className="glass-panel rounded-[2rem] p-8">
+        <p className="text-sm font-medium text-muted">Learning History</p>
         <h2 className="mt-2 text-2xl font-semibold text-foreground">
-          Homework feedback parents can actually understand
+          Recent class, homework, and report timeline
         </h2>
+        <div className="mt-8 space-y-4">
+          {state.data.learningHistory.length === 0 ? (
+            <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
+              Learning history will appear here after the first tutor-reviewed cycle.
+            </div>
+          ) : (
+            state.data.learningHistory.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-[1.5rem] border border-border bg-white/80 p-5"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${getHistoryTone(item.type)}`}
+                    >
+                      {item.type}
+                    </span>
+                    <p className="text-base font-semibold text-foreground">
+                      {item.title}
+                    </p>
+                  </div>
+                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted">
+                    {item.dateLabel}
+                  </p>
+                </div>
+                <p className="mt-3 text-sm leading-7 text-muted">{item.detail}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section id="homework-feedback" className="glass-panel rounded-[2rem] p-8">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-muted">Recent Tutor Feedback</p>
+            <h2 className="mt-2 text-2xl font-semibold text-foreground">
+              Homework feedback parents can actually understand
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={() => askParentAssistant("Explain the latest homework feedback")}
+            className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#20C997]"
+          >
+            Ask AI
+          </button>
+        </div>
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
           {state.data.recentHomeworkFeedback.length === 0 ? (
             <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted lg:col-span-3">
@@ -357,11 +590,23 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
                 <p className="mt-2 text-sm font-medium text-teal">
                   Score: {item.score}
                 </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    askParentAssistant(`Explain the feedback for ${item.title}.`)
+                  }
+                  className="mt-3 rounded-full border border-[#dbe7ff] bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#20C997] transition hover:-translate-y-0.5"
+                >
+                  Ask AI
+                </button>
                 <p className="mt-2 text-sm leading-7 text-muted">
                   {item.tutorFeedback}
                 </p>
+                <p className="mt-2 text-sm leading-7 text-[#2f5bff]">
+                  {item.progressNote}
+                </p>
                 <p className="mt-3 text-xs uppercase tracking-[0.18em] text-muted">
-                  Submitted {item.submittedAt}
+                  Submitted {item.submittedAt} · {item.versionCount === 1 ? "First version" : `${item.versionCount} versions`}
                 </p>
               </article>
             ))

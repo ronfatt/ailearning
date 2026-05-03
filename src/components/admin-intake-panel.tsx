@@ -24,6 +24,16 @@ type TutorApplicationItem = {
   submittedAt: string;
 };
 
+type ContactInquiryItem = {
+  id: string;
+  fullName: string;
+  email: string;
+  enquiryType: string;
+  organization: string;
+  status: string;
+  submittedAt: string;
+};
+
 type EnrollmentDraftItem = {
   id: string;
   studentId: string | null;
@@ -63,6 +73,7 @@ type ClassRoster = {
 type AdminIntakePanelProps = {
   bookingRequests: BookingRequestItem[];
   tutorApplications: TutorApplicationItem[];
+  contactEnquiries: ContactInquiryItem[];
   enrollmentDrafts: EnrollmentDraftItem[];
   tutorOptions: TutorOption[];
   classOptions: ClassOption[];
@@ -80,6 +91,7 @@ const applicationStatuses = [
 export function AdminIntakePanel({
   bookingRequests,
   tutorApplications,
+  contactEnquiries,
   enrollmentDrafts,
   tutorOptions,
   classOptions,
@@ -115,6 +127,7 @@ export function AdminIntakePanel({
       ]),
     ),
   );
+  const contactStatuses = bookingStatuses;
 
   function runMutation(
     key: string,
@@ -297,6 +310,68 @@ export function AdminIntakePanel({
             )}
           </div>
         </article>
+      </section>
+
+      <section className="glass-panel rounded-[2rem] p-8">
+        <p className="text-sm font-medium text-muted">General Contact Queue</p>
+        <h2 className="mt-2 text-2xl font-semibold text-foreground">
+          Contact enquiries that need routing or response
+        </h2>
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+          {contactEnquiries.length === 0 ? (
+            <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted lg:col-span-2">
+              No general contact enquiries are waiting right now.
+            </div>
+          ) : (
+            contactEnquiries.map((item) => (
+              <article
+                key={item.id}
+                className="rounded-[1.75rem] border border-border bg-surface-strong p-5"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-lg font-semibold text-foreground">
+                      {item.fullName}
+                    </p>
+                    <p className="text-sm text-muted">{item.email}</p>
+                  </div>
+                  <div className="rounded-full bg-teal-soft px-3 py-1 text-xs font-semibold text-teal">
+                    {item.status}
+                  </div>
+                </div>
+                <div className="mt-4 space-y-2 text-sm text-muted">
+                  <p>Enquiry type: {item.enquiryType}</p>
+                  <p>Organisation: {item.organization}</p>
+                  <p>Submitted: {item.submittedAt}</p>
+                </div>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {contactStatuses.map((status) => (
+                    <button
+                      key={`${item.id}-${status}`}
+                      type="button"
+                      disabled={isPending || busyKey === `${item.id}-${status}`}
+                      onClick={() =>
+                        runMutation(
+                          `${item.id}-${status}`,
+                          `/api/contact/${item.id}`,
+                          {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ status }),
+                          },
+                          "Unable to update contact enquiry status.",
+                        )
+                      }
+                      className="rounded-full border border-border bg-white/80 px-3 py-2 text-xs font-semibold text-foreground transition hover:border-teal hover:text-teal disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Mark {status}
+                    </button>
+                  ))}
+                </div>
+              </article>
+            ))
+          )}
+        </div>
       </section>
 
       <section className="glass-panel rounded-[2rem] p-8">

@@ -11,6 +11,7 @@ import {
   average,
   formatDateTime,
   getAttendanceRate,
+  getJsonObjectArray,
   getJsonString,
 } from "@/lib/server/dashboard-helpers";
 import { getVersionHistory } from "@/lib/server/workflow-api";
@@ -28,6 +29,28 @@ type ParentInsight = {
   note: string;
 };
 
+type ParentProgressSnapshot = {
+  averageMastery: number | null;
+  attendanceRate: number | null;
+  homeworkCompletionRate: number | null;
+  reviewedHomeworkCount: number;
+};
+
+type ParentProgressSeriesItem = {
+  label: string;
+  value: number;
+  note: string;
+  tone: "blue" | "mint" | "gold" | "purple";
+};
+
+type ParentHistoryItem = {
+  id: string;
+  title: string;
+  detail: string;
+  dateLabel: string;
+  type: "class" | "homework" | "mastery" | "report";
+};
+
 export type ParentDashboardData = {
   metrics: ParentMetric[];
   latestReport: {
@@ -41,8 +64,13 @@ export type ParentDashboardData = {
     score: string;
     tutorFeedback: string;
     submittedAt: string;
+    versionCount: number;
+    progressNote: string;
   }>;
   insights: ParentInsight[];
+  progressSnapshot: ParentProgressSnapshot;
+  progressSeries: ParentProgressSeriesItem[];
+  learningHistory: ParentHistoryItem[];
   reportTrace: string[];
   reportWindow: string;
   studentName: string;
@@ -98,6 +126,14 @@ export async function getParentDashboardData(
       latestReport: null,
       recentHomeworkFeedback: [],
       insights: [],
+      progressSnapshot: {
+        averageMastery: null,
+        attendanceRate: null,
+        homeworkCompletionRate: null,
+        reviewedHomeworkCount: 0,
+      },
+      progressSeries: [],
+      learningHistory: [],
       reportTrace: [],
       reportWindow: "Connect database to load live parent reporting",
       studentName: "Linked student pending",
@@ -127,6 +163,14 @@ export async function getParentDashboardData(
       latestReport: null,
       recentHomeworkFeedback: [],
       insights: [],
+      progressSnapshot: {
+        averageMastery: null,
+        attendanceRate: null,
+        homeworkCompletionRate: null,
+        reviewedHomeworkCount: 0,
+      },
+      progressSeries: [],
+      learningHistory: [],
       reportTrace: [],
       reportWindow: "No linked child found",
       studentName: "Student linkage required",
@@ -199,6 +243,14 @@ export async function getParentDashboardData(
       latestReport: null,
       recentHomeworkFeedback: [],
       insights: [],
+      progressSnapshot: {
+        averageMastery: null,
+        attendanceRate: null,
+        homeworkCompletionRate: null,
+        reviewedHomeworkCount: 0,
+      },
+      progressSeries: [],
+      learningHistory: [],
       reportTrace: [],
       reportWindow: "Pending class linkage",
       studentName: "Student not enrolled",
@@ -315,6 +367,14 @@ export async function getParentDashboardData(
             },
           },
         },
+        include: {
+          classSession: true,
+        },
+        orderBy: {
+          classSession: {
+            startsAt: "desc",
+          },
+        },
         take: 8,
       }),
       parentId
@@ -349,6 +409,11 @@ export async function getParentDashboardData(
     const title =
       getJsonString(submission.homeworkAssignment.assignmentContent, "title") ??
       "Tutor-reviewed homework";
+    const submissionVersions = getJsonObjectArray(
+      submission.submissionContent,
+      "submissionVersions",
+    );
+    const versionCount = submissionVersions.length + 1;
 
     return {
       id: submission.id,
@@ -361,8 +426,116 @@ export async function getParentDashboardData(
       submittedAt: submission.submittedAt
         ? formatDateTime(submission.submittedAt)
         : "Pending",
+      versionCount,
+      progressNote:
+        versionCount > 1
+          ? `This homework was revised ${versionCount - 1} time${versionCount > 2 ? "s" : ""} before the latest tutor review.`
+          : "This homework was reviewed after the first student submission.",
     };
   });
+
+  const progressSnapshot: ParentProgressSnapshot = {
+    averageMastery: masteryRecords.length > 0 ? averageMastery : null,
+    attendanceRate: attendanceRecords.length > 0 ? attendanceRate : null,
+    homeworkCompletionRate: assignments.length > 0 ? homeworkCompletionRate : null,
+    reviewedHomeworkCount: submissions.length,
+  };
+
+  const progressSeries: ParentProgressSeriesItem[] = [
+    {
+      label: "Attendance",
+      value: attendanceRecords.length > 0 ? attendanceRate : 0,
+      note:
+        attendanceRecords.length > 0
+          ? `${attendanceRate}% across completed tutor-led sessions.`
+          : "Attendance will appear after the first completed class.",
+      tone: "mint",
+    },
+    {
+      label: "Homework",
+      value: assignments.length > 0 ? homeworkCompletionRate : 0,
+      note:
+        assignments.length > 0
+          ? `${homeworkCompletionRate}% of tutor-approved homework has been completed.`
+          : "Homework completion will appear after the first assignment cycle.",
+      tone: "gold",
+    },
+    {
+      label: "Mastery",
+      value: masteryRecords.length > 0 ? averageMastery : 0,
+      note:
+        masteryRecords.length > 0
+          ? `${averageMastery}% current tutor-reviewed mastery across tracked topics.`
+          : "Mastery will appear after the tutor reviews the first learning cycle.",
+      tone: "blue",
+    },
+    {
+      label: "Support Focus",
+      value: masteryRecords.length > 0 ? Math.max(100 - averageMastery, 8) : 0,
+      note:
+        masteryRecords.length > 0
+          ? `${supportArea} is the main topic still needing reinforcement.`
+          : "A support focus area will appear after the first reviewed cycle.",
+      tone: "purple",
+    },
+  ];
+
+  const learningHistorySeed = [
+    ...attendanceRecords.slice(0, 3).map((record) => ({
+      id: `class-${record.id}`,
+      title: record.classSession.title,
+      detail:
+        record.status === "PRESENT"
+          ? `Attended class with ${Math.round(record.participationScore ?? 0)}% participation.`
+          : `Attendance status: ${record.status.toLowerCase().replace("_", " ")}.`,
+      sortKey: record.classSession.startsAt.getTime(),
+      dateLabel: formatDateTime(record.classSession.startsAt),
+      type: "class" as const,
+    })),
+    ...submissions.slice(0, 3).map((submission) => {
+      const title =
+        getJsonString(submission.homeworkAssignment.assignmentContent, "title") ??
+        "Tutor-reviewed homework";
+
+      return {
+        id: `homework-${submission.id}`,
+        title,
+        detail:
+          submission.tutorFeedback ??
+          (typeof submission.score === "number"
+            ? `Tutor reviewed this homework and gave ${Math.round(submission.score)}%.`
+            : "Homework submitted and waiting for tutor review."),
+        sortKey: submission.updatedAt.getTime(),
+        dateLabel: formatDateTime(submission.updatedAt),
+        type: "homework" as const,
+      };
+    }),
+    ...masteryRecords.slice(0, 3).map((record) => ({
+      id: `mastery-${record.id}`,
+      title: `${record.topicLabel} mastery updated`,
+      detail:
+        record.tutorReviewNotes ??
+        `Mastery updated to ${Math.round(record.masteryScore)}% after tutor review.`,
+      sortKey: (record.reviewedByTutorAt ?? record.updatedAt).getTime(),
+      dateLabel: formatDateTime(record.reviewedByTutorAt ?? record.updatedAt),
+      type: "mastery" as const,
+    })),
+    ...reports.slice(0, 2).map((report) => ({
+      id: `report-${report.id}`,
+      title: "Weekly progress report approved",
+      detail:
+        getJsonString(report.aiSummary, "summary") ??
+        report.tutorNotes ??
+        "A tutor-approved weekly report was published.",
+      sortKey: (report.approvedAt ?? report.updatedAt).getTime(),
+      dateLabel: formatDateTime(report.approvedAt ?? report.updatedAt),
+      type: "report" as const,
+    })),
+  ];
+
+  const learningHistory: ParentHistoryItem[] = learningHistorySeed
+    .sort((left, right) => right.sortKey - left.sortKey)
+    .slice(0, 8);
 
   const metrics: ParentMetric[] = [
     {
@@ -434,6 +607,9 @@ export async function getParentDashboardData(
       : null,
     recentHomeworkFeedback,
     insights,
+    progressSnapshot,
+    progressSeries,
+    learningHistory,
     reportTrace: traceability,
     reportWindow: "Sunday 7:30 PM",
     studentName: enrollment.student.fullName,

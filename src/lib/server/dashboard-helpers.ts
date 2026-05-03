@@ -70,6 +70,23 @@ export function getJsonStringArray(
   return candidate.filter((item): item is string => typeof item === "string");
 }
 
+export function getJsonObjectArray(
+  value: Prisma.JsonValue | null | undefined,
+  key: string,
+) {
+  const record = getJsonRecord(value);
+  const candidate = record?.[key];
+
+  if (!Array.isArray(candidate)) {
+    return [];
+  }
+
+  return candidate.filter(
+    (item): item is Record<string, Prisma.JsonValue> =>
+      typeof item === "object" && item !== null && !Array.isArray(item),
+  );
+}
+
 export function average(values: number[]) {
   if (values.length === 0) {
     return 0;

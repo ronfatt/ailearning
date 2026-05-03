@@ -50,6 +50,7 @@ export const demoIds = {
   parentReportApproved: "parent_report_demo_02",
   bookingRequestAina: "booking_request_demo_01",
   tutorApplicationMath: "tutor_application_demo_01",
+  contactInquiryCentre: "contact_inquiry_demo_01",
 } as const;
 
 export async function cleanupDemoData(prisma: PrismaClient) {
@@ -99,6 +100,12 @@ export async function cleanupDemoData(prisma: PrismaClient) {
   await prisma.bookingRequest.deleteMany({
     where: {
       id: { in: [demoIds.bookingRequestAina] },
+    },
+  });
+
+  await prisma.contactInquiry.deleteMany({
+    where: {
+      id: { in: [demoIds.contactInquiryCentre] },
     },
   });
 
@@ -527,6 +534,15 @@ export async function seedDemoData(prisma: PrismaClient) {
           title: "Word problem revision set A",
           questions: 5,
           focus: "Narrative translation",
+          prompt:
+            "Translate each word problem into an equation first, then solve it step by step.",
+          questionPrompts: [
+            "Convert the first narrative problem into an equation before solving it.",
+            "Solve a two-step word problem and show where you define the unknown.",
+            "Check your final answer by substituting it back into the story context.",
+            "Rewrite one long question into smaller steps before solving it.",
+            "Explain which clue in the question helped you decide the equation structure.",
+          ],
         },
         dueDate: new Date("2026-04-10T10:00:00.000Z"),
         status: HomeworkLifecycleStatus.DRAFT,
@@ -547,6 +563,18 @@ export async function seedDemoData(prisma: PrismaClient) {
           title: "Post-class revision for narrative word problems",
           questions: 8,
           focus: "Short guided revision",
+          prompt:
+            "Complete the guided revision, show your working, and flag one question you still want your tutor to explain.",
+          questionPrompts: [
+            "Solve Question 1 and show how you identified the unknown value.",
+            "Write the equation for Question 2 before solving it.",
+            "Show the working for Question 3 and circle the key clue from the story.",
+            "Explain how you checked your answer for Question 4.",
+            "Solve Question 5 using a step-by-step method.",
+            "Write one mistake you nearly made in Question 6 and how you avoided it.",
+            "Solve Question 7 and explain why your answer makes sense in the context.",
+            "For Question 8, write what part still feels difficult.",
+          ],
         },
         dueDate: new Date("2026-04-11T10:00:00.000Z"),
         status: HomeworkLifecycleStatus.ASSIGNED,
@@ -569,6 +597,16 @@ export async function seedDemoData(prisma: PrismaClient) {
           title: "Hafiz ratio recovery set",
           questions: 6,
           focus: "Ratio simplification and checking working",
+          prompt:
+            "Simplify each ratio carefully and explain how you checked whether your final form is correct.",
+          questionPrompts: [
+            "Simplify the first ratio and show each division step.",
+            "Rewrite the second ratio in its lowest terms.",
+            "Check whether the third ratio can be simplified further.",
+            "Explain how you compared both sides of the fourth ratio.",
+            "Solve the fifth ratio problem and write one thing you checked before finishing.",
+            "For the final question, explain which step was most confusing.",
+          ],
         },
         dueDate: new Date("2026-04-11T10:00:00.000Z"),
         status: HomeworkLifecycleStatus.SUBMITTED,
@@ -590,7 +628,32 @@ export async function seedDemoData(prisma: PrismaClient) {
       submittedAt: new Date("2026-04-03T15:30:00.000Z"),
       submissionContent: {
         completedQuestions: 8,
-        note: "Student finished the set after class.",
+        answerSummary:
+          "I finished the guided set and got more confident when turning the story into equations before solving.",
+        answers: [
+          {
+            questionId: "question-1",
+            prompt: "Solve Question 1 and show how you identified the unknown value.",
+            answer:
+              "I used x for the unknown because the story asked for the missing number of tickets.",
+          },
+          {
+            questionId: "question-2",
+            prompt: "Write the equation for Question 2 before solving it.",
+            answer: "I wrote 3x + 5 = 20 and then solved it step by step.",
+          },
+          {
+            questionId: "question-3",
+            prompt: "Show the working for Question 3 and circle the key clue from the story.",
+            answer:
+              "The key clue was '5 more than'. That told me to add after writing the equation.",
+          },
+        ],
+        workingNotes:
+          "I was fastest when I wrote the equation first instead of trying to solve in my head.",
+        reflection:
+          "I still want help checking the last step when the answer needs to fit the story.",
+        confidence: 4,
       },
       score: 78,
       tutorFeedback: "Good recovery on questions 1 to 6. Recheck the final translation step.",
@@ -605,7 +668,24 @@ export async function seedDemoData(prisma: PrismaClient) {
       submittedAt: new Date("2026-04-03T16:10:00.000Z"),
       submissionContent: {
         completedQuestions: 6,
-        note: "Student submitted before the next live session.",
+        answerSummary:
+          "I completed the ratio set but I am still unsure when I should divide both numbers again.",
+        answers: [
+          {
+            questionId: "question-1",
+            prompt: "Simplify the first ratio and show each division step.",
+            answer: "I divided both sides by 3 first, then checked if 2:5 could still be reduced.",
+          },
+          {
+            questionId: "question-2",
+            prompt: "Rewrite the second ratio in its lowest terms.",
+            answer: "I reduced 12:18 to 2:3 by dividing both by 6.",
+          },
+        ],
+        workingNotes:
+          "I usually know the method, but sometimes I stop too early and forget to fully simplify.",
+        reflection: "Please check if I am choosing the best common factor each time.",
+        confidence: 2,
       },
     },
   });
@@ -702,6 +782,20 @@ export async function seedDemoData(prisma: PrismaClient) {
       teachingExperience:
         "5 years teaching online secondary mathematics and exam prep classes.",
       notes: "Comfortable with live online tuition and tutor-reviewed AI workflows.",
+      status: IntakeStatus.NEW,
+    },
+  });
+
+  await prisma.contactInquiry.create({
+    data: {
+      id: demoIds.contactInquiryCentre,
+      fullName: "Melissa Tan",
+      email: "melissa.centre@ailearningos.demo",
+      phoneNumber: "+60 17-555 1188",
+      organization: "Northpoint Tuition Hub",
+      enquiryType: "Centre partnership",
+      message:
+        "We run two branches and want to explore tutor dashboards, parent reporting, and AI revision support across both centres.",
       status: IntakeStatus.NEW,
     },
   });
