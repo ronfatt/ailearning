@@ -11,6 +11,8 @@
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:seed": "node --import tsx prisma/seed.ts",
+    "db:seed:demo": "ALLOW_DEMO_SEED=true node --import tsx prisma/seed.ts",
+    "db:clear-demo": "node --import tsx prisma/clear-demo.ts",
     "db:setup": "npm run db:push && npm run db:generate && npm run db:seed"
   },
   "dependencies": {

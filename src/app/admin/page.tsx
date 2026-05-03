@@ -1,6 +1,5 @@
 import { AdminIntakePanel } from "@/components/admin-intake-panel";
 import { AccessGuard } from "@/components/access-guard";
-import { DemoCasePlaybook } from "@/components/demo-case-playbook";
 import { MetricCard } from "@/components/metric-card";
 import { PageShell } from "@/components/page-shell";
 import { StatusPill } from "@/components/status-pill";
@@ -12,11 +11,11 @@ import { redirect } from "next/navigation";
 
 export default async function AdminPage() {
   const session = await getCurrentSession();
-  const isGuestPreview =
-    process.env.NODE_ENV !== "production" && session.user.role === "Guest";
+  if (session.user.role === "Guest") {
+    redirect("/login");
+  }
 
   if (
-    !isGuestPreview &&
     !canAccessRole({
       currentRole: session.user.role,
       allowedRoles: ["Admin"],
@@ -32,7 +31,7 @@ export default async function AdminPage() {
     );
   }
 
-  if (!isGuestPreview && !session.user.onboardingCompleted) {
+  if (!session.user.onboardingCompleted) {
     redirect("/welcome");
   }
 
@@ -41,28 +40,16 @@ export default async function AdminPage() {
 
   return (
     <PageShell
-      title={isGuestPreview ? "Admin Dashboard Preview" : "Admin Oversight Console"}
-      description={
-        isGuestPreview
-          ? "Local preview mode is active, so you can test intake, enrolment, approvals, and AI logs directly."
-          : "Admin keeps the system compliant and scalable by monitoring tutors, classes, payments, partnerships, referrals, AI logs, and approval workflows."
-      }
+      title="Admin Oversight Console"
+      description="Admin keeps the system compliant and scalable by monitoring tutors, classes, payments, partnerships, referrals, AI logs, and approval workflows."
       action={
-        isGuestPreview ? (
-          <div className="rounded-full border border-[#fde8bf] bg-[#fff8e8] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6b16]">
-            Preview mode · Admin test workspace
-          </div>
-        ) : (
-          <div className="rounded-[1.5rem] bg-gold-soft px-5 py-4 text-sm font-semibold text-[#8b5a13]">
-            Internal access only
-          </div>
-        )
+        <div className="rounded-[1.5rem] bg-gold-soft px-5 py-4 text-sm font-semibold text-[#8b5a13]">
+          Internal access only
+        </div>
       }
       visual={<WorkspaceHeroVisual role="admin" />}
       eyebrow="Admin Control Layer"
     >
-      {isGuestPreview ? <DemoCasePlaybook role="admin" /> : null}
-
       {adminData.message ? (
         <section className="glass-panel rounded-[2rem] border border-border p-5 text-sm leading-7 text-muted">
           {adminData.message}

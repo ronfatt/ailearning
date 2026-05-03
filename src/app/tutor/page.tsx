@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AccessGuard } from "@/components/access-guard";
-import { DemoCasePlaybook } from "@/components/demo-case-playbook";
 import { PageShell } from "@/components/page-shell";
 import { RoleAssistantChatbox } from "@/components/role-assistant-chatbox";
 import { TutorDashboardLive } from "@/components/tutor-dashboard-live";
@@ -11,11 +10,12 @@ import { redirect } from "next/navigation";
 
 export default async function TutorPage() {
   const session = await getCurrentSession();
-  const tutorDashboardId = session.user.id ?? "tutor_farrah_01";
-  const isGuestPreview =
-    process.env.NODE_ENV !== "production" && session.user.role === "Guest";
-  const tutorDashboardName =
-    session.isAuthenticated ? session.user.name : "Tutor workspace";
+  if (session.user.role === "Guest") {
+    redirect("/login");
+  }
+
+  const tutorDashboardId = session.user.id ?? "";
+  const tutorDashboardName = session.user.name;
   const quickStartSteps = [
     {
       label: "Start here",
@@ -44,7 +44,6 @@ export default async function TutorPage() {
   ] as const;
 
   if (
-    !isGuestPreview &&
     !canAccessRole({
       currentRole: session.user.role,
       allowedRoles: ["Tutor"],
@@ -60,32 +59,18 @@ export default async function TutorPage() {
     );
   }
 
-  if (!isGuestPreview && !session.user.onboardingCompleted) {
+  if (!session.user.onboardingCompleted) {
     redirect("/welcome");
   }
 
   return (
     <PageShell
-      title={
-        isGuestPreview
-          ? "Tutor Dashboard Preview"
-          : `Tutor Dashboard for ${tutorDashboardName}`
-      }
-      description={
-        isGuestPreview
-          ? "Local preview mode is active, so you can test live class tools, approvals, and follow-up workflows directly."
-          : "Plan lessons, run live classes, approve follow-up, and keep parents informed from one workspace."
-      }
+      title={`Tutor Dashboard for ${tutorDashboardName}`}
+      description="Plan lessons, run live classes, approve follow-up, and keep parents informed from one workspace."
       action={
-        isGuestPreview ? (
-          <div className="rounded-full border border-[#fde8bf] bg-[#fff8e8] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6b16]">
-            Preview mode · Tutor test workspace
-          </div>
-        ) : (
-          <div className="rounded-[1.5rem] bg-teal px-5 py-4 text-sm font-semibold text-white">
-            Next class: {platformSummary.className} at 8:00 PM
-          </div>
-        )
+        <div className="rounded-[1.5rem] bg-teal px-5 py-4 text-sm font-semibold text-white">
+          Next class: {platformSummary.className} at 8:00 PM
+        </div>
       }
       visual={<WorkspaceHeroVisual role="tutor" />}
     >
@@ -116,7 +101,6 @@ export default async function TutorPage() {
         ))}
       </section>
 
-      {isGuestPreview ? <DemoCasePlaybook role="tutor" /> : null}
     </PageShell>
   );
 }

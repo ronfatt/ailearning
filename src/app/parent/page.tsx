@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AccessGuard } from "@/components/access-guard";
-import { DemoCasePlaybook } from "@/components/demo-case-playbook";
 import { ParentDashboardLive } from "@/components/parent-dashboard-live";
 import { PageShell } from "@/components/page-shell";
 import { RoleAssistantChatbox } from "@/components/role-assistant-chatbox";
@@ -10,9 +9,11 @@ import { redirect } from "next/navigation";
 
 export default async function ParentPage() {
   const session = await getCurrentSession();
-  const parentDashboardId = session.user.id ?? "parent_aina_01";
-  const isGuestPreview =
-    process.env.NODE_ENV !== "production" && session.user.role === "Guest";
+  if (session.user.role === "Guest") {
+    redirect("/login");
+  }
+
+  const parentDashboardId = session.user.id ?? "";
   const quickStartSteps = [
     {
       label: "Start here",
@@ -41,7 +42,6 @@ export default async function ParentPage() {
   ] as const;
 
   if (
-    !isGuestPreview &&
     !canAccessRole({
       currentRole: session.user.role,
       allowedRoles: ["Parent"],
@@ -57,28 +57,18 @@ export default async function ParentPage() {
     );
   }
 
-  if (!isGuestPreview && !session.user.onboardingCompleted) {
+  if (!session.user.onboardingCompleted) {
     redirect("/welcome");
   }
 
   return (
     <PageShell
-      title={isGuestPreview ? "Parent Dashboard Preview" : "Parent Progress Portal"}
-      description={
-        isGuestPreview
-          ? "Local preview mode is active, so you can review reports, attendance, and homework follow-up directly."
-          : "Track attendance, tutor comments, homework follow-up, and approved progress updates in one place."
-      }
+      title="Parent Progress Portal"
+      description="Track attendance, tutor comments, homework follow-up, and approved progress updates in one place."
       action={
-        isGuestPreview ? (
-          <div className="rounded-full border border-[#fde8bf] bg-[#fff8e8] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6b16]">
-            Preview mode · Parent test workspace
-          </div>
-        ) : (
-          <div className="rounded-[1.5rem] bg-teal px-5 py-4 text-sm font-semibold text-white">
-            Report delivery window: Sunday 7:30 PM
-          </div>
-        )
+        <div className="rounded-[1.5rem] bg-teal px-5 py-4 text-sm font-semibold text-white">
+          Report delivery window: Sunday 7:30 PM
+        </div>
       }
       visual={<WorkspaceHeroVisual role="parent" />}
       eyebrow="Parent Transparency Layer"
@@ -110,7 +100,6 @@ export default async function ParentPage() {
         ))}
       </section>
 
-      {isGuestPreview ? <DemoCasePlaybook role="parent" /> : null}
     </PageShell>
   );
 }

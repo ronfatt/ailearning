@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
-import { ProductHeroVisual } from "@/components/solace/product-hero-visual";
 import { SolaceLandingHeader } from "@/components/solace/landing-header";
 import {
   AudienceSceneGrid,
@@ -212,55 +212,122 @@ function StudentFeatureVisual({
   );
 }
 
+function HeroInfoCard({
+  className,
+  children,
+}: {
+  className: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`absolute rounded-[1.8rem] border border-white/75 bg-white/96 p-5 shadow-[0_22px_54px_rgba(15,23,42,0.14)] ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.2),transparent_18%),radial-gradient(circle_at_top_right,rgba(167,139,250,0.22),transparent_22%),radial-gradient(circle_at_78%_26%,rgba(251,191,36,0.18),transparent_18%),linear-gradient(180deg,#f7fbff_0%,#eef5ff_35%,#fbf7ff_72%,#fffdf8_100%)] text-[#10223e]">
-      <SolaceLandingHeader />
+      <main className="mx-auto flex w-full max-w-[1440px] flex-col gap-12 px-6 pb-8 pt-8 sm:px-8 sm:pt-10 lg:gap-14 lg:px-[96px] lg:pb-10 lg:pt-10">
+        <section className="relative overflow-hidden rounded-[3rem] border border-[#6fa8ff] bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.16),transparent_18%),radial-gradient(circle_at_80%_16%,rgba(255,255,255,0.12),transparent_16%),linear-gradient(180deg,#4f9aff_0%,#377dff_38%,#2867db_100%)] px-6 pb-0 pt-6 shadow-[0_36px_100px_rgba(59,108,255,0.26)] sm:px-8 sm:pt-8 lg:px-12 lg:pt-8">
+          <SolaceLandingHeader variant="hero" />
 
-      <main className="mx-auto flex w-full max-w-[1440px] flex-col gap-12 px-6 py-8 sm:px-8 lg:gap-14 lg:px-[96px] lg:py-10">
-        <section className="overflow-hidden rounded-[2.5rem] border border-[#e6ecf5] bg-[radial-gradient(circle_at_20%_10%,rgba(18,207,243,0.18),transparent_32%),radial-gradient(circle_at_85%_20%,rgba(124,92,255,0.14),transparent_30%),linear-gradient(180deg,#F6FAFF_0%,#FFFFFF_100%)] px-6 py-8 shadow-[0_32px_90px_rgba(59,108,255,0.14)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
-          <div className="grid gap-10 lg:grid-cols-[0.45fr_0.55fr] lg:items-center">
-            <div className="space-y-6">
-              <div className="inline-flex rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-[#3B6CFF]">
-                AI-powered tuition platform
+          <div className="absolute left-10 top-40 h-16 w-16 rounded-full border-[7px] border-transparent border-l-white/80 border-t-white/80 opacity-80" />
+          <div className="absolute right-14 top-48 text-7xl text-[#ffe066] opacity-95">✦</div>
+          <div className="absolute left-14 top-[64%] text-7xl text-[#ffd84d] opacity-95">✺</div>
+          <div className="absolute inset-x-0 bottom-0 h-[42%] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.06)_42%,transparent_66%)]" />
+
+          <div className="relative z-10 flex flex-col items-center pt-24 text-center sm:pt-28 lg:pt-32">
+            <div className="inline-flex rounded-full border border-white/35 bg-white/14 px-5 py-2 text-sm font-semibold tracking-[0.02em] text-white shadow-[0_12px_30px_rgba(25,55,140,0.14)] backdrop-blur-sm">
+              Learn from real tutors with AI follow-up
+            </div>
+            <h1 className="mt-8 max-w-5xl text-5xl font-semibold tracking-tight text-white sm:text-6xl lg:text-[5.2rem] lg:leading-[0.94]">
+              Smarter Tuition.
+              <br />
+              Real Teachers.
+              <br />
+              AI That Follows Up.
+            </h1>
+            <p className="mt-6 max-w-3xl text-lg leading-8 text-white/80 sm:text-xl">
+              Live online and offline tuition with AI-powered revision, homework tracking,
+              parent reports, and personalised follow-up after every lesson.
+            </p>
+
+            <div className="mt-8 flex w-full max-w-[580px] items-center gap-3 rounded-full bg-white px-3 py-3 shadow-[0_22px_60px_rgba(17,24,39,0.16)]">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#eef4ff] text-xl text-[#2867db]">
+                ⌕
               </div>
-              <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-[#111827] sm:text-6xl lg:text-[4.9rem] lg:leading-[0.92]">
-                Smarter Tuition.
-                <br />
-                Real Teachers.
-                <br />
-                AI That Follows Up.
-              </h1>
-              <p className="max-w-2xl text-lg leading-8 text-[#5B6472]">
-                Live online and offline classes with AI-powered revision, homework tracking, parent reports, and personalised follow-up after every lesson.
-              </p>
-              <div className="flex flex-col gap-4 sm:flex-row">
-                <Link
-                  href="/book-class"
-                  className="rounded-full bg-[linear-gradient(135deg,#3B6CFF_0%,#7C5CFF_100%)] px-7 py-3.5 text-sm font-semibold text-white shadow-[0_18px_42px_rgba(59,108,255,0.24)] transition hover:-translate-y-0.5"
-                >
-                  Book a Free Trial
-                </Link>
-                <Link
-                  href="/how-it-works"
-                  className="inline-flex items-center justify-center rounded-full border border-[#dbe7ff] bg-white px-7 py-3.5 text-sm font-semibold !text-[#111827] shadow-[0_10px_24px_rgba(59,108,255,0.08)] transition hover:border-[#7C5CFF] hover:!text-[#3B6CFF]"
-                >
-                  See How It Works
-                </Link>
+              <div className="flex-1 text-left text-base font-medium text-[#7b8597]">
+                Search classes, tutors, or revision topics...
               </div>
-              <div className="flex flex-wrap gap-3 pt-1">
-                {featureTags.map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-full border border-[#e6ecf5] bg-white px-4 py-2 text-sm font-medium text-[#374151] shadow-[0_10px_24px_rgba(59,130,246,0.08)]"
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
+              <Link
+                href="/book-class"
+                className="inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,#3B6CFF_0%,#7C5CFF_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(59,108,255,0.22)] transition hover:-translate-y-0.5"
+              >
+                Start Free Trial
+              </Link>
             </div>
 
-            <ProductHeroVisual />
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              {featureTags.map((item) => (
+                <div
+                  key={item}
+                  className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white/92 backdrop-blur-sm"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+
+            <div className="relative mt-12 flex w-full justify-center">
+              <div className="relative h-[640px] w-full max-w-[920px] sm:h-[720px]">
+                <HeroInfoCard className="left-0 top-44 z-20 w-[220px] sm:left-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#64748b]">
+                    Student rating
+                  </p>
+                  <p className="mt-3 text-5xl font-semibold tracking-tight text-[#111827]">4.8</p>
+                  <p className="mt-2 text-xl text-[#ffb703]">★★★★★</p>
+                  <p className="mt-3 text-sm leading-6 text-[#5B6472]">
+                    By students worldwide for quality learning and support.
+                  </p>
+                </HeroInfoCard>
+
+                <HeroInfoCard className="right-0 top-32 z-20 w-[290px] sm:right-4">
+                  <div className="flex -space-x-3">
+                    {["#99f6e4", "#93c5fd", "#f9a8d4", "#fde68a"].map((tone, index) => (
+                      <div
+                        key={tone}
+                        className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-white text-sm font-semibold text-[#111827]"
+                        style={{ backgroundColor: tone, zIndex: 5 - index }}
+                      >
+                        {index + 1}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-5 text-5xl font-semibold tracking-tight text-[#111827]">60k+</p>
+                  <p className="mt-3 text-sm leading-6 text-[#5B6472]">
+                    Learners growing with expert guidance from trusted tutors.
+                  </p>
+                </HeroInfoCard>
+
+                <div className="absolute inset-x-0 bottom-0 mx-auto h-[460px] w-[460px] rounded-t-[250px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.24)_0%,rgba(255,255,255,0.14)_38%,rgba(255,255,255,0.02)_72%,transparent_100%)] sm:h-[560px] sm:w-[700px] sm:rounded-t-[360px]" />
+                <div className="absolute inset-x-0 bottom-4 mx-auto h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.24)_0%,rgba(255,255,255,0.06)_56%,transparent_78%)] blur-[4px]" />
+
+                <div className="absolute inset-x-0 bottom-0 z-10 mx-auto h-[660px] w-[500px] overflow-visible sm:h-[760px] sm:w-[600px]">
+                  <Image
+                    src="/malay-girl.png"
+                    alt="Malay student holding books and smiling"
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 600px, 500px"
+                    className="object-contain object-bottom drop-shadow-[0_28px_54px_rgba(17,24,39,0.22)]"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 

@@ -1,5 +1,4 @@
 import { AccessGuard } from "@/components/access-guard";
-import { DemoCasePlaybook } from "@/components/demo-case-playbook";
 import Link from "next/link";
 import { RoleAssistantChatbox } from "@/components/role-assistant-chatbox";
 import { WorkspaceHeroVisual } from "@/components/workspace-hero-visual";
@@ -11,9 +10,11 @@ import { redirect } from "next/navigation";
 
 export default async function StudentPage() {
   const session = await getCurrentSession();
-  const studentDashboardId = session.user.id ?? "student_aina_01";
-  const isGuestPreview =
-    process.env.NODE_ENV !== "production" && session.user.role === "Guest";
+  if (session.user.role === "Guest") {
+    redirect("/login");
+  }
+
+  const studentDashboardId = session.user.id ?? "";
   const quickStartSteps = [
     {
       label: "First",
@@ -42,7 +43,6 @@ export default async function StudentPage() {
   ] as const;
 
   if (
-    !isGuestPreview &&
     !canAccessRole({
       currentRole: session.user.role,
       allowedRoles: ["Student"],
@@ -58,43 +58,29 @@ export default async function StudentPage() {
     );
   }
 
-  if (!isGuestPreview && !session.user.onboardingCompleted) {
+  if (!session.user.onboardingCompleted) {
     redirect("/welcome");
   }
 
   return (
     <PageShell
-      title={
-        isGuestPreview
-          ? "Student Dashboard Preview"
-          : `Welcome back, ${session.user.name}`
-      }
-      description={
-        isGuestPreview
-          ? "Local preview mode is active, so you can test homework, revision, and AI study assistant flows directly."
-          : "See today’s tasks, finish assigned homework, and revise approved topics between tutor-led classes."
-      }
+      title={`Welcome back, ${session.user.name}`}
+      description="See today’s tasks, finish assigned homework, and revise approved topics between tutor-led classes."
       action={
-        isGuestPreview ? (
-          <div className="rounded-full border border-[#fde8bf] bg-[#fff8e8] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#9a6b16]">
-            Preview mode · Student test workspace
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/student/diagnostic"
-              className="rounded-full bg-teal px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#09443c]"
-            >
-              Open Readiness Check
-            </Link>
-            <a
-              href="#assistant"
-              className="rounded-full border border-border bg-surface-strong px-5 py-3 text-sm font-semibold text-foreground transition hover:border-teal hover:text-teal"
-            >
-              Open AI Study Assistant
-            </a>
-          </div>
-        )
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link
+            href="/student/diagnostic"
+            className="rounded-full bg-teal px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#09443c]"
+          >
+            Open Readiness Check
+          </Link>
+          <a
+            href="#assistant"
+            className="rounded-full border border-border bg-surface-strong px-5 py-3 text-sm font-semibold text-foreground transition hover:border-teal hover:text-teal"
+          >
+            Open AI Study Assistant
+          </a>
+        </div>
       }
       visual={<WorkspaceHeroVisual role="student" />}
       eyebrow="Student Revision Workspace"
@@ -126,7 +112,6 @@ export default async function StudentPage() {
         ))}
       </section>
 
-      {isGuestPreview ? <DemoCasePlaybook role="student" /> : null}
     </PageShell>
   );
 }

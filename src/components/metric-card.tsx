@@ -27,7 +27,7 @@ export function MetricCard({
           </p>
         </div>
         <div className={`rounded-full px-3 py-1 text-xs font-semibold ${toneClasses[tone]}`}>
-          Live demo
+          Live data
         </div>
       </div>
       <p className="mt-5 text-sm leading-7 text-[#5B6472]">{detail}</p>

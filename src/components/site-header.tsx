@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { getAuthenticatedHomePath, getCurrentSession } from "@/lib/auth-session";
-import { QuickTestHeaderLinks } from "@/components/quick-test-dashboards";
 import { SignOutButton } from "@/components/sign-out-button";
 
 const navItems = [
@@ -15,7 +14,6 @@ const navItems = [
 
 export async function SiteHeader() {
   const session = await getCurrentSession();
-  const showQuickTest = process.env.NODE_ENV !== "production";
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#e6ecf5] bg-white/84 backdrop-blur-xl">
@@ -71,7 +69,6 @@ export async function SiteHeader() {
           )}
         </div>
       </div>
-      {showQuickTest ? <QuickTestHeaderLinks /> : null}
     </header>
   );
 }
