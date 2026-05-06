@@ -67,12 +67,30 @@ export default function PricingPage() {
   return (
     <SolacePageShell
       eyebrow="Pricing"
-      title="Simple tuition plans for revision, live classes, and follow-up."
-      description="Start with AI revision support or move into tutor-led classes with homework, reports, and clearer weekly structure."
-      heroPanelClassName="border-[#e6ecf5] bg-[radial-gradient(circle_at_20%_12%,rgba(18,207,243,0.14),transparent_30%),radial-gradient(circle_at_86%_18%,rgba(124,92,255,0.1),transparent_28%),linear-gradient(180deg,#f8fbff_0%,#ffffff_100%)] shadow-[0_28px_80px_rgba(59,108,255,0.1)]"
+      title="Plans built for tutor-led classes, clearer follow-up, and centre growth."
+      description="Start with AI revision support or move into live tuition plans with homework, reports, and a more visible weekly progress rhythm."
+      heroVariant="stage"
+      heroColumnsClassName="lg:grid-cols-[0.6fr_0.4fr]"
+      actions={
+        <>
+          <Link
+            href="/book-class"
+            className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3.5 text-sm font-semibold !text-[#2f5bff] shadow-[0_14px_32px_rgba(255,255,255,0.16)] transition hover:bg-[#f8fbff] hover:!text-[#2448d8]"
+          >
+            Book a Class
+          </Link>
+          <Link
+            href="/contact"
+            className="rounded-full border border-white/24 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/18"
+          >
+            Ask About Plans
+          </Link>
+        </>
+      }
+      highlights={["AI revision", "Tutor-led classes", "Parent reports", "Centre ready"]}
       aside={
         <div className="space-y-4">
-          <div className="rounded-[1.8rem] border border-[#e6ecf5] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] p-6 shadow-[0_18px_40px_rgba(59,108,255,0.08)]">
+          <div className="rounded-[1.9rem] border border-white/75 bg-white/96 p-6 shadow-[0_22px_54px_rgba(15,23,42,0.14)]">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#3B6CFF]">
               Pricing principle
             </p>
@@ -87,7 +105,9 @@ export default function PricingPage() {
               <GlowBadge label="Teacher-led" tone="mint" />
             </div>
           </div>
-          <AudienceSceneGrid />
+          <div className="hidden lg:block">
+            <AudienceSceneGrid />
+          </div>
         </div>
       }
     >

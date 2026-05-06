@@ -19,6 +19,10 @@ function includesAny(text: string, keywords: string[]) {
   return keywords.some((keyword) => text.includes(keyword));
 }
 
+function firstMeaningfulItem(items: string[]) {
+  return items.find((item) => item.trim().length > 0) ?? null;
+}
+
 function buildStudentReply(
   message: string,
   data: StudentDashboardData,
@@ -27,6 +31,7 @@ function buildStudentReply(
   const homework = data.assignedHomework[0] ?? null;
   const weakestTopic = data.subjectProgress[0] ?? null;
   const nextClass = data.upcomingClass;
+  const nextRevisionTask = firstMeaningfulItem(data.revisionTasks);
 
   if (includesAny(query, ["homework", "assignment", "submit", "redo"])) {
     return {
@@ -36,8 +41,8 @@ function buildStudentReply(
             homework.submissionDetails?.versionCount
               ? `You already have ${homework.submissionDetails.versionCount} submission version${homework.submissionDetails.versionCount > 1 ? "s" : ""}, so review the tutor comments before you resubmit.`
               : `Complete the answer summary and each question before sending it to your tutor.`
-          }`
-        : "There is no tutor-approved homework open right now, so your best next move is the readiness check or approved revision tasks.",
+          } ${nextRevisionTask ? `After that, move into ${nextRevisionTask}` : ""}`
+        : `There is no tutor-approved homework open right now, so your best next move is ${nextRevisionTask ?? "the readiness check or approved revision tasks"}.`,
       suggestions: [
         "What should I revise before resubmitting?",
         "Summarise my weakest topic",
@@ -52,7 +57,7 @@ function buildStudentReply(
     return {
       title: "Weak topic summary",
       answer: weakestTopic
-        ? `${weakestTopic.title} is currently the weakest tutor-tracked area at ${weakestTopic.mastery}%. ${weakestTopic.note} Focus on that before moving into extra topics.`
+        ? `${weakestTopic.title} is currently the weakest tutor-tracked area at ${weakestTopic.mastery}%. ${weakestTopic.note} ${nextRevisionTask ? `Your next node-based revision step is: ${nextRevisionTask}` : "Focus on that before moving into extra topics."}`
         : "Your tutor has not published mastery signals yet, so stay inside the current homework and revision tasks first.",
       suggestions: [
         "Give me a 10-minute revision plan",
@@ -67,7 +72,7 @@ function buildStudentReply(
   if (includesAny(query, ["class", "next class", "lesson", "tutor"])) {
     return {
       title: "Next class focus",
-      answer: `${nextClass.className} is your next tutor-led session. It is ${nextClass.subject} with ${nextClass.tutorName}. The best preparation is to finish the open homework and arrive ready to ask about ${weakestTopic?.title ?? "the topic you still find difficult"}.`,
+      answer: `${nextClass.className} is your next tutor-led session. It is ${nextClass.subject} with ${nextClass.tutorName}. The best preparation is to finish the open homework and arrive ready to ask about ${weakestTopic?.title ?? "the topic you still find difficult"}. ${nextRevisionTask ? `Before class, work through ${nextRevisionTask}` : ""}`,
       suggestions: [
         "What should I finish before class?",
         "Help me write one question for my tutor",
@@ -82,7 +87,7 @@ function buildStudentReply(
     title: "Study support",
     answer: `Your next class is ${nextClass.className}, and your strongest next move is to ${
       homework ? `finish ${homework.title}` : "work through the approved revision tasks"
-    }. ${weakestTopic ? `${weakestTopic.title} is still the topic to watch.` : ""}`,
+    }. ${weakestTopic ? `${weakestTopic.title} is still the topic to watch.` : ""} ${nextRevisionTask ? `Start here: ${nextRevisionTask}` : ""}`,
     suggestions: [
       "What homework should I do first?",
       "What is my weakest topic?",
@@ -173,6 +178,11 @@ function buildTutorReply(
   const liveClass = data.liveClassWorkspace[0] ?? null;
   const nextSubmission = data.submissionReviewQueue[0] ?? null;
   const nextAlert = data.riskAlerts[0] ?? null;
+  const nextQuickWin = liveClass?.quickWins[0] ?? null;
+  const nextMove =
+    data.classIntelligence[0]?.nextMove ??
+    data.afterClassFollowUp[0]?.summary ??
+    null;
 
   if (includesAny(query, ["what should i do", "priority", "first", "today"])) {
     return {
@@ -185,7 +195,7 @@ function buildTutorReply(
         nextSubmission
           ? `After that, review ${nextSubmission.title} from ${nextSubmission.owner}.`
           : "Homework review is currently clear."
-      }`,
+      } ${nextQuickWin ? `First live teaching move: ${nextQuickWin}` : ""}`,
       suggestions: [
         "Which student needs attention first?",
         "What is blocking follow-up right now?",
@@ -221,7 +231,7 @@ function buildTutorReply(
         nextSubmission
           ? `The clearest next student-facing task is to review ${nextSubmission.title}, then close the loop with tutor feedback and a parent-visible summary.`
           : "The current follow-up queue is light enough to focus on planning and class delivery."
-      }`,
+      } ${nextMove ? `Current node-based teaching move: ${nextMove}` : ""}`,
       suggestions: [
         "What should I approve next?",
         "Summarise the after-class follow-up panel",
@@ -240,7 +250,7 @@ function buildTutorReply(
       liveClass
         ? `The live workspace is anchored on ${liveClass.focusTopic}, and ${liveClass.supportCount} student signal${liveClass.supportCount === 1 ? "" : "s"} need support.`
         : "No live class workspace is currently selected."
-    }`,
+    } ${nextQuickWin ? `Open with: ${nextQuickWin}` : ""} ${nextMove ? `Next move: ${nextMove}` : ""}`,
     suggestions: [
       "What should I do first today?",
       "Which student needs attention?",

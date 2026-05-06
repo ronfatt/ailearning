@@ -9,7 +9,6 @@ import {
 } from "@/components/solace/learning-scenes";
 import { SolaceSiteFooter } from "@/components/solace/site-footer";
 import {
-  DashboardSpark,
   GlowBadge,
   MiniStat,
   PlayfulOrb,
@@ -51,15 +50,6 @@ const roleCards = [
   },
 ];
 
-const studentFeatures = [
-  { title: "AI Homework Helper", tone: "blue" as const },
-  { title: "Personalised Revision Plan", tone: "purple" as const },
-  { title: "Topic Practice", tone: "mint" as const },
-  { title: "Exam Preparation", tone: "blue" as const },
-  { title: "Progress Streaks", tone: "coral" as const },
-  { title: "Rewards & Badges", tone: "yellow" as const },
-];
-
 const centreFeatures = [
   "Student Management",
   "Tutor Dashboard",
@@ -69,15 +59,6 @@ const centreFeatures = [
   "Homework Automation",
   "Branch Ready",
   "Subscription Packages",
-];
-
-const outcomes = [
-  "Smarter Revision",
-  "Better Homework Completion",
-  "Clear Parent Communication",
-  "Teacher-Led Learning",
-  "Trackable Progress",
-  "Centre Growth",
 ];
 
 const testimonials = [
@@ -146,69 +127,6 @@ function LandingSection({
       </div>
       <div className="mt-8">{children}</div>
     </section>
-  );
-}
-
-function StudentFeatureVisual({
-  tone,
-  index,
-}: {
-  tone: "blue" | "purple" | "mint" | "yellow" | "coral";
-  index: number;
-}) {
-  if (index === 0) {
-    return (
-      <div className="space-y-3">
-        <GlowBadge label="Auto hint" tone={tone} />
-        <MiniStat label="Suggested next step" value="Revise algebra in 10 min" tone={tone} />
-      </div>
-    );
-  }
-
-  if (index === 1) {
-    return (
-      <div className="space-y-3">
-        <DashboardSpark bars={[20, 34, 28, 40]} tone={tone === "yellow" || tone === "coral" ? "purple" : tone} />
-        <GlowBadge label="Weak topic unlocked" tone={tone} />
-      </div>
-    );
-  }
-
-  if (index === 2) {
-    return (
-      <div className="grid grid-cols-2 gap-3">
-        <MiniStat label="Focus topic" value="Fractions" tone={tone} />
-        <MiniStat label="Practice set" value="12 questions" tone={tone} />
-      </div>
-    );
-  }
-
-  if (index === 3) {
-    return (
-      <div className="space-y-3">
-        <GlowBadge label="SPM mode" tone={tone} />
-        <DashboardSpark bars={[18, 30, 36, 44]} tone="blue" />
-      </div>
-    );
-  }
-
-  if (index === 4) {
-    return (
-      <div className="grid grid-cols-2 gap-3">
-        <MiniStat label="Current streak" value="7 days" tone={tone} />
-        <MiniStat label="XP gained" value="+120 XP" tone={tone} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      <div className="flex gap-2">
-        <GlowBadge label="Bronze" tone="yellow" />
-        <GlowBadge label="On fire" tone="coral" />
-      </div>
-      <MiniStat label="Next badge" value="Homework Hero" tone={tone} />
-    </div>
   );
 }
 
@@ -340,188 +258,41 @@ export default function HomePage() {
           <div className="space-y-5">
             <AudienceSceneGrid />
             <div className="grid gap-4 lg:grid-cols-3">
-            {roleCards.map((card) => (
-              <article
-                key={card.title}
-                className={`rounded-[2rem] border bg-[linear-gradient(160deg,var(--tw-gradient-from),var(--tw-gradient-via),var(--tw-gradient-to))] p-6 shadow-[0_22px_54px_rgba(59,108,255,0.16)] ${card.tone}`}
-              >
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/72">
-                  {card.title}
-                </p>
-                <h3 className="mt-4 text-2xl font-semibold">{card.subtitle}</h3>
-                <p className="mt-4 text-sm leading-6 text-white/88">{card.body}</p>
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {card.title === "For Students" ? (
-                    <>
-                      <GlowBadge label="Daily streak" tone="yellow" />
-                      <GlowBadge label="AI buddy" tone="blue" />
-                    </>
-                  ) : card.title === "For Teachers" ? (
-                    <>
-                      <GlowBadge label="Readiness view" tone="mint" />
-                      <GlowBadge label="Faster follow-up" tone="blue" />
-                    </>
-                  ) : (
-                    <>
-                      <GlowBadge label="Weekly report" tone="yellow" />
-                      <GlowBadge label="Homework status" tone="coral" />
-                    </>
-                  )}
-                </div>
-              </article>
-            ))}
-            </div>
-          </div>
-        </LandingSection>
-
-        <LandingSection
-          eyebrow="Student experience"
-          title="Everything Students Need After Class"
-          description="Keep revision active, visible, and motivating between tutor-led lessons."
-        >
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {studentFeatures.map((item, index) => (
-              <article
-                key={item.title}
-                className="rounded-[1.9rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f9fbff_100%)] p-5 shadow-[0_18px_42px_rgba(14,165,233,0.08)]"
-              >
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-bold text-white ${
-                    item.tone === "blue"
-                      ? "bg-[linear-gradient(135deg,#06b6d4_0%,#3b82f6_100%)]"
-                      : item.tone === "purple"
-                        ? "bg-[linear-gradient(135deg,#7c3aed_0%,#ec4899_100%)]"
-                        : item.tone === "mint"
-                          ? "bg-[linear-gradient(135deg,#22c55e_0%,#14b8a6_100%)]"
-                          : "bg-[linear-gradient(135deg,#f59e0b_0%,#f97316_100%)]"
-                  }`}
+              {roleCards.map((card) => (
+                <article
+                  key={card.title}
+                  className={`rounded-[2rem] border bg-[linear-gradient(160deg,var(--tw-gradient-from),var(--tw-gradient-via),var(--tw-gradient-to))] p-6 shadow-[0_22px_54px_rgba(59,108,255,0.16)] ${card.tone}`}
                 >
-                  {index + 1}
-                </div>
-                <h3 className="mt-4 text-xl font-semibold text-[#10223e]">{item.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-[#55637c]">
-                  Short, guided, and linked to what the tutor wants fixed next.
-                </p>
-                <div className="mt-4">
-                  <StudentFeatureVisual tone={item.tone} index={index} />
-                </div>
-              </article>
-            ))}
+                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/72">
+                    {card.title}
+                  </p>
+                  <h3 className="mt-4 text-2xl font-semibold">{card.subtitle}</h3>
+                  <p className="mt-4 text-sm leading-6 text-white/88">{card.body}</p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {card.title === "For Students" ? (
+                      <>
+                        <GlowBadge label="Daily streak" tone="yellow" />
+                        <GlowBadge label="AI buddy" tone="blue" />
+                      </>
+                    ) : card.title === "For Teachers" ? (
+                      <>
+                        <GlowBadge label="Readiness view" tone="mint" />
+                        <GlowBadge label="Faster follow-up" tone="blue" />
+                      </>
+                    ) : (
+                      <>
+                        <GlowBadge label="Weekly report" tone="yellow" />
+                        <GlowBadge label="Homework status" tone="coral" />
+                      </>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </LandingSection>
 
         <HorizontalLearningStory />
-
-        <LandingSection
-          eyebrow="Parent confidence"
-          title="Parents Stay in the Loop"
-          description="No more guessing what happened in tuition. Parents can see what was taught, what needs improvement, and what the next learning step is."
-          tinted
-        >
-          <div className="grid gap-6 lg:grid-cols-[0.54fr_0.46fr] lg:items-center">
-            <div className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <MiniStat label="Homework done" value="2 / 2 this week" tone="mint" />
-                <MiniStat label="Attendance" value="100% on time" tone="blue" />
-                <MiniStat label="Weak topic" value="Word problems" tone="coral" />
-                <MiniStat label="Next focus" value="Fractions to algebra" tone="purple" />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <GlowBadge label="Weekly summary" tone="blue" />
-                <GlowBadge label="Tutor note" tone="mint" />
-                <GlowBadge label="Next-step plan" tone="yellow" />
-              </div>
-            </div>
-            <div className="rounded-[2rem] border border-[#dbe7ff] bg-white p-5 shadow-[0_22px_54px_rgba(15,23,42,0.08)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3B6CFF]">
-                Parent mobile report
-              </p>
-              <div className="mt-4 rounded-[1.8rem] bg-[linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)] p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-lg font-semibold text-[#10223e]">Aina Sofia</p>
-                    <p className="text-sm text-[#5B6472]">Weekly learning summary</p>
-                  </div>
-                  <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#3B6CFF]">
-                    This week
-                  </div>
-                </div>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  {[
-                    ["Attendance", "100%"],
-                    ["Homework", "2/2 done"],
-                    ["Weak topic", "Word Problems"],
-                    ["Next focus", "Algebra translation"],
-                  ].map(([label, value]) => (
-                    <div key={label} className="rounded-[1.2rem] bg-white/88 p-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-[#64748b]">
-                        {label}
-                      </p>
-                      <p className="mt-2 text-sm font-semibold text-[#10223e]">{value}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </LandingSection>
-
-        <LandingSection
-          eyebrow="Tutor workflow"
-          title="Teach Smarter Before, During & After Class"
-          description="Keep the class human. Let the platform handle the follow-through."
-        >
-          <div className="grid gap-4 lg:grid-cols-3">
-            {[
-              {
-                title: "Before Class",
-                detail: "Readiness, weak topics, and quick prep in one glance.",
-                tone:
-                  "bg-[linear-gradient(180deg,#eff6ff_0%,#eef2ff_100%)] border-[#bfdbfe]",
-              },
-              {
-                title: "During Class",
-                detail: "Live support for quizzes, prompts, and focus checks.",
-                tone:
-                  "bg-[linear-gradient(180deg,#f5f3ff_0%,#fdf2f8_100%)] border-[#ddd6fe]",
-              },
-              {
-                title: "After Class",
-                detail: "Homework, revision, and parent reports move faster.",
-                tone:
-                  "bg-[linear-gradient(180deg,#fff7ed_0%,#fefce8_100%)] border-[#fed7aa]",
-              },
-            ].map((step, index) => (
-              <article
-                key={step.title}
-                className={`rounded-[1.9rem] border p-6 shadow-[0_18px_44px_rgba(79,70,229,0.08)] ${step.tone}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#10223e] text-sm font-bold text-white">
-                    0{index + 1}
-                  </div>
-                  <h3 className="text-2xl font-semibold text-[#10223e]">{step.title}</h3>
-                </div>
-                <p className="mt-4 text-sm leading-6 text-[#55637c]">{step.detail}</p>
-                <div className="mt-4">
-                  {index === 0 ? (
-                    <DashboardSpark bars={[22, 36, 28, 42]} tone="blue" />
-                  ) : index === 1 ? (
-                    <div className="flex gap-2">
-                      <GlowBadge label="Quick quiz" tone="purple" />
-                      <GlowBadge label="Participation" tone="mint" />
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      <MiniStat label="Homework" value="Auto drafted" tone="yellow" />
-                      <MiniStat label="Parent note" value="Ready to send" tone="coral" />
-                    </div>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
-        </LandingSection>
 
         <LandingSection
           eyebrow="For tuition centres"
@@ -555,46 +326,6 @@ export default function HomePage() {
               </article>
             ))}
             </div>
-          </div>
-        </LandingSection>
-
-        <LandingSection
-          eyebrow="Outcomes"
-          title="Designed to Improve Real Tuition Outcomes"
-          description="Less chasing. Better follow-up. Stronger learning habits after class."
-        >
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {outcomes.map((item, index) => (
-              <article
-                key={item}
-                className="rounded-[1.7rem] border border-[#e6ecf5] bg-white p-5 shadow-[0_16px_36px_rgba(14,165,233,0.08)]"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-lg font-semibold text-[#10223e]">{item}</h3>
-                  <div
-                    className={`h-10 w-10 rounded-2xl ${
-                      index % 3 === 0
-                        ? "bg-[#e0f2fe]"
-                        : index % 3 === 1
-                          ? "bg-[#ede9fe]"
-                          : "bg-[#ffedd5]"
-                    }`}
-                  />
-                </div>
-                <div className="mt-4">
-                  {index % 3 === 0 ? (
-                    <DashboardSpark bars={[18, 28, 36, 44]} tone="blue" />
-                  ) : index % 3 === 1 ? (
-                    <div className="flex flex-wrap gap-2">
-                      <GlowBadge label="Tutor-led" tone="mint" />
-                      <GlowBadge label="Trackable" tone="blue" />
-                    </div>
-                  ) : (
-                    <MiniStat label="Visible impact" value="Parents see what changed" tone="coral" />
-                  )}
-                </div>
-              </article>
-            ))}
           </div>
         </LandingSection>
 
@@ -649,7 +380,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <SolaceSiteFooter />
+        <SolaceSiteFooter showPromo={false} />
       </main>
     </div>
   );

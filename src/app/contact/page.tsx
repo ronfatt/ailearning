@@ -53,11 +53,29 @@ export default function ContactPage() {
   return (
     <SolacePageShell
       eyebrow="Contact"
-      title="Talk to the team behind the learning flow."
-      description="Whether you are booking for a child, applying as a tutor, or exploring a centre rollout, we will point you to the right next step quickly."
-      heroPanelClassName="border-[#e6ecf5] bg-[radial-gradient(circle_at_20%_12%,rgba(18,207,243,0.14),transparent_30%),radial-gradient(circle_at_86%_18%,rgba(124,92,255,0.1),transparent_28%),linear-gradient(180deg,#f8fbff_0%,#ffffff_100%)] shadow-[0_28px_80px_rgba(59,108,255,0.1)]"
+      title="Talk to the team and we’ll route you to the right next step."
+      description="Whether you are booking for a child, applying as a tutor, or exploring a tuition centre rollout, the platform team can point you to the fastest path."
+      heroVariant="stage"
+      heroColumnsClassName="lg:grid-cols-[0.58fr_0.42fr]"
+      actions={
+        <>
+          <Link
+            href="/book-class"
+            className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3.5 text-sm font-semibold !text-[#2f5bff] shadow-[0_14px_32px_rgba(255,255,255,0.16)] transition hover:bg-[#f8fbff] hover:!text-[#2448d8]"
+          >
+            Book a Class
+          </Link>
+          <Link
+            href="/tutor-apply"
+            className="rounded-full border border-white/24 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/18"
+          >
+            Tutor Application
+          </Link>
+        </>
+      }
+      highlights={["Family enquiries", "Tutor applications", "Centre partnerships"]}
       aside={
-        <div className="rounded-[1.8rem] border border-[#e6ecf5] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] p-6 shadow-[0_18px_40px_rgba(59,108,255,0.08)]">
+        <div className="rounded-[1.9rem] border border-white/75 bg-white/96 p-6 shadow-[0_22px_54px_rgba(15,23,42,0.14)]">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#3B6CFF]">
             Response expectation
           </p>
@@ -65,7 +83,7 @@ export default function ContactPage() {
             {responseExpectations.map((item) => (
               <div
                 key={item}
-                className="rounded-[1.2rem] border border-[#dbe7ff] bg-white px-4 py-3 text-sm font-medium leading-7 text-[#111827]"
+                className="rounded-[1.2rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-3 text-sm font-medium leading-7 text-[#111827]"
               >
                 {item}
               </div>

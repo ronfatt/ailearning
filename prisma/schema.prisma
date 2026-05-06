@@ -4,7 +4,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum UserRole {
@@ -98,6 +99,77 @@ enum IntakeStatus {
   ARCHIVED
 }
 
+enum ContentStatus {
+  DRAFT
+  ACADEMIC_REVIEW
+  QA_REVIEW
+  APPROVED
+  LIVE
+  REVISION_NEEDED
+  ARCHIVED
+}
+
+enum MasteryNodeType {
+  RECOGNITION
+  PROCEDURE
+  APPLICATION
+  RETENTION
+}
+
+enum MasteryEdgeType {
+  REQUIRED
+  RECOMMENDED
+}
+
+enum LessonModuleType {
+  MICRO_LESSON
+  WORKED_EXAMPLE
+  GUIDED_PRACTICE
+  CHECKPOINT_PREP
+}
+
+enum QuestionPoolType {
+  TEACH
+  GUIDED_PRACTICE
+  DIAGNOSTIC
+  MASTERY
+  REVISION
+}
+
+enum QuestionFormat {
+  MCQ
+  SHORT_ANSWER
+  STEP_ORDER
+  MATCH
+  OPEN_RESPONSE
+}
+
+enum DifficultyBand {
+  FOUNDATION
+  CORE
+  STRETCH
+}
+
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum InterventionTriggerType {
+  STALLED_MASTERY
+  HINT_DEPENDENCE
+  RETENTION_DROP
+  REPEAT_MISCONCEPTION
+}
+
+enum RevisionScheduleType {
+  SPACED
+  WEAK_TOPIC
+  PRE_CLASS
+  PRE_EXAM
+}
+
 model User {
   id                    String             @id @default(cuid())
   email                 String             @unique
@@ -128,8 +200,239 @@ model Subject {
   updatedAt   DateTime    @updatedAt
   classes     Class[]
   lessonPlans LessonPlan[]
+  curriculumLevels CurriculumLevel[]
+  curriculumDomains SubjectDomain[]
+  curriculumTopics SubjectTopic[]
   masteryRecords StudentMastery[]
   readinessChecks ReadinessCheckSubmission[]
+}
+
+model CurriculumLevel {
+  id                  String        @id @default(cuid())
+  subjectId           String
+  code                String
+  formLabel           String
+  ageBand             String?
+  track               String?
+  examStage           String?
+  curriculumFramework String       @default("KSSM")
+  sequenceOrder       Int          @default(0)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  subject             Subject      @relation(fields: [subjectId], references: [id])
+  domains             SubjectDomain[]
+  topics              SubjectTopic[]
+
+  @@unique([subjectId, code])
+  @@index([subjectId, sequenceOrder])
+}
+
+model SubjectDomain {
+  id            String        @id @default(cuid())
+  subjectId     String
+  levelId       String
+  code          String
+  name          String
+  description   String?
+  sequenceOrder Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  subject       Subject       @relation(fields: [subjectId], references: [id])
+  level         CurriculumLevel @relation(fields: [levelId], references: [id])
+  topics        SubjectTopic[]
+
+  @@unique([levelId, code])
+  @@index([subjectId, sequenceOrder])
+  @@index([levelId, sequenceOrder])
+}
+
+model SubjectTopic {
+  id                       String              @id @default(cuid())
+  subjectId                String
+  levelId                  String
+  domainId                 String
+  code                     String
+  name                     String
+  summary                  String?
+  prerequisiteSummary      String?
+  sequenceOrder            Int                 @default(0)
+  estimatedLearningMinutes Int?
+  estimatedRevisionCycles  Int?
+  contentStatus            ContentStatus       @default(DRAFT)
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+  subject                  Subject             @relation(fields: [subjectId], references: [id])
+  level                    CurriculumLevel     @relation(fields: [levelId], references: [id])
+  domain                   SubjectDomain       @relation(fields: [domainId], references: [id])
+  masteryNodes             MasteryNode[]
+  misconceptions           TopicMisconception[]
+
+  @@unique([levelId, code])
+  @@index([domainId, sequenceOrder])
+  @@index([subjectId, levelId, sequenceOrder])
+  @@index([contentStatus])
+}
+
+model MasteryNode {
+  id                   String                @id
+  topicId              String
+  code                 String
+  nodeType             MasteryNodeType
+  title                String
+  learningObjective    String
+  difficultyBand       DifficultyBand       @default(CORE)
+  sequenceOrder        Int                  @default(0)
+  masteryThreshold     Int                  @default(80)
+  hintDependencyLimit  Int                  @default(1)
+  retryLimit           Int                  @default(2)
+  retentionReviewDays  Int                  @default(7)
+  active               Boolean              @default(true)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  topic                SubjectTopic         @relation(fields: [topicId], references: [id])
+  incomingEdges        MasteryEdge[]        @relation("MasteryNodeTo")
+  outgoingEdges        MasteryEdge[]        @relation("MasteryNodeFrom")
+  lessonModules        LessonModule[]
+  questionPools        QuestionPool[]
+  questionItems        QuestionItem[]
+  checkpoints          MasteryCheckpoint[]
+  interventionRules    InterventionRule[]
+  revisionRules        RevisionRule[]
+
+  @@unique([topicId, code])
+  @@index([topicId, sequenceOrder])
+  @@index([nodeType, active])
+}
+
+model MasteryEdge {
+  id         String           @id @default(cuid())
+  fromNodeId String
+  toNodeId   String
+  edgeType   MasteryEdgeType  @default(REQUIRED)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  fromNode   MasteryNode      @relation("MasteryNodeFrom", fields: [fromNodeId], references: [id])
+  toNode     MasteryNode      @relation("MasteryNodeTo", fields: [toNodeId], references: [id])
+
+  @@unique([fromNodeId, toNodeId])
+  @@index([toNodeId])
+}
+
+model LessonModule {
+  id               String           @id @default(cuid())
+  nodeId           String
+  moduleType       LessonModuleType
+  title            String
+  teachingScript   Json?
+  exampleCount     Int?
+  estimatedMinutes Int?
+  tutorVisible     Boolean          @default(true)
+  sequenceOrder    Int              @default(0)
+  contentStatus    ContentStatus    @default(DRAFT)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  node             MasteryNode      @relation(fields: [nodeId], references: [id])
+
+  @@index([nodeId, sequenceOrder])
+  @@index([contentStatus])
+}
+
+model QuestionPool {
+  id               String           @id @default(cuid())
+  nodeId           String
+  poolType         QuestionPoolType
+  targetCount      Int?
+  adaptivePriority Int              @default(0)
+  contentStatus    ContentStatus    @default(DRAFT)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  node             MasteryNode      @relation(fields: [nodeId], references: [id])
+  questionItems    QuestionItem[]
+
+  @@unique([nodeId, poolType])
+  @@index([contentStatus])
+}
+
+model QuestionItem {
+  id               String             @id @default(cuid())
+  poolId           String
+  nodeId           String
+  questionFormat   QuestionFormat
+  difficulty       QuestionDifficulty @default(MEDIUM)
+  prompt           Json
+  answerKey        Json
+  solutionSteps    Json?
+  hintLevel1       String?
+  hintLevel2       String?
+  hintLevel3       String?
+  misconceptionTag String?
+  autoMarkable     Boolean            @default(true)
+  languageSupport  String?
+  contentStatus    ContentStatus      @default(DRAFT)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  pool             QuestionPool       @relation(fields: [poolId], references: [id])
+  node             MasteryNode        @relation(fields: [nodeId], references: [id])
+
+  @@index([poolId])
+  @@index([nodeId, difficulty])
+  @@index([contentStatus])
+}
+
+model MasteryCheckpoint {
+  id               String          @id @default(cuid())
+  nodeId           String
+  stage            MasteryNodeType
+  passRule         String
+  questionCount    Int
+  timeLimitMinutes Int?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  node             MasteryNode     @relation(fields: [nodeId], references: [id])
+
+  @@unique([nodeId, stage])
+}
+
+model TopicMisconception {
+  id               String       @id @default(cuid())
+  topicId          String
+  code             String
+  label            String
+  description      String
+  remedialStrategy String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  topic            SubjectTopic @relation(fields: [topicId], references: [id])
+
+  @@unique([topicId, code])
+  @@index([topicId])
+}
+
+model InterventionRule {
+  id               String                  @id @default(cuid())
+  nodeId           String
+  triggerType      InterventionTriggerType
+  triggerCondition String
+  systemAction     String
+  tutorAction      String
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  node             MasteryNode             @relation(fields: [nodeId], references: [id])
+
+  @@index([nodeId, triggerType])
+}
+
+model RevisionRule {
+  id            String               @id @default(cuid())
+  nodeId        String
+  scheduleType  RevisionScheduleType
+  dayOffsets    Json?
+  stopCondition String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  node          MasteryNode          @relation(fields: [nodeId], references: [id])
+
+  @@index([nodeId, scheduleType])
 }
 
 model Class {

@@ -8,6 +8,10 @@ import {
 import { getLinkedStudentIdForParent } from "@/lib/account-links";
 import { prisma } from "@/lib/prisma";
 import {
+  resolveMathCurriculumLevelCode,
+  resolveMathTopicAliasCode,
+} from "@/lib/server/curriculum-topic-links";
+import {
   average,
   formatDateTime,
   getAttendanceRate,
@@ -103,8 +107,32 @@ export type ParentDashboardData = {
   message?: string;
 };
 
+function normalizeTopicToken(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getStudentLevelFromProfileData(profileData: unknown) {
+  if (!profileData || typeof profileData !== "object" || Array.isArray(profileData)) {
+    return undefined;
+  }
+
+  const rawLevel = (profileData as Record<string, unknown>).studentLevel;
+  return typeof rawLevel === "string" && rawLevel.trim().length > 0 ? rawLevel : undefined;
+}
+
 function getPrimarySupportArea(
-  masteryRecords: Array<{ topicLabel: string; masteryScore: number }>,
+  masteryRecords: Array<{ topicId: string; topicLabel: string; masteryScore: number }>,
+  resolveSubjectTopic: (topicId: string, topicLabel: string) => {
+    id: string;
+    code: string;
+    name: string;
+    _count: { masteryNodes: number };
+  } | null,
 ) {
   if (masteryRecords.length === 0) {
     return "Pending tutor review";
@@ -113,8 +141,14 @@ function getPrimarySupportArea(
   const weakestTopic = [...masteryRecords].sort(
     (left, right) => left.masteryScore - right.masteryScore,
   )[0];
+  const resolvedTopic = resolveSubjectTopic(
+    weakestTopic.topicId,
+    weakestTopic.topicLabel,
+  );
 
-  return weakestTopic.topicLabel;
+  return resolvedTopic
+    ? `${resolvedTopic.code} ${resolvedTopic.name}`
+    : weakestTopic.topicLabel;
 }
 
 export async function getParentDashboardData(
@@ -200,6 +234,7 @@ export async function getParentDashboardData(
       email: true,
       accountStatus: true,
       onboardingCompleted: true,
+      profileData: true,
     },
   });
 
@@ -302,6 +337,10 @@ export async function getParentDashboardData(
       )
       .sort((left, right) => left.startsAt.getTime() - right.startsAt.getTime())[0] ??
     null;
+  const studentLevelHint =
+    getStudentLevelFromProfileData(linkedStudent?.profileData) ??
+    latestBookingRequest?.studentLevel ??
+    undefined;
 
   const [
     reports,
@@ -310,6 +349,7 @@ export async function getParentDashboardData(
     masteryRecords,
     attendanceRecords,
     latestWelcomeMessage,
+    subjectTopics,
   ] =
     await Promise.all([
       prisma.parentReport.findMany({
@@ -387,7 +427,55 @@ export async function getParentDashboardData(
             orderBy: [{ sentAt: "desc" }, { updatedAt: "desc" }],
           })
         : Promise.resolve(null),
+      prisma.subjectTopic.findMany({
+        where: {
+          subjectId: enrollment.class.subjectId,
+          ...(enrollment.class.subject.code === "MATH-KSSM"
+            ? {
+                level: {
+                  code: resolveMathCurriculumLevelCode(studentLevelHint),
+                },
+              }
+            : {}),
+        },
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          sequenceOrder: true,
+          _count: {
+            select: {
+              masteryNodes: true,
+            },
+          },
+        },
+        orderBy: [{ sequenceOrder: "asc" }, { createdAt: "asc" }],
+      }),
     ]);
+
+  const subjectTopicById = new Map(
+    subjectTopics.map((topic) => [topic.id, topic]),
+  );
+  const subjectTopicByName = new Map(
+    subjectTopics.map((topic) => [normalizeTopicToken(topic.name), topic]),
+  );
+  const subjectTopicByCode = new Map(
+    subjectTopics.map((topic) => [topic.code.toLowerCase(), topic]),
+  );
+
+  function resolveSubjectTopic(topicId: string, topicLabel: string) {
+    const aliasCode =
+      enrollment.class.subject.code === "MATH-KSSM"
+        ? resolveMathTopicAliasCode(topicId, topicLabel)
+        : undefined;
+
+    return (
+      subjectTopicById.get(topicId) ??
+      (aliasCode ? subjectTopicByCode.get(aliasCode.toLowerCase()) : undefined) ??
+      subjectTopicByName.get(normalizeTopicToken(topicLabel)) ??
+      null
+    );
+  }
 
   const latestReport = reports[0] ?? null;
   const attendanceStatuses = attendanceRecords.map((record) => record.status);
@@ -404,11 +492,15 @@ export async function getParentDashboardData(
   const averageMastery = Math.round(
     average(masteryRecords.map((record) => record.masteryScore)),
   );
-  const supportArea = getPrimarySupportArea(masteryRecords);
+  const supportArea = getPrimarySupportArea(masteryRecords, resolveSubjectTopic);
   const recentHomeworkFeedback = submissions.slice(0, 3).map((submission) => {
     const title =
       getJsonString(submission.homeworkAssignment.assignmentContent, "title") ??
       "Tutor-reviewed homework";
+    const resolvedTopic = resolveSubjectTopic(
+      getJsonString(submission.homeworkAssignment.assignmentContent, "subjectTopicId") ?? "",
+      getJsonString(submission.homeworkAssignment.assignmentContent, "subjectTopicLabel") ?? "",
+    );
     const submissionVersions = getJsonObjectArray(
       submission.submissionContent,
       "submissionVersions",
@@ -429,8 +521,8 @@ export async function getParentDashboardData(
       versionCount,
       progressNote:
         versionCount > 1
-          ? `This homework was revised ${versionCount - 1} time${versionCount > 2 ? "s" : ""} before the latest tutor review.`
-          : "This homework was reviewed after the first student submission.",
+          ? `${resolvedTopic ? `${resolvedTopic.code} ${resolvedTopic.name} · ` : ""}This homework was revised ${versionCount - 1} time${versionCount > 2 ? "s" : ""} before the latest tutor review.`
+          : `${resolvedTopic ? `${resolvedTopic.code} ${resolvedTopic.name} · ` : ""}This homework was reviewed after the first student submission.`,
     };
   });
 
@@ -510,16 +602,26 @@ export async function getParentDashboardData(
         type: "homework" as const,
       };
     }),
-    ...masteryRecords.slice(0, 3).map((record) => ({
-      id: `mastery-${record.id}`,
-      title: `${record.topicLabel} mastery updated`,
-      detail:
-        record.tutorReviewNotes ??
-        `Mastery updated to ${Math.round(record.masteryScore)}% after tutor review.`,
-      sortKey: (record.reviewedByTutorAt ?? record.updatedAt).getTime(),
-      dateLabel: formatDateTime(record.reviewedByTutorAt ?? record.updatedAt),
-      type: "mastery" as const,
-    })),
+    ...masteryRecords.slice(0, 3).map((record) => {
+      const resolvedTopic = resolveSubjectTopic(record.topicId, record.topicLabel);
+      const masteryNodeCount = resolvedTopic?._count.masteryNodes ?? 0;
+      const detail = record.tutorReviewNotes
+        ? record.tutorReviewNotes
+        : resolvedTopic
+          ? `${resolvedTopic.code} is now at ${Math.round(record.masteryScore)}% mastery across ${masteryNodeCount} tracked node${
+              masteryNodeCount === 1 ? "" : "s"
+            }.`
+          : `Mastery updated to ${Math.round(record.masteryScore)}% after tutor review.`;
+
+      return {
+        id: `mastery-${record.id}`,
+        title: `${resolvedTopic?.name ?? record.topicLabel} mastery updated`,
+        detail,
+        sortKey: (record.reviewedByTutorAt ?? record.updatedAt).getTime(),
+        dateLabel: formatDateTime(record.reviewedByTutorAt ?? record.updatedAt),
+        type: "mastery" as const,
+      };
+    }),
     ...reports.slice(0, 2).map((report) => ({
       id: `report-${report.id}`,
       title: "Weekly progress report approved",
@@ -568,7 +670,7 @@ export async function getParentDashboardData(
     {
       label: "Main support area",
       value: supportArea,
-      note: "This is the weakest tutor-reviewed topic in the current subject.",
+      note: "This is the weakest tutor-reviewed curriculum topic in the current subject.",
     },
     {
       label: "Next live class",

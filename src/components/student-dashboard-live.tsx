@@ -41,6 +41,9 @@ type StudentDashboardResponse = {
       submissionId: string | null;
       title: string;
       scope: string;
+      curriculumTopicCode: string | null;
+      curriculumTopicName: string | null;
+      masteryNodeTitles: string[];
       prompt: string;
       questionCount: number | null;
       checkpoints: string[];
@@ -242,6 +245,44 @@ export function StudentDashboardLive({
     return "bg-[#f3e8ff] text-[#7c5cff]";
   }
 
+  function getHistoryCardTheme(
+    type: StudentDashboardResponse["data"]["learningHistory"][number]["type"],
+  ) {
+    if (type === "class") {
+      return {
+        shell:
+          "border-[#cfe0ff] bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)]",
+        media: "bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)]",
+        icon: "●",
+      };
+    }
+
+    if (type === "homework") {
+      return {
+        shell:
+          "border-[#ccefe6] bg-[linear-gradient(180deg,#ffffff_0%,#f2fffb_100%)]",
+        media: "bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)]",
+        icon: "✎",
+      };
+    }
+
+    if (type === "mastery") {
+      return {
+        shell:
+          "border-[#ffe0a8] bg-[linear-gradient(180deg,#ffffff_0%,#fff8e8_100%)]",
+        media: "bg-[linear-gradient(135deg,#FFD166_0%,#FF9F1C_100%)]",
+        icon: "↑",
+      };
+    }
+
+    return {
+      shell:
+        "border-[#e6d8ff] bg-[linear-gradient(180deg,#ffffff_0%,#faf5ff_100%)]",
+      media: "bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)]",
+      icon: "★",
+    };
+  }
+
   function getSeriesTone(
     tone: StudentDashboardResponse["data"]["progressSeries"][number]["tone"],
   ) {
@@ -249,6 +290,8 @@ export function StudentDashboardLive({
       return {
         bar: "from-[#20C997] to-[#12CFF3]",
         chip: "bg-[#ecfdf5] text-[#0f9b74]",
+        shell: "from-[#ffffff] to-[#f1fffb]",
+        media: "from-[#20C997] to-[#12CFF3]",
       };
     }
 
@@ -256,6 +299,8 @@ export function StudentDashboardLive({
       return {
         bar: "from-[#FFD166] to-[#FF9F1C]",
         chip: "bg-[#fff4dd] text-[#a86b00]",
+        shell: "from-[#ffffff] to-[#fff8ea]",
+        media: "from-[#FFD166] to-[#FF9F1C]",
       };
     }
 
@@ -263,12 +308,16 @@ export function StudentDashboardLive({
       return {
         bar: "from-[#7C5CFF] to-[#3B6CFF]",
         chip: "bg-[#f3e8ff] text-[#7c5cff]",
+        shell: "from-[#ffffff] to-[#f7f1ff]",
+        media: "from-[#7C5CFF] to-[#3B6CFF]",
       };
     }
 
     return {
       bar: "from-[#3B6CFF] to-[#12CFF3]",
       chip: "bg-[#e7f0ff] text-[#2f5bff]",
+      shell: "from-[#ffffff] to-[#f5f9ff]",
+      media: "from-[#3B6CFF] to-[#12CFF3]",
     };
   }
 
@@ -467,7 +516,7 @@ export function StudentDashboardLive({
         </section>
       ) : null}
 
-      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <section id="overview" className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {state.data.metrics.map((metric) => (
           <MetricCard
             key={metric.label}
@@ -480,20 +529,28 @@ export function StudentDashboardLive({
       </section>
 
       {state.data.welcomeMessage ? (
-        <section className="glass-panel rounded-[2rem] bg-[#103b35] p-8 text-white">
-          <p className="text-sm font-medium text-white/70">Welcome</p>
+        <section className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#3B6CFF_0%,#4F7CFF_46%,#7C5CFF_100%)] p-8 text-white shadow-[0_24px_64px_rgba(59,108,255,0.22)]">
+          <p className="text-sm font-medium text-white/72">Welcome</p>
           <h2 className="mt-2 text-2xl font-semibold text-white">
             {state.data.welcomeMessage.title}
           </h2>
           <p className="mt-4 text-sm leading-7 text-white/88">
             {state.data.welcomeMessage.body}
           </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <div className="rounded-full border border-white/18 bg-white/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/88">
+              Tutor-led class active
+            </div>
+            <div className="rounded-full border border-white/18 bg-white/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/88">
+              AI follow-up ready
+            </div>
+          </div>
         </section>
       ) : null}
 
       {state.data.assistantUnlockNotice ? (
-        <section className="glass-panel rounded-[2rem] border border-teal/20 bg-[#eefaf7] p-8">
-          <p className="text-sm font-medium text-teal">AI Study Assistant</p>
+        <section className="overflow-hidden rounded-[2rem] border border-[#dbe7ff] bg-[linear-gradient(135deg,#eef4ff_0%,#f2edff_54%,#ffffff_100%)] p-8 shadow-[0_18px_44px_rgba(59,108,255,0.1)]">
+          <p className="text-sm font-medium text-[#3B6CFF]">AI Study Assistant</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
             {state.data.assistantUnlockNotice.title}
           </h2>
@@ -513,16 +570,16 @@ export function StudentDashboardLive({
         </section>
       ) : null}
 
-      <section className="glass-panel rounded-[2rem] p-8">
+      <section className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_44%,#f2edff_100%)] p-8 shadow-[0_20px_52px_rgba(59,108,255,0.1)]">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-muted">Your Class</p>
-            <h2 className="mt-2 text-2xl font-semibold text-foreground">
+            <p className="text-sm font-medium text-[#5B6472]">Your Class</p>
+            <h2 className="mt-2 text-3xl font-semibold text-foreground">
               {state.data.enrollmentStatus?.className ?? "Class assignment pending"}
             </h2>
           </div>
           {state.data.enrollmentStatus ? (
-            <div className="rounded-full bg-teal-soft px-4 py-2 text-sm font-semibold text-teal">
+            <div className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#3B6CFF] shadow-[0_12px_26px_rgba(59,108,255,0.1)]">
               {state.data.enrollmentStatus.statusLabel}
             </div>
           ) : null}
@@ -530,19 +587,19 @@ export function StudentDashboardLive({
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {state.data.enrollmentStatus ? (
             <>
-              <div className="rounded-[1.5rem] border border-border bg-surface-strong p-5">
+              <div className="rounded-[1.5rem] border border-white/70 bg-white/90 p-5 shadow-[0_14px_28px_rgba(59,108,255,0.08)]">
                 <p className="text-sm font-medium text-muted">Subject</p>
                 <p className="mt-3 text-base font-semibold text-foreground">
                   {state.data.enrollmentStatus.subject}
                 </p>
               </div>
-              <div className="rounded-[1.5rem] border border-border bg-surface-strong p-5">
+              <div className="rounded-[1.5rem] border border-white/70 bg-white/90 p-5 shadow-[0_14px_28px_rgba(59,108,255,0.08)]">
                 <p className="text-sm font-medium text-muted">Tutor</p>
                 <p className="mt-3 text-base font-semibold text-foreground">
                   {state.data.enrollmentStatus.tutorName}
                 </p>
               </div>
-              <div className="rounded-[1.5rem] border border-border bg-surface-strong p-5">
+              <div className="rounded-[1.5rem] border border-white/70 bg-white/90 p-5 shadow-[0_14px_28px_rgba(59,108,255,0.08)]">
                 <p className="text-sm font-medium text-muted">Schedule</p>
                 <p className="mt-3 text-base font-semibold text-foreground">
                   {state.data.enrollmentStatus.schedule}
@@ -558,7 +615,7 @@ export function StudentDashboardLive({
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <article className="glass-panel rounded-[2rem] p-8">
+        <article id="progress-overview" className="glass-panel rounded-[2rem] p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-muted">Personal Progress Snapshot</p>
@@ -576,113 +633,141 @@ export function StudentDashboardLive({
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#3B6CFF]">
-                Average Mastery
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">
-                {state.data.progressSnapshot.averageMastery !== null
-                  ? `${state.data.progressSnapshot.averageMastery}%`
-                  : "Pending"}
-              </p>
-              <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#e8eefc]">
-                <div
-                  className="h-full rounded-full bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)]"
-                  style={{
-                    width: `${state.data.progressSnapshot.averageMastery ?? 0}%`,
-                  }}
-                />
+            <div className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-0 shadow-[0_14px_30px_rgba(59,108,255,0.08)]">
+              <div className="bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
+                  Average Mastery
+                </p>
+              </div>
+              <div className="p-5">
+                <p className="text-3xl font-semibold text-foreground">
+                  {state.data.progressSnapshot.averageMastery !== null
+                    ? `${state.data.progressSnapshot.averageMastery}%`
+                    : "Pending"}
+                </p>
+                <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#e8eefc]">
+                  <div
+                    className="h-full rounded-full bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)]"
+                    style={{
+                      width: `${state.data.progressSnapshot.averageMastery ?? 0}%`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#20C997]">
-                Attendance
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">
-                {state.data.progressSnapshot.attendanceRate !== null
-                  ? `${state.data.progressSnapshot.attendanceRate}%`
-                  : "Pending"}
-              </p>
-              <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#e9f8f3]">
-                <div
-                  className="h-full rounded-full bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)]"
-                  style={{
-                    width: `${state.data.progressSnapshot.attendanceRate ?? 0}%`,
-                  }}
-                />
+            <div className="overflow-hidden rounded-[1.6rem] border border-[#ccefe6] bg-[linear-gradient(180deg,#ffffff_0%,#f1fffb_100%)] p-0 shadow-[0_14px_30px_rgba(32,201,151,0.08)]">
+              <div className="bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
+                  Attendance
+                </p>
+              </div>
+              <div className="p-5">
+                <p className="text-3xl font-semibold text-foreground">
+                  {state.data.progressSnapshot.attendanceRate !== null
+                    ? `${state.data.progressSnapshot.attendanceRate}%`
+                    : "Pending"}
+                </p>
+                <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#e9f8f3]">
+                  <div
+                    className="h-full rounded-full bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)]"
+                    style={{
+                      width: `${state.data.progressSnapshot.attendanceRate ?? 0}%`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#FF9F1C]">
-                Homework Completion
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">
-                {state.data.progressSnapshot.homeworkCompletionRate !== null
-                  ? `${state.data.progressSnapshot.homeworkCompletionRate}%`
-                  : "Pending"}
-              </p>
-              <p className="mt-3 text-sm text-muted">
-                {state.data.progressSnapshot.submissionCount} submission
-                {state.data.progressSnapshot.submissionCount === 1 ? "" : "s"} sent to your tutor.
-              </p>
+            <div className="overflow-hidden rounded-[1.6rem] border border-[#ffe0a8] bg-[linear-gradient(180deg,#ffffff_0%,#fff8ea_100%)] p-0 shadow-[0_14px_30px_rgba(255,209,102,0.08)]">
+              <div className="bg-[linear-gradient(135deg,#FFD166_0%,#FF9F1C_100%)] px-5 py-4 text-[#6b4100]">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6b4100]/78">
+                  Homework Completion
+                </p>
+              </div>
+              <div className="p-5">
+                <p className="text-3xl font-semibold text-foreground">
+                  {state.data.progressSnapshot.homeworkCompletionRate !== null
+                    ? `${state.data.progressSnapshot.homeworkCompletionRate}%`
+                    : "Pending"}
+                </p>
+                <p className="mt-3 text-sm text-muted">
+                  {state.data.progressSnapshot.submissionCount} submission
+                  {state.data.progressSnapshot.submissionCount === 1 ? "" : "s"} sent to your tutor.
+                </p>
+              </div>
             </div>
 
-            <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]">
-                Reviewed Topics
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">
-                {state.data.progressSnapshot.reviewedTopics}
-              </p>
-              <p className="mt-3 text-sm text-muted">
-                Tutor-reviewed topics currently tracked in your dashboard.
-              </p>
+            <div className="overflow-hidden rounded-[1.6rem] border border-[#e6d8ff] bg-[linear-gradient(180deg,#ffffff_0%,#f8f3ff_100%)] p-0 shadow-[0_14px_30px_rgba(124,92,255,0.08)]">
+              <div className="bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)] px-5 py-4 text-white">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
+                  Reviewed Topics
+                </p>
+              </div>
+              <div className="p-5">
+                <p className="text-3xl font-semibold text-foreground">
+                  {state.data.progressSnapshot.reviewedTopics}
+                </p>
+                <p className="mt-3 text-sm text-muted">
+                  Tutor-reviewed topics currently tracked in your dashboard.
+                </p>
+              </div>
             </div>
           </div>
         </article>
 
-        <article className="glass-panel rounded-[2rem] p-8">
+        <article id="learning-history" className="glass-panel rounded-[2rem] p-8">
           <p className="text-sm font-medium text-muted">Learning History</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
             Your recent class and homework timeline
           </h2>
-          <div className="mt-8 space-y-4">
+          <div className="mt-8 grid gap-4 lg:grid-cols-2">
             {state.data.learningHistory.length === 0 ? (
-              <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
+              <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted lg:col-span-2">
                 Your learning history will start to build after your first tutor-reviewed class cycle.
               </div>
             ) : (
-              state.data.learningHistory.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-[1.5rem] border border-border bg-white/80 p-5"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
+              state.data.learningHistory.map((item) => {
+                const theme = getHistoryCardTheme(item.type);
+
+                return (
+                  <article
+                    key={item.id}
+                    className={`overflow-hidden rounded-[1.6rem] border p-0 shadow-[0_14px_28px_rgba(59,108,255,0.06)] ${theme.shell}`}
+                  >
+                    <div className={`flex items-center justify-between bg-gradient-to-r ${theme.media} px-5 py-4 text-white`}>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/18 text-lg font-semibold">
+                          {theme.icon}
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/74">
+                            {item.type}
+                          </p>
+                          <p className="text-base font-semibold text-white">{item.title}</p>
+                        </div>
+                      </div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/78">
+                        {item.dateLabel}
+                      </p>
+                    </div>
+                    <div className="p-5">
                       <span
                         className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${getHistoryTone(item.type)}`}
                       >
-                        {item.type}
+                        Learning update
                       </span>
-                      <p className="text-base font-semibold text-foreground">
-                        {item.title}
-                      </p>
+                      <p className="mt-4 text-sm leading-7 text-muted">{item.detail}</p>
                     </div>
-                    <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted">
-                      {item.dateLabel}
-                    </p>
-                  </div>
-                  <p className="mt-3 text-sm leading-7 text-muted">{item.detail}</p>
-                </div>
-              ))
+                  </article>
+                );
+              })
             )}
           </div>
         </article>
       </section>
 
-      <section className="glass-panel rounded-[2rem] p-8">
+      <section className="rounded-[2rem] border border-[#e6ecf5] bg-white/94 p-8 shadow-[0_20px_52px_rgba(59,108,255,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-muted">Progress Chart</p>
@@ -706,25 +791,32 @@ export function StudentDashboardLive({
             return (
               <div
                 key={item.label}
-                className="rounded-[1.75rem] border border-border bg-white/85 p-5"
+                className={`overflow-hidden rounded-[1.75rem] border border-[#dbe7ff] bg-gradient-to-b ${tone.shell} p-0 shadow-[0_14px_28px_rgba(59,108,255,0.06)]`}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                <div className={`bg-gradient-to-r ${tone.media} px-5 py-4 text-white`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-white">{item.label}</p>
+                    <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white">
+                      {item.value}%
+                    </span>
+                  </div>
+                </div>
+                <div className="p-5">
                   <span
                     className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${tone.chip}`}
                   >
-                    {item.value}%
+                    current cycle
                   </span>
-                </div>
-                <div className="mt-5 flex h-40 items-end">
-                  <div className="relative w-full overflow-hidden rounded-[1.5rem] bg-[#eef4ff]">
-                    <div
-                      className={`w-full rounded-[1.5rem] bg-gradient-to-t ${tone.bar} transition-all duration-500`}
-                      style={{ height: `${Math.max(item.value, 8)}%` }}
-                    />
+                  <div className="mt-5 flex h-40 items-end">
+                    <div className="relative w-full overflow-hidden rounded-[1.5rem] bg-[#eef4ff]">
+                      <div
+                        className={`w-full rounded-[1.5rem] bg-gradient-to-t ${tone.bar} transition-all duration-500`}
+                        style={{ height: `${Math.max(item.value, 8)}%` }}
+                      />
+                    </div>
                   </div>
+                  <p className="mt-4 text-sm leading-7 text-muted">{item.note}</p>
                 </div>
-                <p className="mt-4 text-sm leading-7 text-muted">{item.note}</p>
               </div>
             );
           })}
@@ -732,7 +824,7 @@ export function StudentDashboardLive({
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <article id="assigned-homework" className="glass-panel rounded-[2rem] p-8">
+        <article id="assigned-homework" className="rounded-[2rem] border border-[#e6ecf5] bg-white/94 p-8 shadow-[0_20px_52px_rgba(59,108,255,0.08)]">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-muted">Upcoming Tutor-Led Class</p>
@@ -776,9 +868,9 @@ export function StudentDashboardLive({
                   </div>
                 ) : (
                   state.data.assignedHomework.map((item) => (
-                    <div key={item.id} className="rounded-2xl bg-white/75 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-base font-semibold text-foreground">
+                    <article key={item.id} className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-0 shadow-[0_14px_28px_rgba(59,108,255,0.06)]">
+                      <div className="flex items-center justify-between gap-3 bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)] px-4 py-4 text-white">
+                        <p className="text-base font-semibold text-white">
                           {item.title}
                         </p>
                         <div className="flex items-center gap-2">
@@ -793,18 +885,43 @@ export function StudentDashboardLive({
                           >
                             Ask AI
                           </button>
-                          <span className="rounded-full bg-gold-soft px-3 py-1 text-xs font-semibold text-[#8b5a13]">
+                          <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white">
                             {item.status}
                           </span>
                         </div>
                       </div>
-                      <p className="mt-2 text-sm text-muted">{item.scope}</p>
+                      <div className="p-4">
+                      <p className="text-sm text-muted">{item.scope}</p>
+                      {item.curriculumTopicName ? (
+                        <div className="mt-3 rounded-2xl border border-[#dbe7ff] bg-[#f5f9ff] px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#3B6CFF]">
+                            Mastery topic
+                          </p>
+                          <p className="mt-2 text-sm font-semibold text-foreground">
+                            {item.curriculumTopicCode
+                              ? `${item.curriculumTopicCode} ${item.curriculumTopicName}`
+                              : item.curriculumTopicName}
+                          </p>
+                          {item.masteryNodeTitles.length > 0 ? (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {item.masteryNodeTitles.map((nodeTitle) => (
+                                <span
+                                  key={`${item.id}-${nodeTitle}`}
+                                  className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#3B6CFF]"
+                                >
+                                  {nodeTitle}
+                                </span>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
                       <p className="mt-1 text-sm text-teal">{item.dueDate}</p>
                       <div className="mt-4 rounded-2xl border border-border bg-surface-strong px-4 py-4">
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal">
                           Homework brief
                         </p>
-                              <p className="mt-3 text-sm leading-7 text-foreground/88">
+                        <p className="mt-3 text-sm leading-7 text-foreground/88">
                           {item.prompt}
                         </p>
                         <div className="mt-4 space-y-2">
@@ -973,6 +1090,23 @@ export function StudentDashboardLive({
                               <p className="mt-2 text-sm leading-7 text-muted">
                                 Add a short answer summary, your working notes, and a reflection so your tutor can follow up properly.
                               </p>
+                              {item.masteryNodeTitles.length > 0 ? (
+                                <div className="mt-4 rounded-2xl border border-[#dbe7ff] bg-white px-4 py-4">
+                                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#3B6CFF]">
+                                    Today&apos;s node focus
+                                  </p>
+                                  <div className="mt-3 flex flex-wrap gap-2">
+                                    {item.masteryNodeTitles.map((nodeTitle) => (
+                                      <span
+                                        key={`${item.id}-focus-${nodeTitle}`}
+                                        className="rounded-full bg-[#eef4ff] px-3 py-1 text-xs font-semibold text-[#2f5bff]"
+                                      >
+                                        {nodeTitle}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : null}
                               <div className="mt-5 grid gap-4 md:grid-cols-2">
                                 <label className="space-y-2">
                                   <span className="text-sm font-medium text-muted">
@@ -1146,13 +1280,17 @@ export function StudentDashboardLive({
                           ) : null}
                         </>
                       ) : null}
-                    </div>
+                      </div>
+                    </article>
                   ))
                 )}
               </div>
             </div>
-            <div className="rounded-[1.5rem] border border-border bg-surface-strong p-5">
-              <p className="text-sm font-medium text-muted">Teacher Notes</p>
+            <div className="overflow-hidden rounded-[1.6rem] border border-[#e6d8ff] bg-[linear-gradient(180deg,#ffffff_0%,#f8f3ff_100%)] p-0 shadow-[0_14px_30px_rgba(124,92,255,0.08)]">
+              <div className="bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)] px-5 py-4 text-white">
+                <p className="text-sm font-semibold text-white">Teacher Notes</p>
+              </div>
+              <div className="p-5">
               <div className="mt-4 space-y-3">
                 {state.data.teacherNotes.map((note) => (
                   <p
@@ -1163,6 +1301,7 @@ export function StudentDashboardLive({
                   </p>
                 ))}
               </div>
+              </div>
             </div>
           </div>
         </article>
@@ -1172,40 +1311,39 @@ export function StudentDashboardLive({
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
             Tutor-approved revision focus
           </h2>
-          <div className="mt-8 space-y-6">
+          <div className="mt-8 grid gap-4">
             {state.data.subjectProgress.length === 0 ? (
               <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
                 Mastery data will appear after the tutor reviews the first learning cycle.
               </div>
             ) : (
               state.data.subjectProgress.map((topic) => (
-                <div key={topic.id} className="space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                <article
+                  key={topic.id}
+                  className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-0 shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)] px-5 py-4 text-white">
                     <div>
-                      <p className="text-lg font-semibold text-foreground">
-                        {topic.title}
-                      </p>
-                      <p className="text-sm text-muted">{topic.note}</p>
+                      <p className="text-lg font-semibold text-white">{topic.title}</p>
+                      <p className="text-sm text-white/78">{topic.note}</p>
                     </div>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        topic.status === "strong"
-                          ? "bg-teal-soft text-teal"
-                          : topic.status === "watch"
-                            ? "bg-gold-soft text-[#8b5a13]"
-                            : "bg-[#f8d2c7] text-coral"
-                      }`}
-                    >
+                    <span className="rounded-full bg-white/18 px-3 py-1 text-xs font-semibold text-white">
                       {topic.status}
                     </span>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-[#e8dcc5]">
-                    <div
-                      className="metric-bar h-full rounded-full"
-                      style={{ width: `${topic.mastery}%` }}
-                    />
+                  <div className="p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-muted">Mastery level</p>
+                      <p className="text-sm font-semibold text-[#2f5bff]">{topic.mastery}%</p>
+                    </div>
+                    <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#e8dcc5]">
+                      <div
+                        className="metric-bar h-full rounded-full"
+                        style={{ width: `${topic.mastery}%` }}
+                      />
+                    </div>
                   </div>
-                </div>
+                </article>
               ))
             )}
           </div>
@@ -1218,19 +1356,22 @@ export function StudentDashboardLive({
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
             Post-class learning linked to tutor guidance
           </h2>
-          <div className="mt-8 space-y-4">
+          <div className="mt-8 grid gap-4">
             {state.data.revisionTasks.length === 0 ? (
               <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
                 Tutor-approved revision tasks will appear after the study plan is published.
               </div>
             ) : (
               state.data.revisionTasks.map((task) => (
-                <div
+                <article
                   key={task}
-                  className="rounded-[1.5rem] border border-border bg-surface-strong p-5 text-sm font-medium leading-7 text-foreground"
+                  className="overflow-hidden rounded-[1.6rem] border border-[#ccefe6] bg-[linear-gradient(180deg,#ffffff_0%,#f1fffb_100%)] p-0 shadow-[0_12px_24px_rgba(32,201,151,0.05)]"
                 >
-                  {task}
-                </div>
+                  <div className="bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                    <p className="text-sm font-semibold text-white">Tutor-approved task</p>
+                  </div>
+                  <p className="px-5 py-5 text-sm font-medium leading-7 text-foreground">{task}</p>
+                </article>
               ))
             )}
           </div>

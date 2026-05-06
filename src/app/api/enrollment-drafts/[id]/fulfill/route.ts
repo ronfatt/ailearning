@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth-session";
 import { buildPendingStudentEmail } from "@/lib/account-links";
 import { prisma } from "@/lib/prisma";
+import { getDefaultStudyPlanTopicsForSubject } from "@/lib/server/curriculum-topic-links";
 import {
   ApiError,
   assertRecord,
@@ -27,32 +28,6 @@ function slugifySubjectCode(value: string) {
     .replace(/[^A-Z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 24);
-}
-
-function getDefaultStudyPlanTopics(subjectName: string) {
-  const normalized = subjectName.toLowerCase();
-
-  if (normalized.includes("math")) {
-    return [
-      { key: "foundations", label: "Concept Foundations", approved: true },
-      { key: "guided-practice", label: "Guided Practice", approved: true },
-      { key: "word-problems", label: "Word Problems", approved: false },
-    ];
-  }
-
-  if (normalized.includes("english")) {
-    return [
-      { key: "reading", label: "Reading Comprehension", approved: true },
-      { key: "writing", label: "Writing Practice", approved: true },
-      { key: "revision", label: "Vocabulary Revision", approved: false },
-    ];
-  }
-
-  return [
-    { key: "foundations", label: "Core Foundations", approved: true },
-    { key: "guided-practice", label: "Guided Practice", approved: true },
-    { key: "revision", label: "Revision Practice", approved: false },
-  ];
 }
 
 function parseWeekdayFromText(value: string) {
@@ -346,6 +321,14 @@ export async function POST(
       });
 
       if (!existingStudyPlan) {
+        const starterTopics = await getDefaultStudyPlanTopicsForSubject(tx, {
+          id: subject.id,
+          code: subject.code,
+          name: subject.name,
+        }, {
+          levelHint: draft.studentLevel,
+        });
+
         const createdPlan = await tx.studyPlan.create({
           data: {
             classId: targetClass.id,
@@ -368,9 +351,9 @@ export async function POST(
               "awaiting tutor approval before student revision opens",
             ]),
             revisionTopics: {
-              create: getDefaultStudyPlanTopics(subject.name).map((topic, index) => ({
-                topicKey: topic.key,
-                topicLabel: topic.label,
+              create: starterTopics.map((topic, index) => ({
+                topicKey: topic.topicKey,
+                topicLabel: topic.topicLabel,
                 accessApproved: topic.approved,
                 sequenceOrder: index + 1,
               })),
@@ -379,11 +362,11 @@ export async function POST(
         });
 
         await tx.studentMastery.createMany({
-          data: getDefaultStudyPlanTopics(subject.name).map((topic) => ({
+          data: starterTopics.map((topic) => ({
             studentId,
             subjectId: subject.id,
-            topicId: topic.key,
-            topicLabel: topic.label,
+            topicId: topic.topicKey,
+            topicLabel: topic.topicLabel,
             masteryScore: topic.approved ? 55 : 40,
             updatedByAiAt: new Date(),
             reviewedByTutorAt: new Date(),

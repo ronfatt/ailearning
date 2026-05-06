@@ -172,6 +172,56 @@ export default async function AdminPage() {
         </div>
       </section>
 
+      <section className="glass-panel rounded-[2rem] p-8">
+        <p className="text-sm font-medium text-muted">Curriculum Hotspots</p>
+        <h2 className="mt-2 text-2xl font-semibold text-foreground">
+          Which topics are creating the most learning drag
+        </h2>
+        <div className="mt-8 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          {adminData.curriculumHotspots.length === 0 ? (
+            <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted lg:col-span-2 xl:col-span-3">
+              Curriculum hotspots will appear once active students build enough mastery and readiness data.
+            </div>
+          ) : (
+            adminData.curriculumHotspots.map((item) => (
+              <article
+                key={`${item.classId}-${item.topic}`}
+                className="overflow-hidden rounded-[1.75rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-0 shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
+              >
+                <div className="bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-base font-semibold text-white">{item.topic}</p>
+                    <span className="rounded-full bg-white/18 px-3 py-1 text-xs font-semibold text-white">
+                      {item.intensity} heat
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-white/78">
+                    {item.className} · {item.subjectName}
+                  </p>
+                </div>
+                <div className="p-5">
+                  <div className="grid gap-3 text-sm text-muted sm:grid-cols-2">
+                    <p>Avg mastery: {item.averageMastery}%</p>
+                    <p>
+                      Students affected: {item.affectedStudents}
+                    </p>
+                    <p>Readiness flags: {item.readinessFlags}</p>
+                    <p>Topic focus: {item.topicName}</p>
+                  </div>
+                  <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#eef4ff]">
+                    <div
+                      className="h-full rounded-full bg-[linear-gradient(90deg,#7C5CFF_0%,#3B6CFF_45%,#12CFF3_100%)]"
+                      style={{ width: `${item.intensity}%` }}
+                    />
+                  </div>
+                  <p className="mt-4 text-sm leading-7 text-muted">{item.note}</p>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <article className="glass-panel rounded-[2rem] p-8">
           <p className="text-sm font-medium text-muted">Supabase Readiness</p>

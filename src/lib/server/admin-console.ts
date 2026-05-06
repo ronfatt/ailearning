@@ -131,6 +131,19 @@ type AdminClassHealth = {
   schedule: string;
 };
 
+type AdminCurriculumHotspot = {
+  classId: string;
+  className: string;
+  subjectName: string;
+  topic: string;
+  topicName: string;
+  averageMastery: number;
+  affectedStudents: number;
+  readinessFlags: number;
+  intensity: number;
+  note: string;
+};
+
 export type AdminConsoleData = {
   metrics: AdminMetric[];
   aiLogs: AdminAiLog[];
@@ -145,6 +158,7 @@ export type AdminConsoleData = {
   intakeFunnel: AdminFunnelStage[];
   tutorWorkload: AdminTutorWorkload[];
   classHealth: AdminClassHealth[];
+  curriculumHotspots: AdminCurriculumHotspot[];
   rolePermissionsData: typeof rolePermissions;
   complianceRules: typeof complianceGuardrails;
   source: "database" | "unconfigured";
@@ -180,11 +194,21 @@ function buildUnconfiguredAdminConsoleData(message: string): AdminConsoleData {
     intakeFunnel: [],
     tutorWorkload: [],
     classHealth: [],
+    curriculumHotspots: [],
     rolePermissionsData: rolePermissions,
     complianceRules: complianceGuardrails,
     source: "unconfigured",
     message,
   };
+}
+
+function normalizeTopicToken(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function formatIntakeStatus(status: IntakeStatus) {
@@ -340,6 +364,73 @@ export async function getAdminConsoleData(): Promise<AdminConsoleData> {
       }),
     ]);
 
+    const subjectIds = Array.from(new Set(classes.map((item) => item.subjectId)));
+    const classIds = classes.map((item) => item.id);
+    const classStudentIds = Array.from(
+      new Set(
+        classRosters.flatMap((item) =>
+          item.enrollments.map((enrollment) => enrollment.studentId),
+        ),
+      ),
+    );
+
+    const [masteryRecords, readinessSubmissions, subjectTopics] = await Promise.all([
+      subjectIds.length > 0 && classStudentIds.length > 0
+        ? prisma.studentMastery.findMany({
+            where: {
+              subjectId: {
+                in: subjectIds,
+              },
+              studentId: {
+                in: classStudentIds,
+              },
+            },
+          })
+        : Promise.resolve([]),
+      classIds.length > 0
+        ? prisma.readinessCheckSubmission.findMany({
+            where: {
+              classId: {
+                in: classIds,
+              },
+              approvalStatus: {
+                in: [
+                  ApprovalStatus.APPROVED,
+                  ApprovalStatus.ASSIGNED,
+                  ApprovalStatus.TUTOR_REVIEWED,
+                ],
+              },
+            },
+            select: {
+              classId: true,
+              weakTopics: true,
+            },
+            take: 120,
+            orderBy: { submittedAt: "desc" },
+          })
+        : Promise.resolve([]),
+      subjectIds.length > 0
+        ? prisma.subjectTopic.findMany({
+            where: {
+              subjectId: {
+                in: subjectIds,
+              },
+            },
+            select: {
+              id: true,
+              subjectId: true,
+              code: true,
+              name: true,
+              _count: {
+                select: {
+                  masteryNodes: true,
+                },
+              },
+            },
+          })
+        : Promise.resolve([]),
+    ]);
+
     const approvalQueue: AdminApprovalItem[] = [
     ...lessonPlans.map((item) => ({
       id: item.id,
@@ -442,6 +533,139 @@ export async function getAdminConsoleData(): Promise<AdminConsoleData> {
     }))
     .sort((left, right) => right.studentCount - left.studentCount)
     .slice(0, 6);
+
+    const subjectTopicById = new Map(
+      subjectTopics.map((topic) => [topic.id, topic]),
+    );
+    const subjectTopicBySubjectAndName = new Map(
+      subjectTopics.map((topic) => [
+        `${topic.subjectId}:${normalizeTopicToken(topic.name)}`,
+        topic,
+      ]),
+    );
+
+    function resolveSubjectTopic(subjectId: string, topicId: string, topicLabel: string) {
+      return (
+        subjectTopicById.get(topicId) ??
+        subjectTopicBySubjectAndName.get(
+          `${subjectId}:${normalizeTopicToken(topicLabel)}`,
+        ) ??
+        null
+      );
+    }
+
+    const curriculumHotspots: AdminCurriculumHotspot[] = classRosters
+      .flatMap((classItem) => {
+        const activeStudentIds = new Set(
+          classItem.enrollments.map((enrollment) => enrollment.studentId),
+        );
+        const masteryForClass = masteryRecords.filter(
+          (record) =>
+            record.subjectId === classItem.subjectId &&
+            activeStudentIds.has(record.studentId),
+        );
+        const readinessWeakTopics = readinessSubmissions
+          .filter((submission) => submission.classId === classItem.id)
+          .flatMap((submission) => {
+            const weakTopics = submission.weakTopics;
+
+            if (!Array.isArray(weakTopics)) {
+              return [];
+            }
+
+            return weakTopics.filter(
+              (entry): entry is string => typeof entry === "string" && entry.length > 0,
+            );
+          });
+
+        const grouped = new Map<
+          string,
+          {
+            topic: string;
+            topicName: string;
+            averageMasterySeed: number[];
+            readinessFlags: number;
+            studentIds: Set<string>;
+            masteryNodeCount: number;
+          }
+        >();
+
+        for (const record of masteryForClass) {
+          const resolvedTopic = resolveSubjectTopic(
+            classItem.subjectId,
+            record.topicId,
+            record.topicLabel,
+          );
+          const topicKey = resolvedTopic?.id ?? `label:${record.topicLabel}`;
+          const existing = grouped.get(topicKey) ?? {
+            topic: resolvedTopic
+              ? `${resolvedTopic.code} ${resolvedTopic.name}`
+              : record.topicLabel,
+            topicName: resolvedTopic?.name ?? record.topicLabel,
+            averageMasterySeed: [],
+            readinessFlags: 0,
+            studentIds: new Set<string>(),
+            masteryNodeCount: resolvedTopic?._count.masteryNodes ?? 0,
+          };
+
+          existing.averageMasterySeed.push(record.masteryScore);
+          existing.studentIds.add(record.studentId);
+          grouped.set(topicKey, existing);
+        }
+
+        for (const topic of readinessWeakTopics) {
+          const resolvedTopic = resolveSubjectTopic(classItem.subjectId, "", topic);
+          const topicKey = resolvedTopic?.id ?? `label:${topic}`;
+          const existing = grouped.get(topicKey) ?? {
+            topic: resolvedTopic
+              ? `${resolvedTopic.code} ${resolvedTopic.name}`
+              : topic,
+            topicName: resolvedTopic?.name ?? topic,
+            averageMasterySeed: [],
+            readinessFlags: 0,
+            studentIds: new Set<string>(),
+            masteryNodeCount: resolvedTopic?._count.masteryNodes ?? 0,
+          };
+
+          existing.readinessFlags += 1;
+          grouped.set(topicKey, existing);
+        }
+
+        return Array.from(grouped.values()).map((item) => {
+          const averageMastery = item.averageMasterySeed.length > 0
+            ? Math.round(
+                item.averageMasterySeed.reduce((sum, value) => sum + value, 0) /
+                  item.averageMasterySeed.length,
+              )
+            : 45;
+          const affectedStudents = item.studentIds.size;
+          const intensity = Math.max(
+            12,
+            Math.min(
+              100,
+              Math.round((100 - averageMastery) + item.readinessFlags * 12 + affectedStudents * 6),
+            ),
+          );
+
+          return {
+            classId: classItem.id,
+            className: classItem.title,
+            subjectName: classItem.subject.name,
+            topic: item.topic,
+            topicName: item.topicName,
+            averageMastery,
+            affectedStudents,
+            readinessFlags: item.readinessFlags,
+            intensity,
+            note:
+              item.readinessFlags > 0
+                ? `${item.readinessFlags} readiness flag${item.readinessFlags === 1 ? "" : "s"} and ${affectedStudents} tracked student${affectedStudents === 1 ? "" : "s"} around this topic.`
+                : `${affectedStudents} tracked student${affectedStudents === 1 ? "" : "s"} currently map to this topic${item.masteryNodeCount > 0 ? ` across ${item.masteryNodeCount} mastery node${item.masteryNodeCount === 1 ? "" : "s"}` : ""}.`,
+          };
+        });
+      })
+      .sort((left, right) => right.intensity - left.intensity)
+      .slice(0, 6);
 
     return {
       metrics: [
@@ -551,6 +775,7 @@ export async function getAdminConsoleData(): Promise<AdminConsoleData> {
       intakeFunnel,
       tutorWorkload,
       classHealth,
+      curriculumHotspots,
       rolePermissionsData: rolePermissions,
       complianceRules: complianceGuardrails,
       source: "database",

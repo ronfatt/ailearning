@@ -206,7 +206,7 @@ export function RoleAssistantChatbox({
     <section
       className={`rounded-[2.25rem] border p-6 shadow-[0_18px_48px_rgba(59,108,255,0.08)] ${config.shell}`}
     >
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${config.accent}`}>
@@ -216,15 +216,12 @@ export function RoleAssistantChatbox({
               Instant role-aware AI
             </div>
             <div className="rounded-full border border-white/80 bg-white/88 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5B6472] shadow-[0_10px_22px_rgba(59,108,255,0.06)]">
-              Top AI helper
+              Smart sidekick
             </div>
           </div>
-          <h2 className="mt-3 text-[2rem] font-semibold tracking-tight text-[#111827] sm:text-[2.2rem]">
+          <h2 className="mt-3 text-[1.55rem] font-semibold tracking-tight text-[#111827] sm:text-[1.7rem]">
             {config.title}
           </h2>
-        </div>
-        <div className="rounded-[1.2rem] border border-white/70 bg-white/76 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#5B6472] shadow-[0_12px_28px_rgba(59,108,255,0.08)]">
-          Top AI helper
         </div>
       </div>
 
@@ -241,7 +238,7 @@ export function RoleAssistantChatbox({
         ))}
       </div>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-6 max-h-[360px] space-y-4 overflow-y-auto pr-1">
         {messages.map((message) => (
           <article
             key={message.id}

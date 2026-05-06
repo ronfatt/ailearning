@@ -41,10 +41,14 @@ const footerGroups = [
   },
 ];
 
-export function SolaceSiteFooter() {
+export function SolaceSiteFooter({ showPromo = true }: { showPromo?: boolean }) {
   return (
     <footer className="rounded-[2.2rem] border border-[#e6ecf5] bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(238,244,255,0.92)_100%)] px-6 py-8 shadow-[0_18px_46px_rgba(79,124,255,0.08)] sm:px-8 lg:px-10">
-      <div className="grid gap-8 border-b border-[#e6ecf5] pb-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+      <div
+        className={`grid gap-8 border-b border-[#e6ecf5] pb-8 ${
+          showPromo ? "lg:grid-cols-[1.05fr_0.95fr] lg:items-center" : ""
+        }`}
+      >
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#3B6CFF_0%,#7C5CFF_100%)] text-sm font-semibold tracking-[0.24em] text-white shadow-[0_12px_28px_rgba(59,108,255,0.2)]">
@@ -76,31 +80,33 @@ export function SolaceSiteFooter() {
           </div>
         </div>
 
-        <div className="rounded-[1.8rem] border border-[#d6e3ff] bg-[linear-gradient(135deg,#3B6CFF_0%,#4F7CFF_44%,#7C5CFF_78%,#12CFF3_100%)] p-6 text-white shadow-[0_18px_42px_rgba(59,108,255,0.2)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/72">
-            Start smarter
-          </p>
-          <h3 className="mt-3 text-3xl font-semibold leading-tight">
-            Bring tutors, students, and parents into one learning flow.
-          </h3>
-          <p className="mt-3 max-w-lg text-sm leading-7 text-white/82">
-            Book a free trial, see how the platform works, and turn tuition into a clearer weekly progress system.
-          </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/book-class"
-              className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold !text-[#2f5bff] shadow-[0_14px_32px_rgba(255,255,255,0.16)] transition hover:bg-[#f8fbff] hover:!text-[#2448d8]"
-            >
-              Book a Free Trial
-            </Link>
-            <Link
-              href="/how-it-works"
-              className="rounded-full border border-white/24 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/18"
-            >
-              See How It Works
-            </Link>
+        {showPromo ? (
+          <div className="rounded-[1.8rem] border border-[#d6e3ff] bg-[linear-gradient(135deg,#3B6CFF_0%,#4F7CFF_44%,#7C5CFF_78%,#12CFF3_100%)] p-6 text-white shadow-[0_18px_42px_rgba(59,108,255,0.2)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/72">
+              Start smarter
+            </p>
+            <h3 className="mt-3 text-3xl font-semibold leading-tight">
+              Bring tutors, students, and parents into one learning flow.
+            </h3>
+            <p className="mt-3 max-w-lg text-sm leading-7 text-white/82">
+              Book a free trial, see how the platform works, and turn tuition into a clearer weekly progress system.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/book-class"
+                className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold !text-[#2f5bff] shadow-[0_14px_32px_rgba(255,255,255,0.16)] transition hover:bg-[#f8fbff] hover:!text-[#2448d8]"
+              >
+                Book a Free Trial
+              </Link>
+              <Link
+                href="/how-it-works"
+                className="rounded-full border border-white/24 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/18"
+              >
+                See How It Works
+              </Link>
+            </div>
           </div>
-        </div>
+        ) : null}
       </div>
 
       <div className="grid gap-8 pt-8 lg:grid-cols-[0.85fr_1.15fr]">

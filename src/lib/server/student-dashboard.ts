@@ -9,6 +9,10 @@ import {
 
 import { prisma } from "@/lib/prisma";
 import {
+  resolveMathCurriculumLevelCode,
+  resolveMathTopicAliasCode,
+} from "@/lib/server/curriculum-topic-links";
+import {
   average,
   formatDate,
   formatDateTime,
@@ -31,6 +35,9 @@ type StudentHomeworkItem = {
   submissionId: string | null;
   title: string;
   scope: string;
+  curriculumTopicCode: string | null;
+  curriculumTopicName: string | null;
+  masteryNodeTitles: string[];
   prompt: string;
   questionCount: number | null;
   checkpoints: string[];
@@ -74,6 +81,8 @@ type StudentProgressItem = {
   note: string;
   mastery: number;
   status: "strong" | "watch" | "support";
+  curriculumCode?: string | null;
+  masteryNodeCount?: number;
 };
 
 type StudentProgressSnapshot = {
@@ -169,6 +178,73 @@ function getConfidenceLabel(value: number | null) {
   }
 
   return "Need tutor help";
+}
+
+function normalizeTopicToken(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getStudentLevelFromProfileData(profileData: unknown) {
+  if (!profileData || typeof profileData !== "object" || Array.isArray(profileData)) {
+    return undefined;
+  }
+
+  const rawLevel = (profileData as Record<string, unknown>).studentLevel;
+  return typeof rawLevel === "string" && rawLevel.trim().length > 0 ? rawLevel : undefined;
+}
+
+function pickRecommendedNodes(
+  topic:
+    | {
+        code: string;
+        name: string;
+        masteryNodes: Array<{ title: string; sequenceOrder: number }>;
+      }
+    | null,
+  masteryScore?: number | null,
+) {
+  if (!topic || topic.masteryNodes.length === 0) {
+    return {
+      nodeTitles: [] as string[],
+      nodeCount: 0,
+      phaseLabel: masteryScore === null || masteryScore === undefined ? "start" : "review",
+    };
+  }
+
+  const orderedNodes = [...topic.masteryNodes].sort(
+    (left, right) => left.sequenceOrder - right.sequenceOrder,
+  );
+  const total = orderedNodes.length;
+
+  let startIndex = 0;
+  let phaseLabel: "start" | "rebuild" | "secure" | "review" = "start";
+
+  if (masteryScore === null || masteryScore === undefined) {
+    startIndex = 0;
+    phaseLabel = "start";
+  } else if (masteryScore < 50) {
+    startIndex = 0;
+    phaseLabel = "rebuild";
+  } else if (masteryScore < 75) {
+    startIndex = Math.min(1, Math.max(0, total - 2));
+    phaseLabel = "secure";
+  } else {
+    startIndex = Math.max(0, total - 2);
+    phaseLabel = "review";
+  }
+
+  const nodeTitles = orderedNodes.slice(startIndex, startIndex + 2).map((node) => node.title);
+
+  return {
+    nodeTitles,
+    nodeCount: total,
+    phaseLabel,
+  };
 }
 
 function buildHomeworkQuestions(
@@ -363,11 +439,20 @@ export async function getStudentDashboardData(
         session.status === ClassSessionStatus.LIVE,
     ) ?? null;
 
+  const studentProfile = await prisma.user.findUnique({
+    where: { id: studentId },
+    select: {
+      profileData: true,
+    },
+  });
+  const studentLevelHint = getStudentLevelFromProfileData(studentProfile?.profileData);
+
   const [
     homeworkAssignments,
     studyPlan,
     latestAnyStudyPlan,
     masteryRecords,
+    subjectTopics,
     latestReport,
     latestReadiness,
     submissions,
@@ -425,6 +510,42 @@ export async function getStudentDashboardData(
         orderBy: { masteryScore: "asc" },
         take: 6,
       }),
+      prisma.subjectTopic.findMany({
+        where: {
+          subjectId: enrollment.class.subjectId,
+          ...(enrollment.class.subject.code === "MATH-KSSM"
+            ? {
+                level: {
+                  code: resolveMathCurriculumLevelCode(studentLevelHint),
+                },
+              }
+            : {}),
+        },
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          sequenceOrder: true,
+          _count: {
+            select: {
+              masteryNodes: true,
+            },
+          },
+          masteryNodes: {
+            where: {
+              active: true,
+            },
+            select: {
+              title: true,
+              sequenceOrder: true,
+            },
+            orderBy: {
+              sequenceOrder: "asc",
+            },
+          },
+        },
+        orderBy: [{ sequenceOrder: "asc" }, { code: "asc" }],
+      }),
       prisma.parentReport.findFirst({
         where: {
           studentId,
@@ -469,6 +590,30 @@ export async function getStudentDashboardData(
       }),
     ]);
 
+  const subjectTopicById = new Map(
+    subjectTopics.map((topic) => [topic.id, topic]),
+  );
+  const subjectTopicByName = new Map(
+    subjectTopics.map((topic) => [normalizeTopicToken(topic.name), topic]),
+  );
+  const subjectTopicByCode = new Map(
+    subjectTopics.map((topic) => [topic.code.toLowerCase(), topic]),
+  );
+
+  function resolveSubjectTopic(topicId: string, topicLabel: string) {
+    const aliasCode =
+      enrollment.class.subject.code === "MATH-KSSM"
+        ? resolveMathTopicAliasCode(topicId, topicLabel)
+        : undefined;
+
+    return (
+      subjectTopicById.get(topicId) ??
+      (aliasCode ? subjectTopicByCode.get(aliasCode.toLowerCase()) : undefined) ??
+      subjectTopicByName.get(normalizeTopicToken(topicLabel)) ??
+      null
+    );
+  }
+
   const submissionsByAssignmentId = new Map(
     submissions.map((submission) => [submission.homeworkAssignmentId, submission]),
   );
@@ -489,14 +634,42 @@ export async function getStudentDashboardData(
       : null;
 
   const approvedTopics = studyPlan?.revisionTopics ?? [];
+  const resolvedApprovedTopics = approvedTopics.map((topic) => {
+    const resolvedTopic = resolveSubjectTopic(topic.topicKey, topic.topicLabel);
+    const masteryRecord = resolvedTopic
+      ? masteryRecords.find(
+          (record) =>
+            record.topicId === resolvedTopic.id ||
+            normalizeTopicToken(record.topicLabel) ===
+              normalizeTopicToken(resolvedTopic.name),
+        ) ?? null
+      : masteryRecords.find(
+          (record) =>
+            normalizeTopicToken(record.topicLabel) ===
+            normalizeTopicToken(topic.topicLabel),
+        ) ?? null;
+    const recommendation = pickRecommendedNodes(
+      resolvedTopic,
+      masteryRecord?.masteryScore ?? null,
+    );
+
+    return {
+      ...topic,
+      resolvedTopic,
+      masteryRecord,
+      recommendation,
+    };
+  });
   const assistantUnlockNotice =
-    studyPlan && approvedTopics.length > 0
+    studyPlan && resolvedApprovedTopics.length > 0
       ? {
           title: "New revision topics unlocked",
           body: `${enrollment.class.tutor.fullName} has approved ${approvedTopics.length} topic${
             approvedTopics.length > 1 ? "s" : ""
           } for your AI Study Assistant.`,
-          topics: approvedTopics.map((topic) => topic.topicLabel),
+          topics: resolvedApprovedTopics.map(
+            (topic) => topic.resolvedTopic?.name ?? topic.topicLabel,
+          ),
         }
       : null;
   const reportSummary =
@@ -519,7 +692,12 @@ export async function getStudentDashboardData(
     {
       label: "Approved Revision Topics",
       value: `${approvedTopics.length} topics`,
-      detail: "The AI Study Assistant is limited to these tutor-approved areas.",
+      detail:
+        resolvedApprovedTopics.length > 0
+          ? `The AI Study Assistant is limited to ${resolvedApprovedTopics
+              .map((topic) => topic.resolvedTopic?.code ?? topic.topicLabel)
+              .join(", ")}.`
+          : "The AI Study Assistant is limited to these tutor-approved areas.",
       tone: "teal",
     },
     {
@@ -616,6 +794,21 @@ export async function getStudentDashboardData(
       getJsonString(item.assignmentContent, "title") ?? "Tutor-approved homework";
     const focus =
       getJsonString(item.assignmentContent, "focus") ?? "Targeted revision";
+    const subjectTopicId =
+      getJsonString(item.assignmentContent, "subjectTopicId") ?? "";
+    const subjectTopicLabel =
+      getJsonString(item.assignmentContent, "subjectTopicLabel") ?? focus;
+    const resolvedHomeworkTopic = resolveSubjectTopic(subjectTopicId, subjectTopicLabel);
+    const assignmentNodeTitles = getJsonStringArray(
+      item.assignmentContent,
+      "masteryNodeTitles",
+    );
+    const masteryNodeTitles =
+      assignmentNodeTitles.length > 0
+        ? assignmentNodeTitles
+        : resolvedHomeworkTopic?.masteryNodes
+            .slice(0, Math.min(3, resolvedHomeworkTopic.masteryNodes.length))
+            .map((node) => node.title) ?? [];
     const questionCount = getJsonNumber(item.assignmentContent, "questions");
     const prompt =
       getJsonString(item.assignmentContent, "prompt") ??
@@ -641,6 +834,9 @@ export async function getStudentDashboardData(
       scope: questionCount
         ? `${focus} · ${questionCount} questions`
         : focus,
+      curriculumTopicCode: resolvedHomeworkTopic?.code ?? null,
+      curriculumTopicName: resolvedHomeworkTopic?.name ?? subjectTopicLabel,
+      masteryNodeTitles,
       prompt,
       questionCount,
       checkpoints,
@@ -689,15 +885,28 @@ export async function getStudentDashboardData(
       : "A tutor-approved study plan will appear here once it is published.",
   ];
 
-  const subjectProgress: StudentProgressItem[] = masteryRecords.map((record) => ({
-    id: record.id,
-    title: record.topicLabel,
-    note:
-      record.tutorReviewNotes ??
-      `Tutor-reviewed mastery updated ${formatDate(record.reviewedByTutorAt ?? record.updatedAt)}.`,
-    mastery: Math.round(record.masteryScore),
-    status: getProgressStatus(record.masteryScore),
-  }));
+  const subjectProgress: StudentProgressItem[] = masteryRecords.map((record) => {
+    const resolvedTopic = resolveSubjectTopic(record.topicId, record.topicLabel);
+    const masteryNodeCount = resolvedTopic?._count.masteryNodes ?? 0;
+    const reviewedAt = record.reviewedByTutorAt ?? record.updatedAt;
+    const note = record.tutorReviewNotes
+      ? record.tutorReviewNotes
+      : resolvedTopic
+        ? `${resolvedTopic.code} · ${masteryNodeCount} mastery node${
+            masteryNodeCount === 1 ? "" : "s"
+          } · updated ${formatDate(reviewedAt)}.`
+        : `Tutor-reviewed mastery updated ${formatDate(reviewedAt)}.`;
+
+    return {
+      id: record.id,
+      title: resolvedTopic?.name ?? record.topicLabel,
+      note,
+      mastery: Math.round(record.masteryScore),
+      status: getProgressStatus(record.masteryScore),
+      curriculumCode: resolvedTopic?.code ?? null,
+      masteryNodeCount,
+    };
+  });
 
   const progressSnapshot: StudentProgressSnapshot = {
     averageMastery: masteryRecords.length > 0 ? avgMastery : null,
@@ -781,16 +990,26 @@ export async function getStudentDashboardData(
         type: "homework" as const,
       };
     }),
-    ...masteryRecords.slice(0, 3).map((record) => ({
-      id: `mastery-${record.id}`,
-      title: `${record.topicLabel} mastery updated`,
-      detail:
-        record.tutorReviewNotes ??
-        `Mastery moved to ${Math.round(record.masteryScore)}% after tutor review.`,
-      sortKey: (record.reviewedByTutorAt ?? record.updatedAt).getTime(),
-      dateLabel: formatDate(record.reviewedByTutorAt ?? record.updatedAt),
-      type: "mastery" as const,
-    })),
+    ...masteryRecords.slice(0, 3).map((record) => {
+      const resolvedTopic = resolveSubjectTopic(record.topicId, record.topicLabel);
+      const masteryNodeCount = resolvedTopic?._count.masteryNodes ?? 0;
+      const detail = record.tutorReviewNotes
+        ? record.tutorReviewNotes
+        : resolvedTopic
+          ? `${resolvedTopic.code} is now at ${Math.round(record.masteryScore)}% mastery across ${masteryNodeCount} tracked node${
+              masteryNodeCount === 1 ? "" : "s"
+            }.`
+          : `Mastery moved to ${Math.round(record.masteryScore)}% after tutor review.`;
+
+      return {
+        id: `mastery-${record.id}`,
+        title: `${resolvedTopic?.name ?? record.topicLabel} mastery updated`,
+        detail,
+        sortKey: (record.reviewedByTutorAt ?? record.updatedAt).getTime(),
+        dateLabel: formatDate(record.reviewedByTutorAt ?? record.updatedAt),
+        type: "mastery" as const,
+      };
+    }),
     ...(latestReport
       ? [
           {
@@ -813,9 +1032,36 @@ export async function getStudentDashboardData(
     .slice(0, 8);
 
   const revisionTasks = [
-    ...approvedTopics.map(
-      (topic, index) =>
-        `Revision ${index + 1}: ${topic.topicLabel} within the approved ${studyPlan?.title ?? "study plan"}.`,
+    ...resolvedApprovedTopics.map(
+      (topic, index) => {
+        const topicLabel = topic.resolvedTopic
+          ? `${topic.resolvedTopic.code} ${topic.resolvedTopic.name}`
+          : topic.topicLabel;
+        const masteryLabel =
+          typeof topic.masteryRecord?.masteryScore === "number"
+            ? `${Math.round(topic.masteryRecord.masteryScore)}% mastery`
+            : "new topic";
+        const nodeSummary =
+          topic.recommendation.nodeTitles.length > 0
+            ? `Focus on ${topic.recommendation.nodeTitles.join(" -> ")}`
+            : "Start with the tutor-approved first steps";
+        const phaseLead =
+          topic.recommendation.phaseLabel === "rebuild"
+            ? "Rebuild"
+            : topic.recommendation.phaseLabel === "secure"
+              ? "Secure"
+              : topic.recommendation.phaseLabel === "review"
+                ? "Review"
+                : "Start";
+
+        return `Revision ${index + 1}: ${phaseLead} ${topicLabel} (${masteryLabel}) — ${nodeSummary}${
+          topic.recommendation.nodeCount > 0
+            ? ` across ${topic.recommendation.nodeCount} tracked node${
+                topic.recommendation.nodeCount === 1 ? "" : "s"
+              }`
+            : ""
+        }.`;
+      },
     ),
     ...assignedHomework
       .filter((item) => item.status !== "submitted")
@@ -825,8 +1071,14 @@ export async function getStudentDashboardData(
   const approvedAssistantScope = [
     `Approved class: ${enrollment.class.title} with ${enrollment.class.tutor.fullName}.`,
     `Approved subject: ${enrollment.class.subject.name}.`,
-    approvedTopics.length > 0
-      ? `Approved topics: ${approvedTopics.map((topic) => topic.topicLabel).join(", ")}.`
+    resolvedApprovedTopics.length > 0
+      ? `Approved topics: ${resolvedApprovedTopics
+          .map((topic) =>
+            topic.resolvedTopic
+              ? `${topic.resolvedTopic.code} ${topic.resolvedTopic.name}`
+              : topic.topicLabel,
+          )
+          .join(", ")}.`
       : "Approved topics will appear after the tutor publishes the study plan.",
     "The AI Study Assistant cannot unlock new subjects or independent learning paths.",
   ];

@@ -79,6 +79,9 @@ type TutorDashboardResponse = {
       homeworkAssignmentId: string;
       title: string;
       owner: string;
+      curriculumTopicCode: string | null;
+      curriculumTopicName: string | null;
+      masteryNodeTitles: string[];
       submittedAt: string;
       score: string;
       tutorFeedback: string;
@@ -317,6 +320,39 @@ function DraftPreviewCard({
   );
 }
 
+function TutorChannelCard({
+  title,
+  subtitle,
+  accent,
+}: {
+  title: string;
+  subtitle: string;
+  accent: "blue" | "purple" | "mint";
+}) {
+  const theme =
+    accent === "blue"
+      ? "border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)]"
+      : accent === "purple"
+        ? "border-[#e6d8ff] bg-[linear-gradient(180deg,#ffffff_0%,#f8f3ff_100%)]"
+        : "border-[#ccefe6] bg-[linear-gradient(180deg,#ffffff_0%,#f1fffb_100%)]";
+
+  const media =
+    accent === "blue"
+      ? "from-[#3B6CFF] to-[#12CFF3]"
+      : accent === "purple"
+        ? "from-[#7C5CFF] to-[#3B6CFF]"
+        : "from-[#20C997] to-[#12CFF3]";
+
+  return (
+    <div className={`overflow-hidden rounded-[1.6rem] border ${theme} p-0 shadow-[0_12px_24px_rgba(59,108,255,0.05)]`}>
+      <div className={`bg-gradient-to-r ${media} px-4 py-4 text-white`}>
+        <p className="text-sm font-semibold text-white">{title}</p>
+      </div>
+      <p className="px-4 py-4 text-sm leading-7 text-muted">{subtitle}</p>
+    </div>
+  );
+}
+
 function QueueSection({
   title,
   subtitle,
@@ -375,15 +411,18 @@ function QueueSection({
           items.map((item) => (
             <article
               key={item.id}
-              className="rounded-[1.75rem] border border-border bg-surface-strong p-5"
+              className="overflow-hidden rounded-[1.75rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-0 shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
             >
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)] px-5 py-4 text-white">
                 <div>
-                  <p className="text-lg font-semibold text-foreground">{item.title}</p>
-                  <p className="text-sm text-muted">{item.owner}</p>
+                  <p className="text-lg font-semibold text-white">{item.title}</p>
+                  <p className="text-sm text-white/78">{item.owner}</p>
                 </div>
-                <StatusPill status={item.status} />
+                <div className="rounded-full bg-white/18 px-3 py-1 text-xs font-semibold text-white">
+                  {item.status}
+                </div>
               </div>
+              <div className="p-5">
               <div className="mt-4 grid gap-3 text-sm text-muted sm:grid-cols-3">
                 <p>AI draft: {item.generatedAt}</p>
                 <p>Tutor review: {item.reviewedAt}</p>
@@ -512,6 +551,7 @@ function QueueSection({
                   onRunAction(target as ApprovalQueueItem, nextStatus)
                 }
               />
+              </div>
             </article>
           ))
         )}
@@ -1299,18 +1339,6 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
     });
   }
 
-  function getStudentPriorityTone(priority: "high" | "medium" | "steady") {
-    if (priority === "high") {
-      return "bg-[#fff0f3] text-[#e25575]";
-    }
-
-    if (priority === "medium") {
-      return "bg-[#fff4dd] text-[#a86b00]";
-    }
-
-    return "bg-[#ecfdf5] text-[#0f9b74]";
-  }
-
   const selectedClassIntelligence =
     state.data.classIntelligence.find((item) => item.classId === selectedClassId) ??
     state.data.classIntelligence[0] ??
@@ -1348,19 +1376,19 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
         </section>
       ) : null}
 
-      <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-        <article className="glass-panel rounded-[2rem] p-8">
-          <p className="text-sm font-medium text-muted">Workspace Mode</p>
-          <h2 className="mt-2 text-2xl font-semibold text-foreground">
+      <section id="overview" className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+        <article className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#3B6CFF_0%,#4F7CFF_42%,#7C5CFF_100%)] p-8 text-white shadow-[0_24px_64px_rgba(59,108,255,0.2)]">
+          <p className="text-sm font-medium text-white/72">Workspace Mode</p>
+          <h2 className="mt-2 text-2xl font-semibold text-white">
             Start in focus mode, open analytics only when you need them
           </h2>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-muted">
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-white/84">
             Focus mode keeps the first screen centered on live teaching, follow-up,
             approvals, and student support. Full mode opens deeper teaching analytics
             and editing tools.
           </p>
         </article>
-        <article className="glass-panel rounded-[2rem] p-8">
+        <article className="rounded-[2rem] border border-[#e6ecf5] bg-white/94 p-8 shadow-[0_20px_52px_rgba(59,108,255,0.08)]">
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
@@ -1387,24 +1415,23 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             {[
-              ["Live class", "Run the room and act on student signals."],
-              ["Approvals", "Review lesson, homework, and parent drafts."],
-              ["Follow-up", "Close the loop before the next class starts."],
-            ].map(([title, note]) => (
-              <div
+              ["Live class", "Run the room and act on student signals.", "blue"],
+              ["Approvals", "Review lesson, homework, and parent drafts.", "purple"],
+              ["Follow-up", "Close the loop before the next class starts.", "mint"],
+            ].map(([title, note, accent]) => (
+              <TutorChannelCard
                 key={title}
-                className="rounded-[1.5rem] bg-surface-strong p-4"
-              >
-                <p className="text-sm font-semibold text-foreground">{title}</p>
-                <p className="mt-2 text-sm leading-7 text-muted">{note}</p>
-              </div>
+                title={title}
+                subtitle={note}
+                accent={accent as "blue" | "purple" | "mint"}
+              />
             ))}
           </div>
         </article>
       </section>
 
       <section id="live-workspace" className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <article className="glass-panel rounded-[2rem] p-8">
+        <article className="rounded-[2rem] border border-[#e6ecf5] bg-white/94 p-8 shadow-[0_20px_52px_rgba(59,108,255,0.08)]">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-muted">Live Class Workspace</p>
@@ -1431,28 +1458,28 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           {selectedLiveWorkspace ? (
             <>
               <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-[1.5rem] bg-surface-strong p-5">
+                <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#eef4ff_0%,#ffffff_100%)] p-5">
                   <p className="text-sm font-medium text-muted">Session</p>
                   <p className="mt-3 text-xl font-semibold text-foreground">
                     {selectedLiveWorkspace.sessionTitle}
                   </p>
                   <p className="mt-2 text-sm text-muted">{selectedLiveWorkspace.sessionTime}</p>
                 </div>
-                <div className="rounded-[1.5rem] bg-surface-strong p-5">
+                <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#f2edff_0%,#ffffff_100%)] p-5">
                   <p className="text-sm font-medium text-muted">Focus topic</p>
                   <p className="mt-3 text-xl font-semibold text-foreground">
                     {selectedLiveWorkspace.focusTopic}
                   </p>
                   <p className="mt-2 text-sm text-muted">{selectedLiveWorkspace.sessionMode}</p>
                 </div>
-                <div className="rounded-[1.5rem] bg-surface-strong p-5">
+                <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#ecfdf5_0%,#ffffff_100%)] p-5">
                   <p className="text-sm font-medium text-muted">Room ready</p>
                   <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
                     {selectedLiveWorkspace.rosterReadyCount}
                   </p>
                   <p className="mt-2 text-sm text-muted">students currently steady</p>
                 </div>
-                <div className="rounded-[1.5rem] bg-surface-strong p-5">
+                <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#fff4dd_0%,#ffffff_100%)] p-5">
                   <p className="text-sm font-medium text-muted">Need attention</p>
                   <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
                     {selectedLiveWorkspace.supportCount}
@@ -1462,7 +1489,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
               </div>
 
               <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                <div className="rounded-[1.75rem] border border-border bg-surface-strong p-5">
+                <div className="rounded-[1.75rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-5 shadow-[0_12px_24px_rgba(59,108,255,0.05)]">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <p className="text-lg font-semibold text-foreground">
                       Student attention queue
@@ -1482,19 +1509,19 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                     {selectedLiveWorkspace.studentSignals.map((student) => (
                       <article
                         key={student.studentId}
-                        className="rounded-[1.5rem] border border-border bg-white/80 p-4"
+                        className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-0 shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
                       >
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                          <p className="text-base font-semibold text-foreground">
+                        <div className="flex flex-wrap items-center justify-between gap-3 bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)] px-4 py-4 text-white">
+                          <p className="text-base font-semibold text-white">
                             {student.studentName}
                           </p>
                           <span
                             className={`rounded-full px-3 py-1 text-xs font-semibold ${
                               student.priority === "high"
-                                ? "bg-[#f8d2c7] text-coral"
+                                ? "bg-white/20 text-white"
                                 : student.priority === "medium"
-                                  ? "bg-gold-soft text-[#8b5a13]"
-                                  : "bg-teal-soft text-teal"
+                                  ? "bg-white/20 text-white"
+                                  : "bg-white/20 text-white"
                             }`}
                           >
                             {student.priority === "high"
@@ -1504,6 +1531,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                                 : "Steady"}
                           </span>
                         </div>
+                        <div className="p-4">
                         {student.recentActionLabel ? (
                           <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-teal">
                             {student.recentActionLabel}
@@ -1578,14 +1606,18 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                             Mini Revision
                           </button>
                         </div>
+                        </div>
                       </article>
                     ))}
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <article className="rounded-[1.75rem] border border-border bg-surface-strong p-5">
-                    <p className="text-lg font-semibold text-foreground">Quick wins</p>
+                  <article className="overflow-hidden rounded-[1.75rem] border border-[#ddd4ff] bg-[linear-gradient(180deg,#ffffff_0%,#f4efff_100%)] p-0 shadow-[0_12px_24px_rgba(124,92,255,0.06)]">
+                    <div className="bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)] px-5 py-4 text-white">
+                      <p className="text-lg font-semibold text-white">Quick wins</p>
+                    </div>
+                    <div className="p-5">
                     <div className="mt-5 space-y-3">
                       {selectedLiveWorkspace.quickWins.map((item, index) => (
                         <div
@@ -1596,10 +1628,14 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                         </div>
                       ))}
                     </div>
+                    </div>
                   </article>
 
-                  <article className="rounded-[1.75rem] border border-border bg-surface-strong p-5">
-                    <p className="text-lg font-semibold text-foreground">Tutor checklist</p>
+                  <article className="overflow-hidden rounded-[1.75rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-0 shadow-[0_12px_24px_rgba(59,108,255,0.05)]">
+                    <div className="bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                      <p className="text-lg font-semibold text-white">Tutor checklist</p>
+                    </div>
+                    <div className="p-5">
                     <div className="mt-5 space-y-3">
                       {selectedLiveWorkspace.tutorChecklist.map((item, index) => (
                         <div
@@ -1609,6 +1645,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                           {item}
                         </div>
                       ))}
+                    </div>
                     </div>
                   </article>
                 </div>
@@ -1622,7 +1659,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           )}
         </article>
 
-        <article className="glass-panel rounded-[2rem] p-8">
+        <article className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_40%,#f3f7ff_100%)] p-8 shadow-[0_20px_52px_rgba(59,108,255,0.08)]">
           <p className="text-sm font-medium text-muted">During Class Prompting</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
             Tutor-facing prompts for the next 45 minutes
@@ -1655,7 +1692,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
         </article>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+      <section id="homework-reviews" className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <article className="glass-panel rounded-[2rem] p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -1678,25 +1715,26 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
               {selectedLiveWorkspace.studentSignals.map((student) => (
                 <article
                   key={`growth-${student.studentId}`}
-                  className="rounded-[1.5rem] border border-border bg-white/80 p-5"
+                  className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-0 shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)] px-5 py-4 text-white">
                     <div>
-                      <p className="text-lg font-semibold text-foreground">
+                      <p className="text-lg font-semibold text-white">
                         {student.studentName}
                       </p>
-                      <p className="mt-1 text-sm text-muted">{student.coachNote}</p>
+                      <p className="mt-1 text-sm text-white/78">{student.coachNote}</p>
                     </div>
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${getStudentPriorityTone(student.priority)}`}
+                      className="rounded-full bg-white/18 px-3 py-1 text-xs font-semibold text-white"
                     >
                       {student.priority === "high"
                         ? "Needs intervention"
                         : student.priority === "medium"
                           ? "Watch this cycle"
-                          : "Steady progress"}
+                        : "Steady progress"}
                     </span>
                   </div>
+                  <div className="p-5">
                   <div className="mt-4 grid gap-3 text-sm text-muted sm:grid-cols-2">
                     <div className="rounded-2xl bg-[#eef4ff] px-4 py-3 text-[#2f5bff]">
                       {student.readinessLabel}
@@ -1716,6 +1754,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                       Latest tutor action: {student.recentActionLabel}
                     </p>
                   ) : null}
+                  </div>
                 </article>
               ))}
             </div>
@@ -1747,27 +1786,35 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           {selectedClassIntelligence ? (
             <>
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#3B6CFF]">
-                    Readiness Trend
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold text-foreground">
-                    {selectedClassIntelligence.readinessScore}%
-                  </p>
-                  <p className="mt-3 text-sm text-muted">
-                    Current tutor-approved pre-class baseline for the selected class.
-                  </p>
+                <div className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-0 shadow-[0_14px_30px_rgba(59,108,255,0.08)]">
+                  <div className="bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
+                      Readiness Trend
+                    </p>
+                  </div>
+                  <div className="p-5">
+                    <p className="text-3xl font-semibold text-foreground">
+                      {selectedClassIntelligence.readinessScore}%
+                    </p>
+                    <p className="mt-3 text-sm text-muted">
+                      Current tutor-approved pre-class baseline for the selected class.
+                    </p>
+                  </div>
                 </div>
-                <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#20C997]">
-                    Participation Trend
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold text-foreground">
-                    {selectedClassIntelligence.participationScore}%
-                  </p>
-                  <p className="mt-3 text-sm text-muted">
-                    Class energy signal based on recent completed teaching cycles.
-                  </p>
+                <div className="overflow-hidden rounded-[1.6rem] border border-[#ccefe6] bg-[linear-gradient(180deg,#ffffff_0%,#f1fffb_100%)] p-0 shadow-[0_14px_30px_rgba(32,201,151,0.08)]">
+                  <div className="bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
+                      Participation Trend
+                    </p>
+                  </div>
+                  <div className="p-5">
+                    <p className="text-3xl font-semibold text-foreground">
+                      {selectedClassIntelligence.participationScore}%
+                    </p>
+                    <p className="mt-3 text-sm text-muted">
+                      Class energy signal based on recent completed teaching cycles.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -2142,14 +2189,17 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
               state.data.lessonSuggestions.map((item) => (
                 <article
                   key={item.id}
-                  className="rounded-[1.5rem] border border-border bg-surface-strong p-5"
+                  className="overflow-hidden rounded-[1.5rem] border border-[#ddd4ff] bg-[linear-gradient(180deg,#ffffff_0%,#f4efff_100%)] p-0 shadow-[0_12px_24px_rgba(124,92,255,0.06)]"
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="text-lg font-semibold text-foreground">
+                  <div className="flex items-center justify-between gap-4 bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)] px-5 py-4 text-white">
+                    <p className="text-lg font-semibold text-white">
                       {item.title}
                     </p>
-                    <StatusPill status={item.status} />
+                    <div className="rounded-full bg-white/18 px-3 py-1 text-xs font-semibold text-white">
+                      {item.status}
+                    </div>
                   </div>
+                  <div className="p-5">
                   <p className="mt-3 text-sm leading-7 text-muted">{item.detail}</p>
                   <div className="mt-4 grid gap-3 text-sm text-muted sm:grid-cols-3">
                     <p>AI draft: {item.generatedAt}</p>
@@ -2171,6 +2221,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                     busy={state.busyId === item.id}
                     onRunAction={runApprovalAction}
                   />
+                  </div>
                 </article>
               ))
             )}
@@ -2282,19 +2333,20 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
               state.data.todaysClasses.map((classItem) => (
                 <article
                   key={classItem.id}
-                  className="rounded-[1.75rem] border border-border bg-surface-strong p-6"
+                  className="overflow-hidden rounded-[1.75rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-0 shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="flex flex-wrap items-start justify-between gap-4 bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)] px-6 py-5 text-white">
                     <div>
-                      <p className="text-lg font-semibold text-foreground">
+                      <p className="text-lg font-semibold text-white">
                         {classItem.name}
                       </p>
-                      <p className="mt-1 text-sm text-muted">{classItem.subject}</p>
+                      <p className="mt-1 text-sm text-white/78">{classItem.subject}</p>
                     </div>
-                    <p className="rounded-full bg-teal-soft px-4 py-2 text-xs font-semibold text-teal">
+                    <p className="rounded-full bg-white/18 px-4 py-2 text-xs font-semibold text-white">
                       {classItem.schedule}
                     </p>
                   </div>
+                  <div className="p-6">
                   <div className="mt-5 grid gap-3 sm:grid-cols-3">
                     <div className="rounded-2xl bg-white/80 p-4 text-sm text-muted">
                       {classItem.readiness}
@@ -2305,6 +2357,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                     <div className="rounded-2xl bg-white/80 p-4 text-sm text-muted">
                       {classItem.focus}
                     </div>
+                  </div>
                   </div>
                 </article>
               ))
@@ -2324,26 +2377,29 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
               </div>
             ) : (
               state.data.weakTopicHeatmap.map((item) => (
-                <div key={`${item.className}-${item.topic}`} className="space-y-3">
-                  <div className="flex items-center justify-between gap-4">
+                <article
+                  key={`${item.className}-${item.topic}`}
+                  className="overflow-hidden rounded-[1.75rem] border border-[#ffd9b4] bg-[linear-gradient(180deg,#ffffff_0%,#fff7ec_100%)] shadow-[0_12px_24px_rgba(255,166,77,0.06)]"
+                >
+                  <div className="flex items-center justify-between gap-4 bg-[linear-gradient(135deg,#FFB86B_0%,#FF8A65_100%)] px-5 py-4 text-[#6f3400]">
                     <div>
-                      <p className="text-lg font-semibold text-foreground">
-                        {item.topic}
-                      </p>
-                      <p className="text-sm text-muted">{item.className}</p>
+                      <p className="text-lg font-semibold text-[#6f3400]">{item.topic}</p>
+                      <p className="text-sm text-[#6f3400]/70">{item.className}</p>
                     </div>
-                    <span className="rounded-full bg-[#f8d2c7] px-3 py-1 text-xs font-semibold text-coral">
+                    <span className="rounded-full bg-white/28 px-3 py-1 text-xs font-semibold text-[#6f3400]">
                       {item.intensity}% risk
                     </span>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-[#e8dcc5]">
-                    <div
-                      className="metric-bar h-full rounded-full"
-                      style={{ width: `${item.intensity}%` }}
-                    />
+                  <div className="space-y-4 p-5">
+                    <div className="h-3 overflow-hidden rounded-full bg-white/80">
+                      <div
+                        className="h-full rounded-full bg-[linear-gradient(90deg,#ff8a65_0%,#ffb86b_100%)]"
+                        style={{ width: `${item.intensity}%` }}
+                      />
+                    </div>
+                    <p className="text-sm leading-7 text-muted">{item.note}</p>
                   </div>
-                  <p className="text-sm leading-7 text-muted">{item.note}</p>
-                </div>
+                </article>
               ))
             )}
           </div>
@@ -2359,37 +2415,59 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           {selectedClassIntelligence ? (
             <>
               <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-[1.5rem] bg-surface-strong p-5">
-                  <p className="text-sm font-medium text-muted">Class duration</p>
-                  <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
-                    {selectedClassIntelligence.durationMinutes}
-                  </p>
-                  <p className="mt-2 text-sm text-muted">minutes</p>
-                </div>
-                <div className="rounded-[1.5rem] bg-surface-strong p-5">
-                  <p className="text-sm font-medium text-muted">Readiness</p>
-                  <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
-                    {selectedClassIntelligence.readinessScore}%
-                  </p>
-                  <p className="mt-2 text-sm text-muted">Tutor-approved baseline signal</p>
-                </div>
-                <div className="rounded-[1.5rem] bg-surface-strong p-5">
-                  <p className="text-sm font-medium text-muted">Tutor guidance</p>
-                  <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
-                    {selectedClassIntelligence.tutorGuidanceRatio}%
-                  </p>
-                  <p className="mt-2 text-sm text-muted">Teacher-led explanation time</p>
-                </div>
-                <div className="rounded-[1.5rem] bg-surface-strong p-5">
-                  <p className="text-sm font-medium text-muted">Student practice</p>
-                  <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
-                    {selectedClassIntelligence.studentPracticeRatio}%
-                  </p>
-                  <p className="mt-2 text-sm text-muted">Independent or guided attempts</p>
-                </div>
+                {[
+                  {
+                    label: "Class duration",
+                    value: selectedClassIntelligence.durationMinutes,
+                    suffix: "minutes",
+                    note: "Session length",
+                    header: "bg-[linear-gradient(135deg,#8B5CF6_0%,#6D7CFF_100%)]",
+                    text: "text-white",
+                  },
+                  {
+                    label: "Readiness",
+                    value: `${selectedClassIntelligence.readinessScore}%`,
+                    suffix: "Tutor-approved baseline",
+                    note: "Tutor-approved baseline signal",
+                    header: "bg-[linear-gradient(135deg,#3B82F6_0%,#22D3EE_100%)]",
+                    text: "text-white",
+                  },
+                  {
+                    label: "Tutor guidance",
+                    value: `${selectedClassIntelligence.tutorGuidanceRatio}%`,
+                    suffix: "Teacher-led time",
+                    note: "Teacher-led explanation time",
+                    header: "bg-[linear-gradient(135deg,#F59E0B_0%,#FB7185_100%)]",
+                    text: "text-[#6b4100]",
+                  },
+                  {
+                    label: "Student practice",
+                    value: `${selectedClassIntelligence.studentPracticeRatio}%`,
+                    suffix: "Practice window",
+                    note: "Independent or guided attempts",
+                    header: "bg-[linear-gradient(135deg,#34D399_0%,#22C55E_100%)]",
+                    text: "text-[#0b4c32]",
+                  },
+                ].map((card) => (
+                  <article
+                    key={card.label}
+                    className="overflow-hidden rounded-[1.5rem] border border-[#dbe7ff] bg-white shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
+                  >
+                    <div className={`px-5 py-4 ${card.header} ${card.text}`}>
+                      <p className={`text-sm font-semibold ${card.text}`}>{card.label}</p>
+                      <p className={`mt-3 text-3xl font-semibold tracking-tight ${card.text}`}>
+                        {card.value}
+                      </p>
+                    </div>
+                    <div className="space-y-2 p-5">
+                      <p className="text-sm font-semibold text-foreground">{card.suffix}</p>
+                      <p className="text-sm text-muted">{card.note}</p>
+                    </div>
+                  </article>
+                ))}
               </div>
 
-              <div className="mt-6 rounded-[1.75rem] border border-border bg-[#103b35] p-6 text-white">
+              <div className="mt-6 overflow-hidden rounded-[1.75rem] border border-[#cfdcff] bg-[linear-gradient(135deg,#1d4ed8_0%,#5b5cf6_58%,#12cff3_100%)] p-6 text-white shadow-[0_18px_40px_rgba(59,108,255,0.18)]">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-white/70">
@@ -2428,25 +2506,32 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
             <>
               <div className="mt-8 space-y-4">
                 {selectedClassIntelligence.pulseRows.map((row) => (
-                  <div
-                    key={`${selectedClassIntelligence.classId}-${row.label}`}
-                    className="grid grid-cols-[76px_1fr] items-center gap-4"
-                  >
-                    <p className="text-sm font-medium text-muted">{row.label}</p>
-                    <div className="grid grid-cols-6 gap-2">
-                      {row.values.map((value, index) => (
-                        <div
-                          key={`${row.label}-${index}`}
-                          className="h-10 rounded-2xl border border-white/60 bg-white/70"
-                          style={{
-                            backgroundColor: `rgba(23, 161, 132, ${0.12 + value / 120})`,
-                          }}
-                          title={`${row.label} checkpoint ${index + 1}: ${value}%`}
-                        />
-                      ))}
-                    </div>
+                <div
+                  key={`${selectedClassIntelligence.classId}-${row.label}`}
+                  className="overflow-hidden rounded-[1.5rem] border border-[#dbe7ff] bg-white shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
+                >
+                  <div className="flex items-center justify-between gap-4 bg-[linear-gradient(135deg,#EEF4FF_0%,#F4ECFF_100%)] px-5 py-4">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#3B6CFF]">
+                      {row.label}
+                    </p>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#7C5CFF]">
+                      6 checkpoints
+                    </span>
                   </div>
-                ))}
+                  <div className="grid grid-cols-6 gap-2 p-5">
+                    {row.values.map((value, index) => (
+                      <div
+                        key={`${row.label}-${index}`}
+                        className="h-14 rounded-2xl border border-white/60"
+                        style={{
+                          background: `linear-gradient(180deg, rgba(79,124,255,${0.18 + value / 180}) 0%, rgba(18,207,243,${0.14 + value / 200}) 100%)`,
+                        }}
+                        title={`${row.label} checkpoint ${index + 1}: ${value}%`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
               </div>
               <p className="mt-6 text-sm leading-7 text-muted">
                 Darker cells signal stronger class energy. This is meant to guide tutor pacing,
@@ -2473,16 +2558,18 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
               {selectedClassIntelligence.focusCheckpoints.map((checkpoint) => (
                 <article
                   key={checkpoint.id}
-                  className="rounded-[1.5rem] border border-border bg-surface-strong p-5"
+                  className="overflow-hidden rounded-[1.5rem] border border-[#e6dcff] bg-white shadow-[0_12px_24px_rgba(124,92,255,0.05)]"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-[linear-gradient(135deg,#F3E8FF_0%,#EEF4FF_100%)] px-5 py-4">
                     <p className="text-lg font-semibold text-foreground">{checkpoint.title}</p>
-                    <span className="rounded-full bg-gold-soft px-3 py-1 text-xs font-semibold text-[#8b5a13]">
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#7C5CFF]">
                       {checkpoint.timeLabel}
                     </span>
                   </div>
-                  <p className="mt-3 text-sm font-medium text-teal">{checkpoint.signal}</p>
-                  <p className="mt-2 text-sm leading-7 text-muted">{checkpoint.note}</p>
+                  <div className="space-y-3 p-5">
+                    <p className="text-sm font-medium text-teal">{checkpoint.signal}</p>
+                    <p className="text-sm leading-7 text-muted">{checkpoint.note}</p>
+                  </div>
                 </article>
               ))}
             </div>
@@ -2501,23 +2588,28 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           {selectedClassIntelligence ? (
             <div className="mt-8 space-y-5">
               {selectedClassIntelligence.teachingBalance.map((item) => (
-                <div key={`${selectedClassIntelligence.classId}-${item.mode}`} className="space-y-3">
-                  <div className="flex items-center justify-between gap-4">
+                <article
+                  key={`${selectedClassIntelligence.classId}-${item.mode}`}
+                  className="overflow-hidden rounded-[1.5rem] border border-[#dbe7ff] bg-white shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
+                >
+                  <div className="flex items-center justify-between gap-4 bg-[linear-gradient(135deg,#EEF4FF_0%,#ECFDF5_100%)] px-5 py-4">
                     <div>
                       <p className="text-lg font-semibold text-foreground">{item.mode}</p>
                       <p className="text-sm text-muted">{item.note}</p>
                     </div>
-                    <span className="rounded-full bg-teal-soft px-3 py-1 text-xs font-semibold text-teal">
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-teal">
                       {item.percent}%
                     </span>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-[#e8dcc5]">
-                    <div
-                      className="metric-bar h-full rounded-full"
-                      style={{ width: `${item.percent}%` }}
-                    />
+                  <div className="p-5">
+                    <div className="h-3 overflow-hidden rounded-full bg-[#e8dcc5]">
+                      <div
+                        className="metric-bar h-full rounded-full"
+                        style={{ width: `${item.percent}%` }}
+                      />
+                    </div>
                   </div>
-                </div>
+                </article>
               ))}
               <p className="text-sm leading-7 text-muted">
                 This balances structure and flexibility. It helps tutors pace the session, but the
@@ -2575,7 +2667,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                         event.target.value,
                       )
                     }
-                    className="w-full rounded-[1.5rem] border border-border bg-white/80 px-4 py-4 text-sm leading-7 text-foreground outline-none transition focus:border-teal"
+                    className="w-full rounded-[1.5rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f6faff_100%)] px-4 py-4 text-sm leading-7 text-foreground outline-none transition focus:border-teal"
                   />
                 </label>
                 <label className="space-y-2">
@@ -2590,7 +2682,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                         event.target.value,
                       )
                     }
-                    className="w-full rounded-[1.5rem] border border-border bg-white/80 px-4 py-4 text-sm leading-7 text-foreground outline-none transition focus:border-teal"
+                    className="w-full rounded-[1.5rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f6faff_100%)] px-4 py-4 text-sm leading-7 text-foreground outline-none transition focus:border-teal"
                   />
                 </label>
               </div>
@@ -2601,15 +2693,16 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                   {selectedIntelligenceDraft.teachingSlices.map((slice) => (
                     <article
                       key={slice.id}
-                      className="rounded-[1.5rem] border border-border bg-surface-strong p-5"
+                      className="overflow-hidden rounded-[1.5rem] border border-[#dbe7ff] bg-white shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3 bg-[linear-gradient(135deg,#EEF4FF_0%,#ECFDF5_100%)] px-5 py-4">
                         <p className="text-base font-semibold text-foreground">{slice.title}</p>
-                        <span className="rounded-full bg-teal-soft px-3 py-1 text-xs font-semibold text-teal">
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-teal">
                           {slice.timeLabel}
                         </span>
                       </div>
-                      <label className="mt-4 block space-y-2">
+                      <div className="p-5">
+                      <label className="block space-y-2">
                         <span className="text-sm font-medium text-muted">Slice summary</span>
                         <textarea
                           rows={3}
@@ -2622,7 +2715,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                               event.target.value,
                             )
                           }
-                          className="w-full rounded-2xl border border-border bg-white/80 px-4 py-3 text-sm leading-7 text-foreground outline-none transition focus:border-teal"
+                          className="w-full rounded-2xl border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f6faff_100%)] px-4 py-3 text-sm leading-7 text-foreground outline-none transition focus:border-teal"
                         />
                       </label>
                       <label className="mt-4 block space-y-2">
@@ -2638,9 +2731,10 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                               event.target.value,
                             )
                           }
-                          className="w-full rounded-2xl border border-border bg-white/80 px-4 py-3 text-sm leading-7 text-foreground outline-none transition focus:border-teal"
+                          className="w-full rounded-2xl border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f6faff_100%)] px-4 py-3 text-sm leading-7 text-foreground outline-none transition focus:border-teal"
                         />
                       </label>
+                      </div>
                     </article>
                   ))}
                 </div>
@@ -2650,15 +2744,16 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                   {selectedIntelligenceDraft.coreQuestions.map((item) => (
                     <article
                       key={item.id}
-                      className="rounded-[1.5rem] border border-border bg-surface-strong p-5"
+                      className="overflow-hidden rounded-[1.5rem] border border-[#ffe0b8] bg-white shadow-[0_12px_24px_rgba(255,166,77,0.05)]"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3 bg-[linear-gradient(135deg,#FFF3D6_0%,#FFE5B4_100%)] px-5 py-4">
                         <p className="text-base font-semibold text-foreground">{item.timeLabel}</p>
-                        <span className="rounded-full bg-gold-soft px-3 py-1 text-xs font-semibold text-[#8b5a13]">
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#8b5a13]">
                           Tutor prompt
                         </span>
                       </div>
-                      <label className="mt-4 block space-y-2">
+                      <div className="p-5">
+                      <label className="block space-y-2">
                         <span className="text-sm font-medium text-muted">Question</span>
                         <textarea
                           rows={3}
@@ -2671,7 +2766,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                               event.target.value,
                             )
                           }
-                          className="w-full rounded-2xl border border-border bg-white/80 px-4 py-3 text-sm leading-7 text-foreground outline-none transition focus:border-teal"
+                          className="w-full rounded-2xl border border-[#ffe0b8] bg-[linear-gradient(180deg,#ffffff_0%,#fffaf0_100%)] px-4 py-3 text-sm leading-7 text-foreground outline-none transition focus:border-teal"
                         />
                       </label>
                       <p className="mt-4 text-sm leading-7 text-muted">{item.intent}</p>
@@ -2688,9 +2783,10 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                               event.target.value,
                             )
                           }
-                          className="w-full rounded-2xl border border-border bg-white/80 px-4 py-3 text-sm leading-7 text-foreground outline-none transition focus:border-teal"
+                          className="w-full rounded-2xl border border-[#ffe0b8] bg-[linear-gradient(180deg,#ffffff_0%,#fffaf0_100%)] px-4 py-3 text-sm leading-7 text-foreground outline-none transition focus:border-teal"
                         />
                       </label>
+                      </div>
                     </article>
                   ))}
                 </div>
@@ -2746,17 +2842,18 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
               {selectedClassIntelligence.teachingSlices.map((slice) => (
                 <article
                   key={slice.id}
-                  className="rounded-[1.5rem] border border-border bg-surface-strong p-5"
+                  className="overflow-hidden rounded-[1.5rem] border border-[#dbe7ff] bg-white shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-[linear-gradient(135deg,#EEF4FF_0%,#F3E8FF_100%)] px-5 py-4">
                     <p className="text-lg font-semibold text-foreground">{slice.title}</p>
-                    <span className="rounded-full bg-teal-soft px-3 py-1 text-xs font-semibold text-teal">
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-teal">
                       {slice.timeLabel}
                     </span>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-muted">{slice.summary}</p>
-                  <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-2xl bg-white/80 p-4">
+                  <div className="space-y-4 p-5">
+                  <p className="text-sm leading-7 text-muted">{slice.summary}</p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-2xl bg-[linear-gradient(180deg,#ffffff_0%,#f6faff_100%)] p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal">
                         Tutor move
                       </p>
@@ -2764,7 +2861,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                         {slice.teacherMove}
                       </p>
                     </div>
-                    <div className="rounded-2xl bg-white/80 p-4">
+                    <div className="rounded-2xl bg-[linear-gradient(180deg,#ffffff_0%,#fff5f7_100%)] p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-coral">
                         Student signal
                       </p>
@@ -2772,6 +2869,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                         {slice.studentSignal}
                       </p>
                     </div>
+                  </div>
                   </div>
                 </article>
               ))}
@@ -2794,22 +2892,24 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
               {selectedClassIntelligence.coreQuestions.map((item) => (
                 <article
                   key={item.id}
-                  className="rounded-[1.5rem] border border-border bg-surface-strong p-5"
+                  className="overflow-hidden rounded-[1.5rem] border border-[#ffe0b8] bg-white shadow-[0_12px_24px_rgba(255,166,77,0.05)]"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-[linear-gradient(135deg,#FFF3D6_0%,#FFE5B4_100%)] px-5 py-4">
                     <p className="text-lg font-semibold text-foreground">{item.question}</p>
-                    <span className="rounded-full bg-gold-soft px-3 py-1 text-xs font-semibold text-[#8b5a13]">
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#8b5a13]">
                       {item.timeLabel}
                     </span>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-muted">{item.intent}</p>
-                  <div className="mt-4 rounded-2xl bg-white/80 p-4">
+                  <div className="space-y-4 p-5">
+                  <p className="text-sm leading-7 text-muted">{item.intent}</p>
+                  <div className="rounded-2xl bg-[linear-gradient(180deg,#ffffff_0%,#fffaf0_100%)] p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal">
                       Follow-up if the room is unsure
                     </p>
                     <p className="mt-3 text-sm leading-7 text-foreground/88">
                       {item.recommendedFollowUp}
                     </p>
+                  </div>
                   </div>
                 </article>
               ))}
@@ -2860,21 +2960,48 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                 return (
                   <article
                     key={item.id}
-                    className="rounded-[1.75rem] border border-border bg-surface-strong p-5"
+                    className="overflow-hidden rounded-[1.75rem] border border-[#ffe0a8] bg-[linear-gradient(180deg,#ffffff_0%,#fff8ea_100%)] p-0 shadow-[0_12px_24px_rgba(255,209,102,0.06)]"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3 bg-[linear-gradient(135deg,#FFD166_0%,#FF9F1C_100%)] px-5 py-4 text-[#6b4100]">
                       <div>
-                        <p className="text-lg font-semibold text-foreground">
+                        <p className="text-lg font-semibold text-[#6b4100]">
                           {item.title}
                         </p>
-                        <p className="text-sm text-muted">
+                        <p className="text-sm text-[#6b4100]/72">
                           Student {item.studentId} · {item.owner}
                         </p>
                       </div>
-                      <span className="rounded-full bg-gold-soft px-3 py-1 text-xs font-semibold text-[#8b5a13]">
+                      <span className="rounded-full bg-white/30 px-3 py-1 text-xs font-semibold text-[#6b4100]">
                         Submitted {item.submittedAt}
                       </span>
                     </div>
+                    <div className="p-5">
+                    {(item.curriculumTopicName || item.masteryNodeTitles.length > 0) ? (
+                      <div className="rounded-[1.5rem] border border-[#ffe8bf] bg-white/85 p-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a86b00]">
+                          Revision focus
+                        </p>
+                        {item.curriculumTopicName ? (
+                          <p className="mt-2 text-sm font-semibold text-foreground">
+                            {item.curriculumTopicCode
+                              ? `${item.curriculumTopicCode} ${item.curriculumTopicName}`
+                              : item.curriculumTopicName}
+                          </p>
+                        ) : null}
+                        {item.masteryNodeTitles.length > 0 ? (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {item.masteryNodeTitles.map((nodeTitle) => (
+                              <span
+                                key={`${item.id}-${nodeTitle}`}
+                                className="rounded-full bg-[#fff4dd] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#a86b00]"
+                              >
+                                {nodeTitle}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
                     <div className="mt-5 grid gap-4 lg:grid-cols-[140px_1fr_auto]">
                       {item.submissionPreview ? (
                         <div className="lg:col-span-3">
@@ -2966,6 +3093,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
                         </button>
                       </div>
                     </div>
+                    </div>
                   </article>
                 );
               })
@@ -2989,18 +3117,20 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
               state.data.riskAlerts.map((alert) => (
                 <article
                   key={`${alert.student}-${alert.risk}`}
-                  className="rounded-[1.5rem] border border-border bg-surface-strong p-5"
+                  className="overflow-hidden rounded-[1.5rem] border border-[#ffd3db] bg-[linear-gradient(180deg,#ffffff_0%,#fff5f7_100%)] p-0 shadow-[0_12px_24px_rgba(226,85,117,0.06)]"
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="text-lg font-semibold text-foreground">
+                  <div className="flex items-center justify-between gap-4 bg-[linear-gradient(135deg,#ff7a8a_0%,#ff9f6b_100%)] px-5 py-4 text-white">
+                    <p className="text-lg font-semibold text-white">
                       {alert.student}
                     </p>
-                    <span className="rounded-full bg-[#f8d2c7] px-3 py-1 text-xs font-semibold text-coral">
+                    <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white">
                       Risk alert
                     </span>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-muted">{alert.risk}</p>
-                  <p className="mt-2 text-sm leading-7 text-teal">{alert.action}</p>
+                  <div className="p-5">
+                    <p className="text-sm leading-7 text-muted">{alert.risk}</p>
+                    <p className="mt-2 text-sm leading-7 text-teal">{alert.action}</p>
+                  </div>
                 </article>
               ))
             )}

@@ -54,19 +54,37 @@ export default function HowItWorksPage() {
   return (
     <SolacePageShell
       eyebrow="How it works"
-      title="A simple path from first enquiry to steady progress."
-      description="Families can move from booking to live classes, revision, homework, and parent reporting without getting lost in admin."
-      heroPanelClassName="border-[#e6ecf5] bg-[radial-gradient(circle_at_18%_12%,rgba(18,207,243,0.14),transparent_30%),radial-gradient(circle_at_86%_18%,rgba(124,92,255,0.1),transparent_28%),linear-gradient(180deg,#f8fbff_0%,#ffffff_100%)] shadow-[0_28px_80px_rgba(59,108,255,0.1)]"
+      title="From first enquiry to a clearer weekly learning rhythm."
+      description="Book a class, match the right tutor path, join live lessons, and keep revision, homework, and parent updates in one bright learning flow."
+      heroVariant="stage"
+      heroColumnsClassName="lg:grid-cols-[0.58fr_0.42fr]"
+      actions={
+        <>
+          <Link
+            href="/book-class"
+            className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3.5 text-sm font-semibold !text-[#2f5bff] shadow-[0_14px_32px_rgba(255,255,255,0.16)] transition hover:bg-[#f8fbff] hover:!text-[#2448d8]"
+          >
+            Book a Class
+          </Link>
+          <Link
+            href="/contact"
+            className="rounded-full border border-white/24 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/18"
+          >
+            Contact the Team
+          </Link>
+        </>
+      }
+      highlights={["Book classes", "Tutor matching", "Live lessons", "Parent updates"]}
       aside={
-        <div className="rounded-[1.8rem] border border-[#e6ecf5] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] p-6 shadow-[0_18px_40px_rgba(59,108,255,0.08)]">
+        <div className="rounded-[1.9rem] border border-white/75 bg-white/96 p-6 shadow-[0_22px_54px_rgba(15,23,42,0.14)]">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#3B6CFF]">
             Core rules
           </p>
-          <div className="mt-5 space-y-3">
+          <div className="mt-5 grid gap-3">
             {supportPrinciples.map((item) => (
               <div
                 key={item}
-                className="rounded-[1.2rem] border border-[#dbe7ff] bg-white px-4 py-3 text-sm font-medium leading-7 text-[#111827]"
+                className="rounded-[1.2rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-3 text-sm font-medium leading-7 text-[#111827]"
               >
                 {item}
               </div>
@@ -83,9 +101,9 @@ export default function HowItWorksPage() {
           {steps.map((item) => (
             <div
               key={item.step}
-              className="rounded-[1.7rem] border border-[#e6ecf5] bg-white p-5 shadow-[0_14px_32px_rgba(59,108,255,0.06)]"
+              className="rounded-[1.8rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-5 shadow-[0_16px_36px_rgba(59,108,255,0.08)]"
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#3B6CFF]">
+              <p className="inline-flex rounded-full border border-[#dbe7ff] bg-[#eef4ff] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#3B6CFF]">
                 {item.step}
               </p>
               <p className="mt-4 text-2xl font-semibold text-[#111827]">

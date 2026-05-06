@@ -9,6 +9,11 @@ import {
 
 import { prisma } from "@/lib/prisma";
 import type { ApprovalStatus } from "@/lib/mvp-data";
+import {
+  normalizeTopicToken,
+  resolveCurriculumLevelCodeForSubject,
+  resolveTopicAliasCodeForSubject,
+} from "@/lib/server/curriculum-topic-links";
 import { average } from "@/lib/server/dashboard-helpers";
 
 type ApprovalQueueItem = {
@@ -66,6 +71,9 @@ type SubmissionReviewItem = {
   homeworkAssignmentId: string;
   title: string;
   owner: string;
+  curriculumTopicCode: string | null;
+  curriculumTopicName: string | null;
+  masteryNodeTitles: string[];
   submittedAt: string;
   score: string;
   tutorFeedback: string;
@@ -93,8 +101,10 @@ type TutorClassOverview = {
 };
 
 type WeakTopicHeatmapItem = {
+  classId: string;
   className: string;
   topic: string;
+  topicName: string;
   intensity: number;
   note: string;
 };
@@ -293,6 +303,62 @@ function getAvailableActions(status: ApprovalStatus): ApprovalStatus[] {
     default:
       return [];
   }
+}
+
+function getStudentLevelFromProfileData(profileData: Prisma.JsonValue | null | undefined) {
+  if (!profileData || typeof profileData !== "object" || Array.isArray(profileData)) {
+    return undefined;
+  }
+
+  const rawLevel = (profileData as Record<string, Prisma.JsonValue>).studentLevel;
+  return typeof rawLevel === "string" && rawLevel.trim().length > 0 ? rawLevel : undefined;
+}
+
+function pickRecommendedNodes(
+  topic:
+    | {
+        masteryNodes: Array<{ title: string; sequenceOrder: number }>;
+      }
+    | null,
+  masteryScore?: number | null,
+) {
+  if (!topic || topic.masteryNodes.length === 0) {
+    return {
+      nodeTitles: [] as string[],
+      nodeCount: 0,
+      phaseLabel: masteryScore === null || masteryScore === undefined ? "start" : "review",
+    };
+  }
+
+  const orderedNodes = [...topic.masteryNodes].sort(
+    (left, right) => left.sequenceOrder - right.sequenceOrder,
+  );
+  const total = orderedNodes.length;
+
+  let startIndex = 0;
+  let phaseLabel: "start" | "rebuild" | "secure" | "review" = "start";
+
+  if (masteryScore === null || masteryScore === undefined) {
+    phaseLabel = "start";
+    startIndex = 0;
+  } else if (masteryScore < 50) {
+    phaseLabel = "rebuild";
+    startIndex = 0;
+  } else if (masteryScore < 75) {
+    phaseLabel = "secure";
+    startIndex = Math.min(1, Math.max(0, total - 2));
+  } else {
+    phaseLabel = "review";
+    startIndex = Math.max(0, total - 2);
+  }
+
+  return {
+    nodeTitles: orderedNodes
+      .slice(startIndex, startIndex + 2)
+      .map((node) => node.title),
+    nodeCount: total,
+    phaseLabel,
+  };
 }
 
 function getJsonStringArray(value: Prisma.JsonValue | null) {
@@ -652,6 +718,7 @@ export async function getTutorDashboardData(
     readinessSubmissions,
     homeworkSubmissions,
     recentLiveWorkspaceActions,
+    subjectTopics,
   ] = await Promise.all([
     studentIds.length > 0 && subjectIds.length > 0
       ? prisma.studentMastery.findMany({
@@ -801,7 +868,138 @@ export async function getTutorDashboardData(
           take: 40,
         })
       : Promise.resolve([]),
+    subjectIds.length > 0
+      ? prisma.subjectTopic.findMany({
+          where: {
+            subjectId: {
+              in: subjectIds,
+            },
+          },
+          select: {
+            id: true,
+            subjectId: true,
+            code: true,
+            name: true,
+            level: {
+              select: {
+                code: true,
+              },
+            },
+          _count: {
+            select: {
+              masteryNodes: true,
+            },
+          },
+          masteryNodes: {
+            where: {
+              active: true,
+            },
+            select: {
+              title: true,
+              sequenceOrder: true,
+            },
+            orderBy: {
+              sequenceOrder: "asc",
+            },
+          },
+        },
+          orderBy: [{ subjectId: "asc" }, { sequenceOrder: "asc" }, { createdAt: "asc" }],
+        })
+      : Promise.resolve([]),
   ]);
+
+  const subjectTopicById = new Map(
+    subjectTopics.map((topic) => [topic.id, topic]),
+  );
+  const subjectTopicBySubjectAndName = new Map(
+    subjectTopics.map((topic) => [
+      `${topic.subjectId}:${normalizeTopicToken(topic.name)}`,
+      topic,
+    ]),
+  );
+  const subjectTopicBySubjectLevelAndCode = new Map(
+    subjectTopics.map((topic) => [
+      `${topic.subjectId}:${topic.level.code}:${topic.code.toLowerCase()}`,
+      topic,
+    ]),
+  );
+  const subjectTopicBySubjectLevelAndName = new Map(
+    subjectTopics.map((topic) => [
+      `${topic.subjectId}:${topic.level.code}:${normalizeTopicToken(topic.name)}`,
+      topic,
+    ]),
+  );
+
+  function resolveSubjectTopic(
+    subjectId: string,
+    subjectCode: string,
+    subjectName: string,
+    topicId: string | null | undefined,
+    topicLabel: string,
+    levelHint?: string | null,
+  ) {
+    const levelCode = resolveCurriculumLevelCodeForSubject(
+      subjectCode,
+      subjectName,
+      levelHint,
+    );
+    const aliasCode = resolveTopicAliasCodeForSubject(
+      subjectCode,
+      subjectName,
+      topicId ?? "",
+      topicLabel,
+    );
+
+    return (
+      (topicId ? subjectTopicById.get(topicId) : undefined) ??
+      (aliasCode && levelCode
+        ? subjectTopicBySubjectLevelAndCode.get(
+            `${subjectId}:${levelCode}:${aliasCode.toLowerCase()}`,
+          )
+        : undefined) ??
+      (levelCode
+        ? subjectTopicBySubjectLevelAndName.get(
+            `${subjectId}:${levelCode}:${normalizeTopicToken(topicLabel)}`,
+          )
+        : undefined) ??
+      subjectTopicBySubjectAndName.get(
+        `${subjectId}:${normalizeTopicToken(topicLabel)}`,
+      ) ??
+      null
+    );
+  }
+
+  function getTopicDisplay(
+    subjectId: string,
+    subjectCode: string,
+    subjectName: string,
+    topicId: string | null | undefined,
+    topicLabel: string,
+    masteryScore?: number | null,
+    levelHint?: string | null,
+  ) {
+    const resolvedTopic = resolveSubjectTopic(
+      subjectId,
+      subjectCode,
+      subjectName,
+      topicId,
+      topicLabel,
+      levelHint,
+    );
+    const recommendation = pickRecommendedNodes(
+      resolvedTopic,
+      masteryScore ?? null,
+    );
+
+    return {
+      resolvedTopic,
+      display: resolvedTopic
+        ? `${resolvedTopic.code} ${resolvedTopic.name}`
+        : topicLabel,
+      sentenceName: resolvedTopic?.name ?? topicLabel,
+      recommendation,
+    };
+  }
 
   const recentActionByStudent = new Map<string, string>();
 
@@ -831,7 +1029,23 @@ export async function getTutorDashboardData(
         enrollment.student.fullName,
       ]),
     );
-    const focusTopic = weakestTopicByClass.get(classItem.id)?.topic ?? classItem.subject.name;
+    const classLevelHint =
+      classItem.enrollments
+        .map((enrollment) =>
+          getStudentLevelFromProfileData(enrollment.student.profileData),
+        )
+        .find((level): level is string => Boolean(level)) ?? null;
+    const weakestTopic = weakestTopicByClass.get(classItem.id);
+    const focusTopic = weakestTopic?.topic ?? classItem.subject.name;
+    const focusTopicMeta = getTopicDisplay(
+      classItem.subjectId,
+      classItem.subject.code,
+      classItem.subject.name,
+      null,
+      weakestTopic?.topicName ?? classItem.subject.name,
+      45,
+      classLevelHint,
+    );
 
     const flaggedStudents = recentLiveWorkspaceActions
       .filter(
@@ -847,7 +1061,10 @@ export async function getTutorDashboardData(
         return {
           studentId,
           studentName: classStudentMap.get(studentId) ?? studentId,
-          reason: `Marked during the live workspace for extra support on ${focusTopic.toLowerCase()}.`,
+          reason:
+            focusTopicMeta.recommendation.nodeTitles.length > 0
+              ? `Marked during the live workspace for extra support on ${focusTopic.toLowerCase()} through ${focusTopicMeta.recommendation.nodeTitles.join(" -> ")}.`
+              : `Marked during the live workspace for extra support on ${focusTopic.toLowerCase()}.`,
           nextAction:
             "Follow up with a short tutor check-in, then decide whether a parent note or mini revision should be assigned.",
         };
@@ -930,6 +1147,12 @@ export async function getTutorDashboardData(
   });
 
   const heatmapCandidates = classes.flatMap((classItem) => {
+    const classLevelHint =
+      classItem.enrollments
+        .map((enrollment) =>
+          getStudentLevelFromProfileData(enrollment.student.profileData),
+        )
+        .find((level): level is string => Boolean(level)) ?? null;
     const classStudentIds = new Set(
       classItem.enrollments.map((enrollment) => enrollment.studentId),
     );
@@ -944,26 +1167,64 @@ export async function getTutorDashboardData(
     const groupedTopics = new Map<
       string,
       {
+        topicLabel: string;
+        topicName: string;
+        curriculumCode: string | null;
+        masteryNodeCount: number;
         masteryScores: number[];
         readinessFlags: number;
       }
     >();
 
     for (const record of relevantMastery) {
+      const topicMeta = getTopicDisplay(
+        classItem.subjectId,
+        classItem.subject.code,
+        classItem.subject.name,
+        record.topicId,
+        record.topicLabel,
+        record.masteryScore,
+        classLevelHint,
+      );
+      const topicKey = topicMeta.resolvedTopic?.id ?? `label:${record.topicLabel}`;
       const existing =
-        groupedTopics.get(record.topicLabel) ?? { masteryScores: [], readinessFlags: 0 };
+        groupedTopics.get(topicKey) ?? {
+          topicLabel: topicMeta.display,
+          topicName: topicMeta.sentenceName,
+          curriculumCode: topicMeta.resolvedTopic?.code ?? null,
+          masteryNodeCount: topicMeta.resolvedTopic?._count.masteryNodes ?? 0,
+          masteryScores: [],
+          readinessFlags: 0,
+        };
       existing.masteryScores.push(record.masteryScore);
-      groupedTopics.set(record.topicLabel, existing);
+      groupedTopics.set(topicKey, existing);
     }
 
     for (const topic of readinessWeakTopics) {
+      const topicMeta = getTopicDisplay(
+        classItem.subjectId,
+        classItem.subject.code,
+        classItem.subject.name,
+        null,
+        topic,
+        undefined,
+        classLevelHint,
+      );
+      const topicKey = topicMeta.resolvedTopic?.id ?? `label:${topic}`;
       const existing =
-        groupedTopics.get(topic) ?? { masteryScores: [], readinessFlags: 0 };
+        groupedTopics.get(topicKey) ?? {
+          topicLabel: topicMeta.display,
+          topicName: topicMeta.sentenceName,
+          curriculumCode: topicMeta.resolvedTopic?.code ?? null,
+          masteryNodeCount: topicMeta.resolvedTopic?._count.masteryNodes ?? 0,
+          masteryScores: [],
+          readinessFlags: 0,
+        };
       existing.readinessFlags += 1;
-      groupedTopics.set(topic, existing);
+      groupedTopics.set(topicKey, existing);
     }
 
-    return Array.from(groupedTopics.entries()).map(([topic, stats]) => {
+    return Array.from(groupedTopics.entries()).map(([, stats]) => {
       const averageMastery = stats.masteryScores.length
         ? average(stats.masteryScores)
         : 45;
@@ -974,12 +1235,13 @@ export async function getTutorDashboardData(
       return {
         classId: classItem.id,
         className: classItem.title,
-        topic,
+        topic: stats.topicLabel,
+        topicName: stats.topicName,
         intensity,
         note:
           stats.readinessFlags > 0
-            ? `Flagged in ${stats.readinessFlags} recent readiness submission(s); average mastery is ${Math.round(averageMastery)}%.`
-            : `Average class mastery is ${Math.round(averageMastery)}% for this topic.`,
+            ? `${stats.curriculumCode ? `${stats.curriculumCode} · ` : ""}Flagged in ${stats.readinessFlags} recent readiness submission(s); average mastery is ${Math.round(averageMastery)}%${stats.masteryNodeCount > 0 ? ` across ${stats.masteryNodeCount} node${stats.masteryNodeCount === 1 ? "" : "s"}` : ""}.`
+            : `${stats.curriculumCode ? `${stats.curriculumCode} · ` : ""}Average class mastery is ${Math.round(averageMastery)}% for this topic${stats.masteryNodeCount > 0 ? ` across ${stats.masteryNodeCount} node${stats.masteryNodeCount === 1 ? "" : "s"}` : ""}.`,
       };
     });
   });
@@ -990,6 +1252,15 @@ export async function getTutorDashboardData(
 
   const weakestTopicByClass = new Map(
     weakTopicHeatmap.map((item) => [item.classId, item]),
+  );
+  const classById = new Map(classes.map((classItem) => [classItem.id, classItem]));
+  const studentLevelById = new Map(
+    classes.flatMap((classItem) =>
+      classItem.enrollments.map((enrollment) => [
+        enrollment.studentId,
+        getStudentLevelFromProfileData(enrollment.student.profileData) ?? null,
+      ] as const),
+    ),
   );
   const latestLessonPlanByClass = new Map<string, (typeof lessonPlans)[number]>();
 
@@ -1055,6 +1326,12 @@ export async function getTutorDashboardData(
   });
 
   const liveClassWorkspace = classes.map((classItem) => {
+    const classLevelHint =
+      classItem.enrollments
+        .map((enrollment) =>
+          getStudentLevelFromProfileData(enrollment.student.profileData),
+        )
+        .find((level): level is string => Boolean(level)) ?? null;
     const nextSession =
       classItem.sessions.find(
         (session) =>
@@ -1066,7 +1343,18 @@ export async function getTutorDashboardData(
         .filter((session) => session.status === ClassSessionStatus.COMPLETED)
         .sort((left, right) => right.startsAt.getTime() - left.startsAt.getTime())[0] ?? null;
     const activeSession = nextSession ?? latestCompletedSession;
-    const focusTopic = weakestTopicByClass.get(classItem.id)?.topic ?? classItem.subject.name;
+    const weakestTopic = weakestTopicByClass.get(classItem.id);
+    const focusTopic = weakestTopic?.topic ?? classItem.subject.name;
+    const focusTopicName = weakestTopic?.topicName ?? classItem.subject.name;
+    const focusTopicMeta = getTopicDisplay(
+      classItem.subjectId,
+      classItem.subject.code,
+      classItem.subject.name,
+      null,
+      focusTopicName,
+      45,
+      classLevelHint,
+    );
     const assignmentsForClass = classHomeworkAssignments.filter(
       (assignment) => assignment.classId === classItem.id,
     );
@@ -1103,10 +1391,24 @@ export async function getTutorDashboardData(
 
         let priority: LiveClassStudentSignal["priority"] = "steady";
         let coachNote = "Keep this learner engaged with one short explanation or retrieval check.";
+        const weakestStudentMastery = studentMastery
+          ? getTopicDisplay(
+              classItem.subjectId,
+              classItem.subject.code,
+              classItem.subject.name,
+              studentMastery.topicId,
+              studentMastery.topicLabel,
+              studentMastery.masteryScore,
+              getStudentLevelFromProfileData(enrollment.student.profileData),
+            )
+          : null;
 
         if ((readinessSubmission?.score ?? 100) < 50 || (studentMastery?.masteryScore ?? 100) < 55) {
           priority = "high";
-          coachNote = `Check ${studentMastery?.topicLabel ?? focusTopic} early and give one guided success before independent work.`;
+          coachNote =
+            weakestStudentMastery?.recommendation.nodeTitles.length
+              ? `Check ${weakestStudentMastery.display} early and rebuild through ${weakestStudentMastery.recommendation.nodeTitles.join(" -> ")} before independent work.`
+              : `Check ${weakestStudentMastery?.display ?? focusTopic} early and give one guided success before independent work.`;
         } else if ((completionRate ?? 100) < 75 || (attendanceRate !== null && attendanceRate < 80)) {
           priority = "medium";
           coachNote =
@@ -1120,7 +1422,7 @@ export async function getTutorDashboardData(
             ? `${Math.round(readinessSubmission.score)}% readiness`
             : "Readiness pending",
           masteryLabel: studentMastery
-            ? `${Math.round(studentMastery.masteryScore)}% on ${studentMastery.topicLabel}`
+            ? `${Math.round(studentMastery.masteryScore)}% on ${weakestStudentMastery?.display ?? studentMastery.topicLabel}`
             : `Mastery baseline pending`,
           attendanceLabel:
             attendanceRate !== null
@@ -1167,11 +1469,15 @@ export async function getTutorDashboardData(
       rosterReadyCount,
       supportCount,
       quickWins: [
-        `Open with one easy win on ${focusTopic.toLowerCase()}.`,
+        focusTopicMeta.recommendation.nodeTitles.length > 0
+          ? `Open ${focusTopicName.toLowerCase()} with ${focusTopicMeta.recommendation.nodeTitles.join(" -> ")}.`
+          : `Open with one easy win on ${focusTopicName.toLowerCase()}.`,
         supportCount > 0
           ? `Name-check ${supportCount} learner(s) who need extra confidence in the first 10 minutes.`
           : "Keep the room moving with one short concept check before longer practice.",
-        "Use one student explanation before moving into the next exercise.",
+        focusTopicMeta.recommendation.nodeCount > 0
+          ? `Use one student explanation before moving into the next ${Math.min(2, focusTopicMeta.recommendation.nodeCount)} node steps.`
+          : "Use one student explanation before moving into the next exercise.",
       ],
       tutorChecklist: [
         "Confirm the live objective in one sentence before teaching.",
@@ -1212,6 +1518,17 @@ export async function getTutorDashboardData(
             record.subjectId === classItem.subjectId,
         )
         .sort((left, right) => left.masteryScore - right.masteryScore)[0];
+      const weakestMasteryTopic = weakestMastery
+        ? getTopicDisplay(
+            classItem.subjectId,
+            classItem.subject.code,
+            classItem.subject.name,
+            weakestMastery.topicId,
+            weakestMastery.topicLabel,
+            weakestMastery.masteryScore,
+            getStudentLevelFromProfileData(enrollment.student.profileData),
+          )
+        : null;
       const readinessSubmission = classItem.readinessChecks.find(
         (submission) => submission.studentId === enrollment.studentId,
       );
@@ -1232,9 +1549,11 @@ export async function getTutorDashboardData(
           "Assign a shorter revision task and review the barrier during the next class check-in.";
       } else if (weakestMastery && weakestMastery.masteryScore < 55) {
         severity = 75 - weakestMastery.masteryScore;
-        risk = `Repeated mistakes in ${weakestMastery.topicLabel}.`;
+        risk = `Repeated mistakes in ${weakestMasteryTopic?.display ?? weakestMastery.topicLabel}.`;
         action =
-          "Use guided examples during live teaching and keep the next revision set tightly scoped.";
+          weakestMasteryTopic?.recommendation.nodeTitles.length
+            ? `Use guided examples on ${weakestMasteryTopic.recommendation.nodeTitles.join(" -> ")} during live teaching and keep the next revision set tightly scoped.`
+            : "Use guided examples during live teaching and keep the next revision set tightly scoped.";
       } else if (readinessSubmission && readinessSubmission.score < 50) {
         severity = 60 - readinessSubmission.score;
         risk = `Latest readiness check came back at ${Math.round(readinessSubmission.score)}%.`;
@@ -1266,6 +1585,12 @@ export async function getTutorDashboardData(
     }));
 
   const classIntelligence = classes.map((classItem) => {
+    const classLevelHint =
+      classItem.enrollments
+        .map((enrollment) =>
+          getStudentLevelFromProfileData(enrollment.student.profileData),
+        )
+        .find((level): level is string => Boolean(level)) ?? null;
     const linkedLessonPlan = latestLessonPlanByClass.get(classItem.id) ?? null;
     const classStudentIds = new Set(
       classItem.enrollments.map((enrollment) => enrollment.studentId),
@@ -1317,7 +1642,18 @@ export async function getTutorDashboardData(
       74,
     );
     const tutorGuidanceRatio = 100 - studentPracticeRatio;
-    const weakTopic = weakestTopicByClass.get(classItem.id)?.topic ?? classItem.subject.name;
+    const weakestTopic = weakestTopicByClass.get(classItem.id);
+    const weakTopic = weakestTopic?.topic ?? classItem.subject.name;
+    const weakTopicName = weakestTopic?.topicName ?? classItem.subject.name;
+    const weakTopicMeta = getTopicDisplay(
+      classItem.subjectId,
+      classItem.subject.code,
+      classItem.subject.name,
+      null,
+      weakTopicName,
+      readinessScore > 0 ? readinessScore : 45,
+      classLevelHint,
+    );
     const lowReadinessStudents = readinessSubmissionsForClass.filter(
       (item) => item.score < 50,
     ).length;
@@ -1343,12 +1679,28 @@ export async function getTutorDashboardData(
           : "Tutor-guided intervention";
     const aiInsight =
       lowReadinessStudents > 0
-        ? `${lowReadinessStudents} learner(s) need extra support before the live session, with ${weakTopic} as the main drag on confidence.`
-        : `${weakTopic} remains the weakest class-wide topic, but live participation is stable enough to keep the lesson interactive.`;
+        ? `${lowReadinessStudents} learner(s) need extra support before the live session, with ${weakTopic} as the main drag on confidence${
+            weakTopicMeta.recommendation.nodeTitles.length > 0
+              ? ` starting from ${weakTopicMeta.recommendation.nodeTitles.join(" -> ")}`
+              : ""
+          }.`
+        : `${weakTopic} remains the weakest class-wide topic${
+            weakTopicMeta.recommendation.nodeTitles.length > 0
+              ? `, especially around ${weakTopicMeta.recommendation.nodeTitles.join(" -> ")}`
+              : ""
+          }, but live participation is stable enough to keep the lesson interactive.`;
     const nextMove =
       lowReadinessStudents > 0
-        ? `Start with a short rebuild on ${weakTopic}, then move into paired practice before widening the task.`
-        : `Keep the opening brief, check understanding early, and spend the longest block on applied ${weakTopic.toLowerCase()}.`;
+        ? `Start with a short rebuild on ${weakTopicName}${
+            weakTopicMeta.recommendation.nodeTitles.length > 0
+              ? ` through ${weakTopicMeta.recommendation.nodeTitles.join(" -> ")}`
+              : ""
+          }, then move into paired practice before widening the task.`
+        : `Keep the opening brief, check understanding early, and spend the longest block on applied ${weakTopicName.toLowerCase()}${
+            weakTopicMeta.recommendation.nodeTitles.length > 0
+              ? ` after securing ${weakTopicMeta.recommendation.nodeTitles.join(" -> ")}`
+              : ""
+          }.`;
 
     const pulseRows: ClassIntelligencePulseRow[] = [
       {
@@ -1419,7 +1771,9 @@ export async function getTutorDashboardData(
             : "No readiness signal yet",
         note:
           lowReadinessStudents > 0
-            ? "Use one easy success question before moving into the core task."
+            ? weakTopicMeta.recommendation.nodeTitles.length > 0
+              ? `Use one easy success question from ${weakTopicMeta.recommendation.nodeTitles[0] ?? weakTopicName} before moving into the core task.`
+              : "Use one easy success question before moving into the core task."
             : "Use a short warm-up to confirm baseline understanding.",
       },
       {
@@ -1454,7 +1808,11 @@ export async function getTutorDashboardData(
         title: `Warm-up and reset on ${weakTopic}`,
         summary:
           readinessScore > 0
-            ? `Use the opening to quickly re-anchor the class around ${weakTopic} before increasing pace.`
+            ? `Use the opening to quickly re-anchor the class around ${weakTopic}${
+                weakTopicMeta.recommendation.nodeTitles.length > 0
+                  ? ` through ${weakTopicMeta.recommendation.nodeTitles.join(" -> ")}`
+                  : ""
+              } before increasing pace.`
             : `Use the opening to establish baseline understanding before the main live teaching starts.`,
         teacherMove:
           lowReadinessStudents > 0
@@ -1483,7 +1841,10 @@ export async function getTutorDashboardData(
         title: "Student practice with targeted tutor intervention",
         summary:
           "Shift into short practice bursts so the tutor can spot repeated mistakes before they harden.",
-        teacherMove: `Spend the longest block on ${weakTopic.toLowerCase()}, then circulate with one recovery hint at a time.`,
+        teacherMove:
+          weakTopicMeta.recommendation.nodeTitles.length > 0
+            ? `Spend the longest block on ${weakTopicName.toLowerCase()} through ${weakTopicMeta.recommendation.nodeTitles.join(" -> ")}, then circulate with one recovery hint at a time.`
+            : `Spend the longest block on ${weakTopicName.toLowerCase()}, then circulate with one recovery hint at a time.`,
         studentSignal: `${studentPracticeRatio}% of this lesson should feel like supervised student attempt time.`,
       },
       {
@@ -1507,7 +1868,7 @@ export async function getTutorDashboardData(
       {
         id: `${classItem.id}-question-1`,
         timeLabel: formatMinuteWindow(4, 6),
-        question: `What is the first clue that tells us this is a ${weakTopic.toLowerCase()} problem?`,
+        question: `What is the first clue that tells us this is a ${weakTopicName.toLowerCase()} problem?`,
         intent: "Checks whether students can classify the task before they try to solve it.",
         recommendedFollowUp:
           "If answers are vague, rephrase with two choices and ask students to justify which one fits.",
@@ -1642,29 +2003,53 @@ export async function getTutorDashboardData(
       availableActions: getAvailableActions(prismaToUiStatus[item.approvalStatus]),
       draftPreview: getDraftPreview(item.aiDraft),
     })),
-    studyPlanQueue: studyPlans.map((item) => ({
-      id: item.id,
-      entityType: "study_plan",
-      resourcePath: `/api/study-plans/${item.id}`,
-      title: item.title,
-      owner:
-        classes.find((classItem) => classItem.id === item.classId)?.title ??
-        "Tutor study plan",
-      status: prismaToUiStatus[item.approvalStatus],
-      generatedAt: formatDate(item.generatedByAiAt ?? item.createdAt),
-      reviewedAt: formatDate(item.reviewedByTutorAt),
-      approvedByTutorId: item.approvedByTutorId ?? "pending",
-      versionHistory: getVersionHistory(item.versionHistory),
-      availableActions: getAvailableActions(prismaToUiStatus[item.approvalStatus]),
-      draftPreview: getDraftPreview(item.tutorEditedContent ?? item.aiDraft),
-      studyPlanTopics: item.revisionTopics.map((topic) => ({
-        id: topic.id,
-        topicKey: topic.topicKey,
-        topicLabel: topic.topicLabel,
-        accessApproved: topic.accessApproved,
-        sequenceOrder: topic.sequenceOrder,
-      })),
-    })),
+    studyPlanQueue: studyPlans.map((item) => {
+      const studyPlanClass = item.classId ? classById.get(item.classId) : null;
+
+      return {
+        id: item.id,
+        entityType: "study_plan",
+        resourcePath: `/api/study-plans/${item.id}`,
+        title: item.title,
+        owner:
+          classes.find((classItem) => classItem.id === item.classId)?.title ??
+          "Tutor study plan",
+        status: prismaToUiStatus[item.approvalStatus],
+        generatedAt: formatDate(item.generatedByAiAt ?? item.createdAt),
+        reviewedAt: formatDate(item.reviewedByTutorAt),
+        approvedByTutorId: item.approvedByTutorId ?? "pending",
+        versionHistory: getVersionHistory(item.versionHistory),
+        availableActions: getAvailableActions(prismaToUiStatus[item.approvalStatus]),
+        draftPreview: getDraftPreview(item.tutorEditedContent ?? item.aiDraft),
+        studyPlanTopics: item.revisionTopics.map((topic) => {
+          const studyPlanLevelHint =
+            studyPlanClass?.enrollments
+              .map((enrollment) =>
+                getStudentLevelFromProfileData(enrollment.student.profileData),
+              )
+              .find((level): level is string => Boolean(level)) ?? null;
+          const topicMeta = studyPlanClass
+            ? getTopicDisplay(
+                studyPlanClass.subjectId,
+                studyPlanClass.subject.code,
+                studyPlanClass.subject.name,
+                topic.topicKey,
+                topic.topicLabel,
+                undefined,
+                studyPlanLevelHint,
+              )
+            : null;
+
+          return {
+            id: topic.id,
+            topicKey: topic.topicKey,
+            topicLabel: topicMeta?.display ?? topic.topicLabel,
+            accessApproved: topic.accessApproved,
+            sequenceOrder: topic.sequenceOrder,
+          };
+        }),
+      };
+    }),
     classSummaryQueue: classSummaries.map((item) => ({
       id: item.id,
       entityType: "class_summary",
@@ -1721,25 +2106,61 @@ export async function getTutorDashboardData(
       availableActions: getAvailableActions(prismaToUiStatus[item.approvalStatus]),
       draftPreview: getDraftPreview(item.aiSummary),
     })),
-    submissionReviewQueue: homeworkSubmissions.map((item) => ({
-      id: item.id,
-      studentId: item.studentId,
-      homeworkAssignmentId: item.homeworkAssignmentId,
-      title:
+    submissionReviewQueue: homeworkSubmissions.map((item) => {
+      const assignmentContent =
         typeof item.homeworkAssignment.assignmentContent === "object" &&
         item.homeworkAssignment.assignmentContent !== null &&
-        !Array.isArray(item.homeworkAssignment.assignmentContent) &&
-        typeof item.homeworkAssignment.assignmentContent.title === "string"
-          ? item.homeworkAssignment.assignmentContent.title
-          : `Homework submission ${item.homeworkAssignmentId}`,
-      owner: item.homeworkAssignment.classId,
-      submittedAt: formatDate(item.submittedAt),
-      score: item.score === null ? "Pending" : `${Math.round(item.score)}%`,
-      tutorFeedback: item.tutorFeedback ?? "Pending tutor feedback",
-      needsReview: item.score === null || item.tutorFeedback === null,
-      submissionPreview: getSubmissionPreview(item.submissionContent),
-      answerDetails: getSubmissionAnswerDetails(item.submissionContent),
-    })),
+        !Array.isArray(item.homeworkAssignment.assignmentContent)
+          ? item.homeworkAssignment.assignmentContent
+          : null;
+      const assignmentClass = classById.get(item.homeworkAssignment.classId);
+      const assignmentLevelHint = studentLevelById.get(item.studentId) ?? null;
+      const assignmentTopicMeta =
+        assignmentContent &&
+        assignmentClass &&
+        typeof assignmentContent.subjectTopicLabel === "string"
+          ? getTopicDisplay(
+              assignmentClass.subjectId,
+              assignmentClass.subject.code,
+              assignmentClass.subject.name,
+              typeof assignmentContent.subjectTopicId === "string"
+                ? assignmentContent.subjectTopicId
+                : null,
+              assignmentContent.subjectTopicLabel,
+              undefined,
+              assignmentLevelHint,
+            )
+          : null;
+
+      return {
+        id: item.id,
+        studentId: item.studentId,
+        homeworkAssignmentId: item.homeworkAssignmentId,
+        title:
+          assignmentContent &&
+          typeof assignmentContent.title === "string"
+            ? assignmentContent.title
+            : `Homework submission ${item.homeworkAssignmentId}`,
+        owner: item.homeworkAssignment.classId,
+        curriculumTopicCode: assignmentTopicMeta?.resolvedTopic?.code ?? null,
+        curriculumTopicName:
+          assignmentTopicMeta?.resolvedTopic?.name ??
+          (assignmentContent &&
+          typeof assignmentContent.subjectTopicLabel === "string"
+            ? assignmentContent.subjectTopicLabel
+            : null),
+        masteryNodeTitles:
+          assignmentContent
+            ? getJsonStringArray(assignmentContent.masteryNodeTitles ?? null)
+            : [],
+        submittedAt: formatDate(item.submittedAt),
+        score: item.score === null ? "Pending" : `${Math.round(item.score)}%`,
+        tutorFeedback: item.tutorFeedback ?? "Pending tutor feedback",
+        needsReview: item.score === null || item.tutorFeedback === null,
+        submissionPreview: getSubmissionPreview(item.submissionContent),
+        answerDetails: getSubmissionAnswerDetails(item.submissionContent),
+      };
+    }),
     todaysClasses,
     liveClassWorkspace,
     afterClassFollowUp,

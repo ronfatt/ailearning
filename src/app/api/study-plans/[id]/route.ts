@@ -6,6 +6,7 @@ import {
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { normalizeRevisionTopicsForSubject } from "@/lib/server/curriculum-topic-links";
 import {
   ApiError,
   appendVersionHistory,
@@ -112,6 +113,21 @@ function mapStudyPlan(studyPlan: {
   };
 }
 
+function getStudentLevelFromProfileData(profileData: Prisma.JsonValue | null | undefined) {
+  if (
+    !profileData ||
+    typeof profileData !== "object" ||
+    Array.isArray(profileData)
+  ) {
+    return undefined;
+  }
+
+  const rawLevel = (profileData as Record<string, unknown>).studentLevel;
+  return typeof rawLevel === "string" && rawLevel.trim().length > 0
+    ? rawLevel
+    : undefined;
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -208,12 +224,28 @@ export async function PATCH(
 
     const studyPlan = await prisma.$transaction(async (tx) => {
       if (revisionTopics !== undefined) {
+        const student = await tx.user.findUnique({
+          where: { id: existing.studentId },
+          select: {
+            profileData: true,
+          },
+        });
+
+        const normalizedRevisionTopics = await normalizeRevisionTopicsForSubject(
+          tx,
+          existing.subjectId,
+          revisionTopics,
+          {
+            levelHint: getStudentLevelFromProfileData(student?.profileData),
+          },
+        );
+
         await tx.studyPlanTopic.deleteMany({
           where: { studyPlanId: id },
         });
 
         await tx.studyPlanTopic.createMany({
-          data: revisionTopics.map((topic, index) => ({
+          data: normalizedRevisionTopics.map((topic, index) => ({
             studyPlanId: id,
             topicKey: topic.topicKey,
             topicLabel: topic.topicLabel,
@@ -223,19 +255,50 @@ export async function PATCH(
         });
 
         await Promise.all(
-          revisionTopics.map((topic) =>
-            tx.studentMastery.updateMany({
+          normalizedRevisionTopics.map(async (topic) => {
+            const updateResult = await tx.studentMastery.updateMany({
               where: {
                 studentId: existing.studentId,
                 subjectId: existing.subjectId,
-                topicId: topic.topicKey,
+                OR: [
+                  { topicId: topic.topicKey },
+                  {
+                    topicLabel: {
+                      equals: topic.topicLabel,
+                      mode: "insensitive",
+                    },
+                  },
+                ],
               },
               data: {
+                topicId: topic.topicKey,
                 topicLabel: topic.topicLabel,
               },
-            }),
-          ),
+            });
+
+            if (updateResult.count === 0) {
+              await tx.studentMastery.create({
+                data: {
+                  studentId: existing.studentId,
+                  subjectId: existing.subjectId,
+                  topicId: topic.topicKey,
+                  topicLabel: topic.topicLabel,
+                  masteryScore: topic.accessApproved ? 55 : 40,
+                  updatedByAiAt: new Date(),
+                  reviewedByTutorAt: new Date(),
+                  tutorReviewNotes: `Baseline mastery created from ${existing.title}.`,
+                },
+              });
+            }
+          }),
         );
+
+        const revisionTopicsForContent = normalizedRevisionTopics.map((topic) => ({
+          topicKey: topic.topicKey,
+          topicLabel: topic.topicLabel,
+          accessApproved: topic.accessApproved,
+          sequenceOrder: topic.sequenceOrder,
+        }));
 
         const existingTutorEdited =
           tutorEditedContent !== undefined
@@ -250,7 +313,7 @@ export async function PATCH(
           !Array.isArray(existingTutorEdited)
             ? existingTutorEdited
             : {}),
-          revisionTopics,
+          revisionTopics: revisionTopicsForContent,
         });
       }
 

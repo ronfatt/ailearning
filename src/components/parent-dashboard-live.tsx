@@ -183,6 +183,8 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
       return {
         bar: "from-[#20C997] to-[#12CFF3]",
         chip: "bg-[#ecfdf5] text-[#0f9b74]",
+        shell: "from-[#ffffff] to-[#f1fffb]",
+        media: "from-[#20C997] to-[#12CFF3]",
       };
     }
 
@@ -190,6 +192,8 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
       return {
         bar: "from-[#FFD166] to-[#FF9F1C]",
         chip: "bg-[#fff4dd] text-[#a86b00]",
+        shell: "from-[#ffffff] to-[#fff8ea]",
+        media: "from-[#FFD166] to-[#FF9F1C]",
       };
     }
 
@@ -197,12 +201,16 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
       return {
         bar: "from-[#7C5CFF] to-[#3B6CFF]",
         chip: "bg-[#f3e8ff] text-[#7c5cff]",
+        shell: "from-[#ffffff] to-[#f7f1ff]",
+        media: "from-[#7C5CFF] to-[#3B6CFF]",
       };
     }
 
     return {
       bar: "from-[#3B6CFF] to-[#12CFF3]",
       chip: "bg-[#e7f0ff] text-[#2f5bff]",
+      shell: "from-[#ffffff] to-[#f5f9ff]",
+      media: "from-[#3B6CFF] to-[#12CFF3]",
     };
   }
 
@@ -224,6 +232,44 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
     return "bg-[#f3e8ff] text-[#7c5cff]";
   }
 
+  function getHistoryCardTheme(
+    type: ParentDashboardResponse["data"]["learningHistory"][number]["type"],
+  ) {
+    if (type === "class") {
+      return {
+        shell:
+          "border-[#cfe0ff] bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)]",
+        media: "bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)]",
+        icon: "●",
+      };
+    }
+
+    if (type === "homework") {
+      return {
+        shell:
+          "border-[#ccefe6] bg-[linear-gradient(180deg,#ffffff_0%,#f2fffb_100%)]",
+        media: "bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)]",
+        icon: "✎",
+      };
+    }
+
+    if (type === "mastery") {
+      return {
+        shell:
+          "border-[#ffe0a8] bg-[linear-gradient(180deg,#ffffff_0%,#fff8e8_100%)]",
+        media: "bg-[linear-gradient(135deg,#FFD166_0%,#FF9F1C_100%)]",
+        icon: "↑",
+      };
+    }
+
+    return {
+      shell:
+        "border-[#e6d8ff] bg-[linear-gradient(180deg,#ffffff_0%,#faf5ff_100%)]",
+      media: "bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)]",
+      icon: "★",
+    };
+  }
+
   return (
     <>
       {state.error ? (
@@ -238,7 +284,7 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
         </section>
       ) : null}
 
-      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <section id="overview" className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {state.data.metrics.map((metric) => (
           <MetricCard
             key={metric.label}
@@ -251,8 +297,8 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
       </section>
 
       {state.data.latestWelcomeMessage ? (
-        <section className="glass-panel rounded-[2rem] bg-[#103b35] p-8 text-white">
-          <p className="text-sm font-medium text-white/70">Welcome</p>
+        <section className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_46%,#3B6CFF_100%)] p-8 text-white shadow-[0_24px_64px_rgba(32,201,151,0.18)]">
+          <p className="text-sm font-medium text-white/72">Welcome</p>
           <h2 className="mt-2 text-2xl font-semibold text-white">
             {state.data.latestWelcomeMessage.title}
           </h2>
@@ -266,26 +312,26 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
       ) : null}
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <article className="glass-panel rounded-[2rem] p-8">
+        <article id="progress-overview" className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#ffffff_0%,#eefcff_38%,#ecfdf5_100%)] p-8 shadow-[0_20px_52px_rgba(32,201,151,0.1)]">
           <p className="text-sm font-medium text-muted">Enrolled Class</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
             {state.data.enrolledClass?.className ?? "Class placement pending"}
           </h2>
           {state.data.enrolledClass ? (
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-[1.5rem] border border-border bg-surface-strong p-5">
+              <div className="rounded-[1.5rem] border border-white/70 bg-white/92 p-5 shadow-[0_14px_28px_rgba(59,108,255,0.08)]">
                 <p className="text-sm font-medium text-muted">Subject</p>
                 <p className="mt-3 text-base font-semibold text-foreground">
                   {state.data.enrolledClass.subject}
                 </p>
               </div>
-              <div className="rounded-[1.5rem] border border-border bg-surface-strong p-5">
+              <div className="rounded-[1.5rem] border border-white/70 bg-white/92 p-5 shadow-[0_14px_28px_rgba(59,108,255,0.08)]">
                 <p className="text-sm font-medium text-muted">Tutor</p>
                 <p className="mt-3 text-base font-semibold text-foreground">
                   {state.data.enrolledClass.tutorName}
                 </p>
               </div>
-              <div className="rounded-[1.5rem] border border-border bg-surface-strong p-5">
+              <div className="rounded-[1.5rem] border border-white/70 bg-white/92 p-5 shadow-[0_14px_28px_rgba(59,108,255,0.08)]">
                 <p className="text-sm font-medium text-muted">Schedule</p>
                 <p className="mt-3 text-base font-semibold text-foreground">
                   {state.data.enrolledClass.schedule}
@@ -339,7 +385,8 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
           </h2>
           {state.data.latestBookingRequest ? (
             <div className="mt-8 space-y-4">
-              <div className="rounded-[1.5rem] border border-border bg-surface-strong p-5">
+              <div className="overflow-hidden rounded-[1.6rem] border border-[#ffe0a8] bg-[linear-gradient(180deg,#ffffff_0%,#fff8ea_100%)] p-0 shadow-[0_14px_30px_rgba(255,209,102,0.08)]">
+                <div className="bg-[linear-gradient(135deg,#FFD166_0%,#FF9F1C_100%)] px-5 py-4 text-[#6b4100]">
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-lg font-semibold text-foreground">
                     {state.data.latestBookingRequest.subjectFocus}
@@ -348,11 +395,14 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
                     {state.data.latestBookingRequest.status}
                   </div>
                 </div>
+                </div>
+                <div className="p-5">
                 <div className="mt-4 grid gap-3 text-sm text-muted sm:grid-cols-2">
                   <p>Level: {state.data.latestBookingRequest.studentLevel}</p>
                   <p>Preferred time: {state.data.latestBookingRequest.preferredTime}</p>
                   <p>Status: {state.data.latestBookingRequest.status}</p>
                   <p>Submitted: {state.data.latestBookingRequest.submittedAt}</p>
+                </div>
                 </div>
               </div>
             </div>
@@ -365,11 +415,11 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <article id="weekly-summary" className="glass-panel rounded-[2rem] p-8">
+        <article id="weekly-summary" className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#3B6CFF_0%,#4F7CFF_46%,#7C5CFF_100%)] p-8 text-white shadow-[0_24px_64px_rgba(59,108,255,0.18)]">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-muted">This Week</p>
-              <h2 className="mt-2 text-2xl font-semibold text-foreground">
+              <p className="text-sm font-medium text-white/72">This Week</p>
+              <h2 className="mt-2 text-2xl font-semibold text-white">
                 Progress summary for {state.data.studentName}
               </h2>
             </div>
@@ -377,15 +427,15 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
               <button
                 type="button"
                 onClick={() => askParentAssistant("Summarise my child's progress")}
-                className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#20C997]"
+                className="solace-soft-pill rounded-full border border-white/24 bg-white/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white"
               >
                 Ask AI
               </button>
               {state.data.latestReport ? <StatusPill status="approved" /> : null}
             </div>
           </div>
-          <div className="mt-8 rounded-[1.75rem] bg-surface-strong p-6">
-            <p className="text-sm leading-8 text-muted">
+          <div className="mt-8 rounded-[1.75rem] bg-white/14 p-6 backdrop-blur-sm">
+            <p className="text-sm leading-8 text-white/86">
               {state.data.latestReport?.summary ??
                 "A tutor-approved weekly report will appear here after the current learning cycle is reviewed."}
             </p>
@@ -399,7 +449,7 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
             ].map((item) => (
               <div
                 key={item}
-                className="rounded-2xl border border-border bg-white/75 p-4 text-sm text-muted"
+                className="rounded-2xl border border-white/18 bg-white/10 p-4 text-sm text-white/84"
               >
                 {item}
               </div>
@@ -442,43 +492,59 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#3B6CFF]">
-                Average Mastery
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">
-                {state.data.progressSnapshot.averageMastery !== null
-                  ? `${state.data.progressSnapshot.averageMastery}%`
-                  : "Pending"}
-              </p>
+            <div className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-0 shadow-[0_14px_30px_rgba(59,108,255,0.08)]">
+              <div className="bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
+                  Average Mastery
+                </p>
+              </div>
+              <div className="p-5">
+                <p className="text-3xl font-semibold text-foreground">
+                  {state.data.progressSnapshot.averageMastery !== null
+                    ? `${state.data.progressSnapshot.averageMastery}%`
+                    : "Pending"}
+                </p>
+              </div>
             </div>
-            <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#20C997]">
-                Attendance
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">
-                {state.data.progressSnapshot.attendanceRate !== null
-                  ? `${state.data.progressSnapshot.attendanceRate}%`
-                  : "Pending"}
-              </p>
+            <div className="overflow-hidden rounded-[1.6rem] border border-[#ccefe6] bg-[linear-gradient(180deg,#ffffff_0%,#f1fffb_100%)] p-0 shadow-[0_14px_30px_rgba(32,201,151,0.08)]">
+              <div className="bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
+                  Attendance
+                </p>
+              </div>
+              <div className="p-5">
+                <p className="text-3xl font-semibold text-foreground">
+                  {state.data.progressSnapshot.attendanceRate !== null
+                    ? `${state.data.progressSnapshot.attendanceRate}%`
+                    : "Pending"}
+                </p>
+              </div>
             </div>
-            <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#FF9F1C]">
-                Homework Completion
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">
-                {state.data.progressSnapshot.homeworkCompletionRate !== null
-                  ? `${state.data.progressSnapshot.homeworkCompletionRate}%`
-                  : "Pending"}
-              </p>
+            <div className="overflow-hidden rounded-[1.6rem] border border-[#ffe0a8] bg-[linear-gradient(180deg,#ffffff_0%,#fff8ea_100%)] p-0 shadow-[0_14px_30px_rgba(255,209,102,0.08)]">
+              <div className="bg-[linear-gradient(135deg,#FFD166_0%,#FF9F1C_100%)] px-5 py-4 text-[#6b4100]">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6b4100]/78">
+                  Homework Completion
+                </p>
+              </div>
+              <div className="p-5">
+                <p className="text-3xl font-semibold text-foreground">
+                  {state.data.progressSnapshot.homeworkCompletionRate !== null
+                    ? `${state.data.progressSnapshot.homeworkCompletionRate}%`
+                    : "Pending"}
+                </p>
+              </div>
             </div>
-            <div className="rounded-[1.5rem] border border-border bg-white/80 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]">
-                Reviewed Homework
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">
-                {state.data.progressSnapshot.reviewedHomeworkCount}
-              </p>
+            <div className="overflow-hidden rounded-[1.6rem] border border-[#e6d8ff] bg-[linear-gradient(180deg,#ffffff_0%,#f8f3ff_100%)] p-0 shadow-[0_14px_30px_rgba(124,92,255,0.08)]">
+              <div className="bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)] px-5 py-4 text-white">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
+                  Reviewed Homework
+                </p>
+              </div>
+              <div className="p-5">
+                <p className="text-3xl font-semibold text-foreground">
+                  {state.data.progressSnapshot.reviewedHomeworkCount}
+                </p>
+              </div>
             </div>
           </div>
         </article>
@@ -495,25 +561,32 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
               return (
                 <div
                   key={item.label}
-                  className="rounded-[1.75rem] border border-border bg-white/85 p-5"
+                  className={`overflow-hidden rounded-[1.75rem] border border-border bg-gradient-to-b ${tone.shell} p-0`}
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                  <div className={`bg-gradient-to-r ${tone.media} px-5 py-4 text-white`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-white">{item.label}</p>
+                      <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white">
+                        {item.value}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-5">
                     <span
                       className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${tone.chip}`}
                     >
-                      {item.value}%
+                      this cycle
                     </span>
-                  </div>
-                  <div className="mt-5 flex h-40 items-end">
-                    <div className="relative w-full overflow-hidden rounded-[1.5rem] bg-[#eef4ff]">
-                      <div
-                        className={`w-full rounded-[1.5rem] bg-gradient-to-t ${tone.bar} transition-all duration-500`}
-                        style={{ height: `${Math.max(item.value, 8)}%` }}
-                      />
+                    <div className="mt-5 flex h-40 items-end">
+                      <div className="relative w-full overflow-hidden rounded-[1.5rem] bg-[#eef4ff]">
+                        <div
+                          className={`w-full rounded-[1.5rem] bg-gradient-to-t ${tone.bar} transition-all duration-500`}
+                          style={{ height: `${Math.max(item.value, 8)}%` }}
+                        />
+                      </div>
                     </div>
+                    <p className="mt-4 text-sm leading-7 text-muted">{item.note}</p>
                   </div>
-                  <p className="mt-4 text-sm leading-7 text-muted">{item.note}</p>
                 </div>
               );
             })}
@@ -521,45 +594,57 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
         </article>
       </section>
 
-      <section className="glass-panel rounded-[2rem] p-8">
+      <section id="learning-history" className="glass-panel rounded-[2rem] p-8">
         <p className="text-sm font-medium text-muted">Learning History</p>
         <h2 className="mt-2 text-2xl font-semibold text-foreground">
           Recent class, homework, and report timeline
         </h2>
-        <div className="mt-8 space-y-4">
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
           {state.data.learningHistory.length === 0 ? (
-            <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
+            <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted lg:col-span-2">
               Learning history will appear here after the first tutor-reviewed cycle.
             </div>
           ) : (
-            state.data.learningHistory.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-[1.5rem] border border-border bg-white/80 p-5"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
+            state.data.learningHistory.map((item) => {
+              const theme = getHistoryCardTheme(item.type);
+
+              return (
+                <article
+                  key={item.id}
+                  className={`overflow-hidden rounded-[1.6rem] border p-0 shadow-[0_14px_28px_rgba(59,108,255,0.06)] ${theme.shell}`}
+                >
+                  <div className={`flex items-center justify-between bg-gradient-to-r ${theme.media} px-5 py-4 text-white`}>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/18 text-lg font-semibold">
+                        {theme.icon}
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/74">
+                          {item.type}
+                        </p>
+                        <p className="text-base font-semibold text-white">{item.title}</p>
+                      </div>
+                    </div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/78">
+                      {item.dateLabel}
+                    </p>
+                  </div>
+                  <div className="p-5">
                     <span
                       className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${getHistoryTone(item.type)}`}
                     >
-                      {item.type}
+                      Parent view
                     </span>
-                    <p className="text-base font-semibold text-foreground">
-                      {item.title}
-                    </p>
+                    <p className="mt-4 text-sm leading-7 text-muted">{item.detail}</p>
                   </div>
-                  <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted">
-                    {item.dateLabel}
-                  </p>
-                </div>
-                <p className="mt-3 text-sm leading-7 text-muted">{item.detail}</p>
-              </div>
-            ))
+                </article>
+              );
+            })
           )}
         </div>
       </section>
 
-      <section id="homework-feedback" className="glass-panel rounded-[2rem] p-8">
+      <section id="homework-feedback" className="rounded-[2rem] border border-[#e6ecf5] bg-white/94 p-8 shadow-[0_20px_52px_rgba(59,108,255,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-muted">Recent Tutor Feedback</p>
@@ -584,12 +669,15 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
             state.data.recentHomeworkFeedback.map((item) => (
               <article
                 key={item.id}
-                className="rounded-[1.5rem] border border-border bg-surface-strong p-5"
+                className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-0 shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
               >
-                <p className="text-base font-semibold text-foreground">{item.title}</p>
-                <p className="mt-2 text-sm font-medium text-teal">
-                  Score: {item.score}
-                </p>
+                <div className="bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                  <p className="text-base font-semibold text-white">{item.title}</p>
+                  <p className="mt-1 text-sm font-medium text-white/82">
+                    Score: {item.score}
+                  </p>
+                </div>
+                <div className="p-5">
                 <button
                   type="button"
                   onClick={() =>
@@ -608,6 +696,7 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
                 <p className="mt-3 text-xs uppercase tracking-[0.18em] text-muted">
                   Submitted {item.submittedAt} · {item.versionCount === 1 ? "First version" : `${item.versionCount} versions`}
                 </p>
+                </div>
               </article>
             ))
           )}
@@ -628,12 +717,15 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
         </div>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {state.data.reportTrace.map((item) => (
-            <div
+            <article
               key={item}
-              className="rounded-[1.5rem] border border-border bg-surface-strong p-5 text-sm leading-7 text-muted"
+              className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-0 shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
             >
-              {item}
-            </div>
+              <div className="bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                <p className="text-sm font-semibold text-white">Report step</p>
+              </div>
+              <p className="px-5 py-5 text-sm leading-7 text-muted">{item}</p>
+            </article>
           ))}
         </div>
       </section>
