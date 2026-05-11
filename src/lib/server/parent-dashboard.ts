@@ -8,8 +8,8 @@ import {
 import { getLinkedStudentIdForParent } from "@/lib/account-links";
 import { prisma } from "@/lib/prisma";
 import {
-  resolveMathCurriculumLevelCode,
-  resolveMathTopicAliasCode,
+  resolveCurriculumLevelCodeForSubject,
+  resolveTopicAliasCodeForSubject,
 } from "@/lib/server/curriculum-topic-links";
 import {
   average,
@@ -430,10 +430,18 @@ export async function getParentDashboardData(
       prisma.subjectTopic.findMany({
         where: {
           subjectId: enrollment.class.subjectId,
-          ...(enrollment.class.subject.code === "MATH-KSSM"
+          ...(resolveCurriculumLevelCodeForSubject(
+            enrollment.class.subject.code,
+            enrollment.class.subject.name,
+            studentLevelHint,
+          )
             ? {
                 level: {
-                  code: resolveMathCurriculumLevelCode(studentLevelHint),
+                  code: resolveCurriculumLevelCodeForSubject(
+                    enrollment.class.subject.code,
+                    enrollment.class.subject.name,
+                    studentLevelHint,
+                  ),
                 },
               }
             : {}),
@@ -464,10 +472,12 @@ export async function getParentDashboardData(
   );
 
   function resolveSubjectTopic(topicId: string, topicLabel: string) {
-    const aliasCode =
-      enrollment.class.subject.code === "MATH-KSSM"
-        ? resolveMathTopicAliasCode(topicId, topicLabel)
-        : undefined;
+    const aliasCode = resolveTopicAliasCodeForSubject(
+      enrollment.class.subject.code,
+      enrollment.class.subject.name,
+      topicId,
+      topicLabel,
+    );
 
     return (
       subjectTopicById.get(topicId) ??
