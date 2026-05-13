@@ -36,7 +36,7 @@ export function SolacePageShell({
       {isStageHero ? null : <SolaceLandingHeader />}
       <main className="solace-shell flex flex-col gap-12 lg:gap-14">
         <section
-          className={`solace-panel fade-up relative overflow-hidden transition-shadow duration-300 ${
+          className={`${isStageHero ? "" : "solace-panel"} fade-up relative overflow-hidden transition-shadow duration-300 ${
             isStageHero
               ? "min-h-[680px] rounded-[3rem] border border-[#6fa8ff] bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.16),transparent_18%),radial-gradient(circle_at_80%_16%,rgba(255,255,255,0.12),transparent_16%),linear-gradient(180deg,#4f9aff_0%,#377dff_38%,#2867db_100%)] px-6 pb-10 pt-6 shadow-[0_36px_100px_rgba(59,108,255,0.26)] sm:px-8 sm:pt-8 lg:px-12 lg:pb-12 lg:pt-8"
               : "rounded-[2.2rem] px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12"
