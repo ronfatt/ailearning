@@ -8,24 +8,28 @@ import { createPageMetadata } from "@/lib/site-metadata";
 const steps = [
   {
     step: "01",
+    tone: "from-[#3B6CFF] to-[#12CFF3]",
     title: "Book a class",
     detail:
       "A parent shares the student level, subject focus, and preferred time so the intake can begin clearly.",
   },
   {
     step: "02",
+    tone: "from-[#7C5CFF] to-[#A78BFA]",
     title: "Match the right tutor path",
     detail:
       "Admin and tutor workflows help assign the right class, create enrollment, and prepare the first lesson cycle.",
   },
   {
     step: "03",
+    tone: "from-[#20C997] to-[#12CFF3]",
     title: "Learn with tutor-led live classes",
     detail:
       "Students join real classes led by tutors, supported by readiness checks, class tools, and clearer follow-up.",
   },
   {
     step: "04",
+    tone: "from-[#FFD166] to-[#FB923C]",
     title: "Revise and track progress",
     detail:
       "Homework, revision tasks, and parent updates stay linked to the class, so progress does not disappear after the lesson.",
@@ -76,15 +80,43 @@ export default function HowItWorksPage() {
       }
       highlights={["Book classes", "Tutor matching", "Live lessons", "Parent updates"]}
       aside={
-        <div className="rounded-[1.9rem] border border-white/75 bg-white/96 p-6 shadow-[0_22px_54px_rgba(15,23,42,0.14)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#3B6CFF]">
-            Core rules
-          </p>
-          <div className="mt-5 grid gap-3">
+        <div className="relative overflow-hidden rounded-[2.2rem] border border-white/75 bg-white/96 p-5 shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
+          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#ffe066]/45 blur-2xl" />
+          <div className="absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-[#12CFF3]/25 blur-2xl" />
+          <div className="relative rounded-[1.8rem] bg-[linear-gradient(135deg,#eef4ff_0%,#ffffff_48%,#ecfdf5_100%)] p-5">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#3B6CFF]">
+                  Learning flow
+                </p>
+                <p className="mt-2 text-3xl font-semibold tracking-tight text-[#111827]">
+                  4 steps
+                </p>
+              </div>
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(135deg,#3B6CFF,#7C5CFF)] text-2xl font-semibold text-white shadow-[0_18px_36px_rgba(59,108,255,0.24)]">
+                AI
+              </div>
+            </div>
+            <div className="mt-5 grid gap-3">
+              {["Book", "Match", "Class", "Revise"].map((item, index) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-3 rounded-[1.1rem] border border-white bg-white/86 px-4 py-3 shadow-[0_10px_24px_rgba(59,108,255,0.08)]"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#eef4ff] text-xs font-semibold text-[#3B6CFF]">
+                    {index + 1}
+                  </span>
+                  <span className="text-sm font-semibold text-[#111827]">{item}</span>
+                  <span className="ml-auto h-2 w-16 rounded-full bg-[linear-gradient(90deg,#3B6CFF,#12CFF3)]" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="relative mt-4 grid gap-3">
             {supportPrinciples.map((item) => (
               <div
                 key={item}
-                className="rounded-[1.2rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-3 text-sm font-medium leading-7 text-[#111827]"
+                className="rounded-[1.2rem] border border-[#dbe7ff] bg-white/88 px-4 py-3 text-sm font-medium leading-7 text-[#111827]"
               >
                 {item}
               </div>
@@ -101,8 +133,9 @@ export default function HowItWorksPage() {
           {steps.map((item) => (
             <div
               key={item.step}
-              className="rounded-[1.8rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-5 shadow-[0_16px_36px_rgba(59,108,255,0.08)]"
+              className="solace-lift relative overflow-hidden rounded-[1.9rem] border border-white bg-white/92 p-5 shadow-[0_18px_44px_rgba(59,108,255,0.10)]"
             >
+              <div className={`absolute inset-x-0 top-0 h-2 bg-gradient-to-r ${item.tone}`} />
               <p className="inline-flex rounded-full border border-[#dbe7ff] bg-[#eef4ff] px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#3B6CFF]">
                 {item.step}
               </p>

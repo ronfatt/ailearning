@@ -22,10 +22,10 @@ export function SectionShell({
   return (
     <section
       id={id}
-      className={`fade-up relative overflow-hidden rounded-[2rem] px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12 ${
+      className={`fade-up relative overflow-hidden rounded-[2.25rem] px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12 ${
         inverted
           ? "border border-[#1e3a8a]/10 bg-[linear-gradient(135deg,#111827_0%,#1d4ed8_52%,#0f766e_100%)] text-white shadow-[0_28px_70px_rgba(29,78,216,0.2)]"
-          : "border border-[#e6ecf5] bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,250,255,0.96)_100%)] shadow-[0_24px_64px_rgba(59,108,255,0.08)]"
+          : "border border-[#e6ecf5] bg-[linear-gradient(145deg,rgba(255,255,255,0.97)_0%,rgba(238,244,255,0.96)_58%,rgba(236,253,245,0.94)_100%)] shadow-[0_28px_80px_rgba(34,62,163,0.08)]"
       }`}
     >
       {!inverted ? (
@@ -35,7 +35,7 @@ export function SectionShell({
           <PlayfulOrb className="bottom-2 right-16 h-20 w-20" color="yellow" />
         </>
       ) : null}
-      <div className="max-w-3xl space-y-3">
+      <div className="relative z-10 max-w-3xl space-y-3">
         {eyebrow ? (
           <p
             className={`text-xs font-semibold uppercase tracking-[0.3em] ${
@@ -58,7 +58,7 @@ export function SectionShell({
           </p>
         ) : null}
       </div>
-      <div className="mt-8">{children}</div>
+      <div className="relative z-10 mt-8">{children}</div>
     </section>
   );
 }

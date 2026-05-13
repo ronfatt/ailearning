@@ -15,12 +15,19 @@ export function PricingCard({
 }: PricingCardProps) {
   return (
     <article
-      className={`solace-lift rounded-[1.8rem] p-6 ${
+      className={`solace-lift relative overflow-hidden rounded-[1.9rem] p-6 ${
         highlight
-          ? "border border-[#cfe0ff] bg-[linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] shadow-[0_20px_50px_rgba(59,108,255,0.14)]"
-          : "border border-[#e6ecf5] bg-white shadow-[0_18px_42px_rgba(59,108,255,0.06)]"
+          ? "border border-[#cfe0ff] bg-[radial-gradient(circle_at_top_right,rgba(124,92,255,0.16),transparent_38%),linear-gradient(180deg,#ffffff_0%,#eef4ff_100%)] shadow-[0_24px_58px_rgba(59,108,255,0.16)]"
+          : "border border-[#e6ecf5] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-[0_18px_42px_rgba(59,108,255,0.07)]"
       }`}
     >
+      <div
+        className={`absolute inset-x-0 top-0 h-2 ${
+          highlight
+            ? "bg-[linear-gradient(90deg,#3B6CFF,#7C5CFF,#12CFF3)]"
+            : "bg-[linear-gradient(90deg,#bfdbfe,#ddd6fe,#bbf7d0)]"
+        }`}
+      />
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#3B6CFF]">

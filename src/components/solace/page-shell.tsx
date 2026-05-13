@@ -38,7 +38,7 @@ export function SolacePageShell({
         <section
           className={`solace-panel fade-up relative overflow-hidden transition-shadow duration-300 ${
             isStageHero
-              ? "rounded-[3rem] border border-[#6fa8ff] bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.16),transparent_18%),radial-gradient(circle_at_80%_16%,rgba(255,255,255,0.12),transparent_16%),linear-gradient(180deg,#4f9aff_0%,#377dff_38%,#2867db_100%)] px-6 pb-8 pt-6 shadow-[0_36px_100px_rgba(59,108,255,0.26)] sm:px-8 sm:pt-8 lg:px-12 lg:pt-8"
+              ? "min-h-[680px] rounded-[3rem] border border-[#6fa8ff] bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.16),transparent_18%),radial-gradient(circle_at_80%_16%,rgba(255,255,255,0.12),transparent_16%),linear-gradient(180deg,#4f9aff_0%,#377dff_38%,#2867db_100%)] px-6 pb-10 pt-6 shadow-[0_36px_100px_rgba(59,108,255,0.26)] sm:px-8 sm:pt-8 lg:px-12 lg:pb-12 lg:pt-8"
               : "rounded-[2.2rem] px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12"
           } ${heroPanelClassName ?? ""}`}
         >
@@ -49,6 +49,8 @@ export function SolacePageShell({
               <div className="absolute right-14 top-48 text-7xl text-[#ffe066] opacity-95">✦</div>
               <div className="absolute left-14 top-[72%] text-7xl text-[#ffd84d] opacity-95">✺</div>
               <div className="absolute inset-x-0 bottom-0 h-[38%] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.06)_42%,transparent_66%)]" />
+              <div className="absolute inset-x-0 bottom-0 mx-auto h-[320px] w-[86%] rounded-t-[999px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.20)_0%,rgba(255,255,255,0.08)_46%,transparent_72%)]" />
+              <div className="absolute -bottom-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-white/10 blur-2xl" />
             </>
           ) : (
             <>
@@ -60,7 +62,7 @@ export function SolacePageShell({
           <div
             className={`grid gap-8 lg:items-end ${
               heroColumnsClassName ?? "lg:grid-cols-[0.62fr_0.38fr]"
-            } ${isStageHero ? "relative z-10 pt-24 sm:pt-28 lg:pt-32" : ""}`}
+            } ${isStageHero ? "relative z-10 pt-24 sm:pt-28 lg:pt-36" : ""}`}
           >
             <div className="space-y-5">
               <div
@@ -108,7 +110,7 @@ export function SolacePageShell({
                 </div>
               ) : null}
             </div>
-            {aside ? <div>{aside}</div> : null}
+            {aside ? <div className="relative z-10">{aside}</div> : null}
           </div>
         </section>
 

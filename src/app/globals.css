@@ -138,10 +138,10 @@ a {
 .solace-page {
   color: var(--solace-ink);
   background:
-    radial-gradient(circle at 10% 12%, rgba(34, 211, 238, 0.12), transparent 18%),
-    radial-gradient(circle at 86% 10%, rgba(79, 124, 255, 0.12), transparent 20%),
-    radial-gradient(circle at 76% 24%, rgba(139, 92, 246, 0.18), transparent 18%),
-    linear-gradient(180deg, #fbfdff 0%, #eef4ff 48%, #f8fbff 100%);
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.2), transparent 18%),
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.22), transparent 22%),
+    radial-gradient(circle at 78% 26%, rgba(251, 191, 36, 0.18), transparent 18%),
+    linear-gradient(180deg, #f7fbff 0%, #eef5ff 35%, #fbf7ff 72%, #fffdf8 100%);
 }
 
 .solace-shell {

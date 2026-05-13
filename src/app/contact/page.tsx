@@ -9,6 +9,7 @@ import { createPageMetadata } from "@/lib/site-metadata";
 const contactStreams = [
   {
     title: "Family enquiries",
+    tone: "from-[#3B6CFF] to-[#12CFF3]",
     detail:
       "Questions about subjects, student level, trial classes, and parent onboarding.",
     actionLabel: "Book a Class",
@@ -16,6 +17,7 @@ const contactStreams = [
   },
   {
     title: "Tutor applications",
+    tone: "from-[#7C5CFF] to-[#A78BFA]",
     detail:
       "Apply to teach live classes, use AI follow-up tools, and support student progress on-platform.",
     actionLabel: "Apply as a Tutor",
@@ -23,6 +25,7 @@ const contactStreams = [
   },
   {
     title: "Tuition centre partnerships",
+    tone: "from-[#20C997] to-[#FFD166]",
     detail:
       "Talk to the team about centre-wide rollouts, branch readiness, and workflow setup.",
     actionLabel: "See How It Works",
@@ -75,15 +78,22 @@ export default function ContactPage() {
       }
       highlights={["Family enquiries", "Tutor applications", "Centre partnerships"]}
       aside={
-        <div className="rounded-[1.9rem] border border-white/75 bg-white/96 p-6 shadow-[0_22px_54px_rgba(15,23,42,0.14)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#3B6CFF]">
-            Response expectation
-          </p>
-          <div className="mt-5 space-y-3">
+        <div className="relative overflow-hidden rounded-[2.2rem] border border-white/75 bg-white/96 p-6 shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
+          <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#12CFF3]/25 blur-2xl" />
+          <div className="absolute -bottom-12 left-0 h-36 w-36 rounded-full bg-[#FFD166]/35 blur-2xl" />
+          <div className="relative">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#3B6CFF]">
+              Response expectation
+            </p>
+            <p className="mt-3 text-3xl font-semibold leading-tight text-[#111827]">
+              We route each message to the right workflow.
+            </p>
+          </div>
+          <div className="relative mt-5 space-y-3">
             {responseExpectations.map((item) => (
               <div
                 key={item}
-                className="rounded-[1.2rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-3 text-sm font-medium leading-7 text-[#111827]"
+                className="rounded-[1.2rem] border border-[#dbe7ff] bg-white/88 px-4 py-3 text-sm font-medium leading-7 text-[#111827] shadow-[0_10px_24px_rgba(59,108,255,0.06)]"
               >
                 {item}
               </div>
@@ -100,8 +110,9 @@ export default function ContactPage() {
           {contactStreams.map((item) => (
             <article
               key={item.title}
-              className="rounded-[1.7rem] border border-[#e6ecf5] bg-white p-6 shadow-[0_14px_32px_rgba(59,108,255,0.06)]"
+              className="solace-lift relative overflow-hidden rounded-[1.8rem] border border-white bg-white/94 p-6 shadow-[0_18px_42px_rgba(59,108,255,0.09)]"
             >
+              <div className={`absolute inset-x-0 top-0 h-2 bg-gradient-to-r ${item.tone}`} />
               <p className="text-2xl font-semibold text-[#111827]">
                 {item.title}
               </p>
