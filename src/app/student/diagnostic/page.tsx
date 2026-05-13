@@ -21,7 +21,7 @@ export default async function DiagnosticPage() {
         allowedRoles={["Student"]}
         currentRole={session.user.role}
         currentUserName={session.user.name}
-        title="Tutor-Linked Readiness Check"
+        title="Pre-Class Warm-up"
       />
     );
   }
@@ -34,14 +34,14 @@ export default async function DiagnosticPage() {
 
   return (
     <PageShell
-      title="Tutor-Linked Readiness Check"
-      description="Finish this quick check before class so your tutor can focus on the topics that need the most support."
+      title="2-minute class warm-up"
+      description="Answer a few quick questions before class so your tutor can focus on the parts that may slow you down."
       action={
         <div className="rounded-[1.5rem] bg-gold-soft px-5 py-4 text-sm font-semibold text-[#8b5a13]">
-          Linked to {platformSummary.className}
+          Today&apos;s class: {platformSummary.className}
         </div>
       }
-      eyebrow="Pre-Class Student Flow"
+      eyebrow="Before Class"
     >
       <DiagnosticReadinessForm
         studentId={studentId}

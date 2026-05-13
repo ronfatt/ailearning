@@ -50,9 +50,9 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Suggested Next Steps
 
-1. Connect production authentication and role-based access enforcement for tutor, student, parent, and admin.
-2. Replace remaining seeded content with live customer data and onboarding flows.
-3. Implement billing, enrollment, and seat management for tutors and parent add-ons.
+1. Configure production environment variables in the hosting provider.
+2. Run the production database setup against the live Supabase project.
+3. Create real admin, tutor, parent, and student accounts through the public account flows.
 4. Add notification delivery for reports, homework, and attendance changes.
 5. Complete legal, privacy, and support pages for public launch.
 
@@ -69,7 +69,7 @@ npm run db:seed
 
 ## Notes
 
-This version uses seeded product data so the teacher-led workflow can be exercised while production integrations are still being connected.
+This version uses the production curriculum seed for subject, topic, mastery-node, and authored question content. User, class, enrollment, homework, and report data should come from live onboarding and operational workflows.
 
 Database foundation now lives in:
 
@@ -123,11 +123,16 @@ For production auth flows, set these as well:
 
 ```bash
 APP_BASE_URL="https://your-domain.com"
+LIVE_ROOM_BASE_URL="https://your-live-class-domain.com"
 RESEND_API_KEY="re_..."
 AUTH_EMAIL_FROM="AI Learning OS <noreply@your-domain.com>"
 ```
 
-These are used for password reset emails. Without email configuration, password reset still works in local development and can return a debug reset link outside production.
+`APP_BASE_URL` is used for account and password links, `LIVE_ROOM_BASE_URL`
+is used when enrollment creates a live class room URL, and the email values are
+used for password reset emails. Without email configuration, password reset
+still works in local development and can return a debug reset link outside
+production.
 
 Notes:
 
@@ -145,22 +150,10 @@ Code scaffolding now includes:
 
 These utilities are intentionally additive. They do not replace the current Prisma data layer or the current app auth flow yet.
 
-To load dashboard-ready demo data:
+For production setup, use:
 
 ```bash
 npm run db:setup
 ```
 
-This will:
-
-1. Push the Prisma schema into your database.
-2. Generate the Prisma client.
-3. Seed demo tutor workflow data aligned with the `/tutor` dashboard.
-
-The demo seed creates:
-
-- `Teacher Farah` as the tutor with id `tutor_farrah_01`
-- `Form 5 Algebra Sprint` as the live class
-- 2 lesson plan drafts in the approval queue
-- 2 homework assignments in draft/approved states
-- 2 parent reports in draft/approved states
+This will push the Prisma schema, generate the Prisma client, and seed the production curriculum content.

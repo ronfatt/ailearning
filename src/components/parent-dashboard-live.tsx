@@ -169,6 +169,54 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
     return null;
   }
 
+  const priorityFeedback = state.data.recentHomeworkFeedback[0] ?? null;
+  const supportHighlight =
+    state.data.insights.find((item) =>
+      item.label.toLowerCase().includes("support"),
+    ) ??
+    state.data.insights[0] ??
+    null;
+  const parentFocusCards = [
+    {
+      id: "summary",
+      label: "Step 1",
+      title: "Read this week’s summary",
+      detail:
+        state.data.latestReport?.summary ??
+        "This week’s summary will show up here after the current learning cycle is reviewed.",
+      status: state.data.latestReport ? "Ready" : "Pending",
+      href: "#weekly-summary",
+      cta: "Open Summary",
+      tone: "from-[#20C997] to-[#12CFF3]",
+    },
+    {
+      id: "feedback",
+      label: "Step 2",
+      title: priorityFeedback
+        ? `Check ${priorityFeedback.title}`
+        : "Check homework feedback",
+      detail: priorityFeedback
+        ? priorityFeedback.progressNote
+        : "Homework feedback will show up here after the next reviewed submission.",
+      status: priorityFeedback ? priorityFeedback.score : "Pending",
+      href: "#homework-feedback",
+      cta: "View Feedback",
+      tone: "from-[#3B6CFF] to-[#20C997]",
+    },
+    {
+      id: "support",
+      label: "Step 3",
+      title: "Decide the next support step",
+      detail:
+        supportHighlight?.note ??
+        "Use the summary and homework feedback to decide whether extra support is needed this week.",
+      status: state.data.latestBookingRequest?.status ?? "Review",
+      href: state.data.latestBookingRequest ? "#overview" : "/book-class",
+      cta: state.data.latestBookingRequest ? "View Request" : "Book Support",
+      tone: "from-[#F59E0B] to-[#FB7185]",
+    },
+  ] as const;
+
   function askParentAssistant(message: string) {
     promptRoleAssistant({
       role: "parent",
@@ -284,6 +332,84 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
         </section>
       ) : null}
 
+      <section
+        id="parent-at-a-glance"
+        className="overflow-hidden rounded-[2.2rem] border border-[#d8efe8] bg-[radial-gradient(circle_at_top_left,rgba(32,201,151,0.16),transparent_22%),radial-gradient(circle_at_top_right,rgba(59,108,255,0.12),transparent_20%),linear-gradient(145deg,#ffffff_0%,#eefcff_54%,#f3fffb_100%)] p-8 shadow-[0_24px_64px_rgba(32,201,151,0.1)]"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-5">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#20C997]">
+              This week at a glance
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
+              Start here so you know how your child is doing in under a minute
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-muted">
+              Read the summary first, check the latest feedback second, then decide
+              whether any extra support is needed this week.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:min-w-[250px] sm:grid-cols-2">
+            <div className="rounded-[1.5rem] border border-white/80 bg-white/92 p-5 shadow-[0_14px_28px_rgba(32,201,151,0.06)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7b8597]">
+                Report window
+              </p>
+              <p className="mt-3 text-lg font-semibold tracking-tight text-foreground">
+                {state.data.reportWindow}
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] border border-white/80 bg-white/92 p-5 shadow-[0_14px_28px_rgba(32,201,151,0.06)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7b8597]">
+                Main support area
+              </p>
+              <p className="mt-3 text-lg font-semibold tracking-tight text-foreground">
+                {supportHighlight?.value ?? "Pending"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          {parentFocusCards.map((card) => (
+            <article
+              key={card.id}
+              className="overflow-hidden rounded-[1.7rem] border border-[#d8efe8] bg-white/95 shadow-[0_14px_28px_rgba(32,201,151,0.05)]"
+            >
+              <div className={`bg-gradient-to-r ${card.tone} px-5 py-4 text-white`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/76">
+                      {card.label}
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold text-white">{card.title}</h3>
+                  </div>
+                  <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white">
+                    {card.status}
+                  </span>
+                </div>
+              </div>
+              <div className="p-5">
+                <p className="text-sm leading-7 text-muted">{card.detail}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (card.href.startsWith("#")) {
+                      window.location.hash = card.href;
+                      return;
+                    }
+
+                    window.location.assign(card.href);
+                  }}
+                  className="mt-5 inline-flex rounded-full border border-[#cfeee4] bg-[#f9fffc] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#20C997] transition hover:border-[#20C997] hover:bg-[#ecfdf5]"
+                >
+                  {card.cta}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section id="overview" className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {state.data.metrics.map((metric) => (
           <MetricCard
@@ -298,7 +424,7 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
 
       {state.data.latestWelcomeMessage ? (
         <section className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_46%,#3B6CFF_100%)] p-8 text-white shadow-[0_24px_64px_rgba(32,201,151,0.18)]">
-          <p className="text-sm font-medium text-white/72">Welcome</p>
+          <p className="text-sm font-medium text-white/72">Good to see you</p>
           <h2 className="mt-2 text-2xl font-semibold text-white">
             {state.data.latestWelcomeMessage.title}
           </h2>
@@ -313,7 +439,7 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <article id="progress-overview" className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#ffffff_0%,#eefcff_38%,#ecfdf5_100%)] p-8 shadow-[0_20px_52px_rgba(32,201,151,0.1)]">
-          <p className="text-sm font-medium text-muted">Enrolled Class</p>
+          <p className="text-sm font-medium text-muted">Current class</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
             {state.data.enrolledClass?.className ?? "Class placement pending"}
           </h2>
@@ -340,15 +466,15 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
             </div>
           ) : (
             <div className="mt-8 rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
-              Once admin completes enrollment, the assigned class and tutor will appear here.
+              The class and tutor details will show up here once enrollment is confirmed.
             </div>
           )}
         </article>
 
         <article className="glass-panel rounded-[2rem] p-8">
-          <p className="text-sm font-medium text-muted">Linked Student</p>
+          <p className="text-sm font-medium text-muted">Linked student</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
-            Account and onboarding status
+            Student account status
           </h2>
           {state.data.linkedStudent ? (
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -373,15 +499,15 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
             </div>
           ) : (
             <div className="mt-8 rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
-              No linked student profile yet. Complete parent onboarding or create a class request to start the linkage.
+              No linked student profile yet. Finish parent onboarding or create a class request to connect one.
             </div>
           )}
         </article>
 
         <article className="glass-panel rounded-[2rem] p-8">
-          <p className="text-sm font-medium text-muted">Latest Booking</p>
+          <p className="text-sm font-medium text-muted">Latest support request</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
-            Current support request
+            Current booking status
           </h2>
           {state.data.latestBookingRequest ? (
             <div className="mt-8 space-y-4">
@@ -408,7 +534,7 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
             </div>
           ) : (
             <div className="mt-8 rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
-              No booking request is attached to this parent account yet.
+              No support request is linked to this parent account yet.
             </div>
           )}
         </article>
@@ -418,9 +544,9 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
         <article id="weekly-summary" className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#3B6CFF_0%,#4F7CFF_46%,#7C5CFF_100%)] p-8 text-white shadow-[0_24px_64px_rgba(59,108,255,0.18)]">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-white/72">This Week</p>
+              <p className="text-sm font-medium text-white/72">This week</p>
               <h2 className="mt-2 text-2xl font-semibold text-white">
-                Progress summary for {state.data.studentName}
+                What happened this week for {state.data.studentName}
               </h2>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -437,7 +563,7 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
           <div className="mt-8 rounded-[1.75rem] bg-white/14 p-6 backdrop-blur-sm">
             <p className="text-sm leading-8 text-white/86">
               {state.data.latestReport?.summary ??
-                "A tutor-approved weekly report will appear here after the current learning cycle is reviewed."}
+                "A weekly summary will show up here after the current learning cycle is reviewed."}
             </p>
           </div>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -477,9 +603,9 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
         <article className="glass-panel rounded-[2rem] p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-muted">Child Progress Snapshot</p>
+              <p className="text-sm font-medium text-muted">Progress this week</p>
               <h2 className="mt-2 text-2xl font-semibold text-foreground">
-                See the learning trend clearly
+                See what is improving and what still needs support
               </h2>
             </div>
             <button
@@ -523,7 +649,7 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
             <div className="overflow-hidden rounded-[1.6rem] border border-[#ffe0a8] bg-[linear-gradient(180deg,#ffffff_0%,#fff8ea_100%)] p-0 shadow-[0_14px_30px_rgba(255,209,102,0.08)]">
               <div className="bg-[linear-gradient(135deg,#FFD166_0%,#FF9F1C_100%)] px-5 py-4 text-[#6b4100]">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6b4100]/78">
-                  Homework Completion
+                  Homework done
                 </p>
               </div>
               <div className="p-5">
@@ -537,7 +663,7 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
             <div className="overflow-hidden rounded-[1.6rem] border border-[#e6d8ff] bg-[linear-gradient(180deg,#ffffff_0%,#f8f3ff_100%)] p-0 shadow-[0_14px_30px_rgba(124,92,255,0.08)]">
               <div className="bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)] px-5 py-4 text-white">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
-                  Reviewed Homework
+                  Reviewed homework
                 </p>
               </div>
               <div className="p-5">
@@ -550,9 +676,9 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
         </article>
 
         <article className="glass-panel rounded-[2rem] p-8">
-          <p className="text-sm font-medium text-muted">Progress Chart</p>
+          <p className="text-sm font-medium text-muted">Learning momentum</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
-            Parent-friendly view of this learning cycle
+            A simple view of this learning cycle
           </h2>
           <div className="mt-8 grid gap-5 lg:grid-cols-4">
             {state.data.progressSeries.map((item) => {
@@ -595,14 +721,14 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
       </section>
 
       <section id="learning-history" className="glass-panel rounded-[2rem] p-8">
-        <p className="text-sm font-medium text-muted">Learning History</p>
+        <p className="text-sm font-medium text-muted">Recent activity</p>
         <h2 className="mt-2 text-2xl font-semibold text-foreground">
-          Recent class, homework, and report timeline
+          Recent class, homework, and report updates
         </h2>
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           {state.data.learningHistory.length === 0 ? (
             <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted lg:col-span-2">
-              Learning history will appear here after the first tutor-reviewed cycle.
+              Recent activity will show up here after the first tutor-reviewed cycle.
             </div>
           ) : (
             state.data.learningHistory.map((item) => {
@@ -647,9 +773,9 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
       <section id="homework-feedback" className="rounded-[2rem] border border-[#e6ecf5] bg-white/94 p-8 shadow-[0_20px_52px_rgba(59,108,255,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-muted">Recent Tutor Feedback</p>
+            <p className="text-sm font-medium text-muted">Recent tutor feedback</p>
             <h2 className="mt-2 text-2xl font-semibold text-foreground">
-              Homework feedback parents can actually understand
+              Feedback explained in a way parents can act on
             </h2>
           </div>
           <button
@@ -663,7 +789,7 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
           {state.data.recentHomeworkFeedback.length === 0 ? (
             <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted lg:col-span-3">
-              Tutor-reviewed homework feedback will appear here after the first marked submission.
+              Homework feedback will show up here after the first marked submission.
             </div>
           ) : (
             state.data.recentHomeworkFeedback.map((item) => (
@@ -706,9 +832,9 @@ export function ParentDashboardLive({ parentId }: ParentDashboardLiveProps) {
       <section className="glass-panel rounded-[2rem] p-8">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-muted">Report History</p>
+            <p className="text-sm font-medium text-muted">Report history</p>
             <h2 className="mt-2 text-2xl font-semibold text-foreground">
-              Clear report delivery and approval history
+              When reports were prepared, reviewed, and delivered
             </h2>
           </div>
           <div className="rounded-[1.5rem] bg-teal px-5 py-4 text-sm font-semibold text-white">

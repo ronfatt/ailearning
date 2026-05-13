@@ -320,7 +320,7 @@ export function AdminIntakePanel({
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           {contactEnquiries.length === 0 ? (
             <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted lg:col-span-2">
-              No general contact enquiries are waiting right now.
+              No contact enquiries are waiting right now.
             </div>
           ) : (
             contactEnquiries.map((item) => (
@@ -382,7 +382,7 @@ export function AdminIntakePanel({
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
           {enrollmentDrafts.length === 0 ? (
             <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted lg:col-span-3">
-              No enrollment drafts yet. Convert a booking request to create one.
+              No enrollment drafts yet. Convert a booking request when you are ready to start setup.
             </div>
           ) : (
             enrollmentDrafts.map((item) => (
@@ -595,7 +595,7 @@ export function AdminIntakePanel({
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           {classRosters.length === 0 ? (
             <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted lg:col-span-2">
-              No class rosters available yet.
+              No class rosters are live yet.
             </div>
           ) : (
             classRosters.map((item) => (

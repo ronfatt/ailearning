@@ -145,15 +145,40 @@ export function DiagnosticReadinessForm({
 
   const completedCount = Object.keys(answers).length;
   const canSubmit = completedCount === tutorApprovedReadinessQuestions.length && !isPending;
+  const remainingCount = tutorApprovedReadinessQuestions.length - completedCount;
 
   return (
     <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
       <article className="glass-panel rounded-[2rem] p-8">
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-sm font-medium text-muted">Approved Questions</p>
-          <span className="rounded-full bg-gold-soft px-4 py-2 text-sm font-semibold text-[#8b5a13]">
-            {completedCount}/{tutorApprovedReadinessQuestions.length} answered
-          </span>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-muted">Quick warm-up</p>
+            <h2 className="mt-2 text-2xl font-semibold text-foreground">
+              Start class already knowing what needs attention
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-muted">
+              This is not a full test. It is just a quick check-in so class time can
+              focus on the parts that may trip you up.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:min-w-[240px] sm:grid-cols-2">
+            <div className="rounded-[1.5rem] border border-[#e6ecf5] bg-white/92 p-4 shadow-[0_12px_24px_rgba(59,108,255,0.06)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7b8597]">
+                Answered
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">
+                {completedCount}/{tutorApprovedReadinessQuestions.length}
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] border border-[#e6ecf5] bg-white/92 p-4 shadow-[0_12px_24px_rgba(59,108,255,0.06)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7b8597]">
+                Left
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">
+                {remainingCount}
+              </p>
+            </div>
+          </div>
         </div>
         <div className="mt-6 space-y-5">
           {tutorApprovedReadinessQuestions.map((question) => (
@@ -166,7 +191,7 @@ export function DiagnosticReadinessForm({
                   {question.skill}
                 </p>
                 <span className="rounded-full bg-teal-soft px-3 py-1 text-xs font-semibold text-teal">
-                  Tutor-approved
+                  Quick check
                 </span>
               </div>
               <p className="mt-4 text-lg font-medium text-foreground">
@@ -210,10 +235,10 @@ export function DiagnosticReadinessForm({
               !canSubmit ? "cursor-not-allowed opacity-60" : ""
             }`}
           >
-            {isPending ? "Submitting..." : "Submit Readiness Check"}
+            {isPending ? "Sending..." : "Send warm-up"}
           </button>
           <p className="text-sm text-muted">
-            This goes to the tutor review queue before it shapes the next live class.
+            Your tutor sees this before class starts.
           </p>
         </div>
       </article>
@@ -221,14 +246,14 @@ export function DiagnosticReadinessForm({
       <article className="glass-panel rounded-[2rem] p-8">
         <p className="text-sm font-medium text-muted">What happens next</p>
         <h2 className="mt-2 text-2xl font-semibold text-foreground">
-          Results feed the tutor, not an autonomous AI teacher
+          This helps your tutor teach better, not replace the tutor
         </h2>
         <div className="mt-6 space-y-5">
           {[
-            "AI analyzes weakness patterns by student and class.",
-            "AI suggests lesson objectives and warm-up questions for tutor approval.",
-            "AI flags which students may need extra attention during class.",
-            "Tutor reviews everything before it affects the live lesson or assignments.",
+            "Your answers show which parts feel easy and which need more help.",
+            "AI groups the weak spots so your tutor can spot patterns faster.",
+            "Your tutor decides what to slow down, explain again, or practise live.",
+            "Only tutor-approved follow-up turns into class focus or homework.",
           ].map((item) => (
             <div
               key={item}
@@ -248,7 +273,7 @@ export function DiagnosticReadinessForm({
         {submissionState.latest ? (
           <div className="mt-6 rounded-[1.75rem] bg-surface-strong p-6">
             <div className="flex items-center justify-between gap-4">
-              <p className="text-sm font-medium text-muted">Latest submission</p>
+              <p className="text-sm font-medium text-muted">Latest warm-up</p>
               <span className="rounded-full bg-teal-soft px-3 py-1 text-xs font-semibold text-teal">
                 {submissionState.latest.approvalStatus}
               </span>
@@ -260,24 +285,23 @@ export function DiagnosticReadinessForm({
               {submissionState.latest.summary}
             </p>
             <p className="mt-3 text-sm leading-7 text-muted">
-              Weak topics:{" "}
+              Topics to watch:{" "}
               {submissionState.latest.weakTopics.length > 0
                 ? submissionState.latest.weakTopics.join(", ")
-                : "No flagged topics"}
+                : "No flagged topics right now"}
             </p>
           </div>
         ) : submissionState.loading ? (
           <div className="mt-6 rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
-            Loading latest readiness status.
+            Loading your latest warm-up result.
           </div>
         ) : null}
 
         <div className="mt-6 rounded-[1.75rem] bg-[#103b35] p-6 text-white">
-          <p className="text-sm font-medium text-white/70">Guardrail</p>
+          <p className="text-sm font-medium text-white/70">Important rule</p>
           <p className="mt-3 text-sm leading-7 text-white/90">
-            The AI Study Assistant cannot turn this into an open-ended
-            independent learning plan. The tutor remains in control of the
-            next step.
+            This warm-up cannot turn into a random AI learning path. Your tutor is
+            still the one who decides the next step.
           </p>
         </div>
       </article>

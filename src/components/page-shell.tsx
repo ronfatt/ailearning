@@ -11,7 +11,7 @@ type PageShellProps = {
   visual?: ReactNode;
   eyebrow?: string;
   variant?: "default" | "workspace";
-  workspaceRole?: "student" | "parent" | "tutor";
+  workspaceRole?: "student" | "parent" | "tutor" | "admin";
   workspaceUserName?: string;
   workspaceTabs?: string[];
   workspaceSearchPlaceholder?: string;
@@ -23,10 +23,10 @@ const workspaceRoleConfig = {
   student: {
     brand: "Student hub",
     nav: [
-      { label: "Overview", href: "#overview" },
+      { label: "Today", href: "#overview" },
       { label: "Progress", href: "#progress-overview" },
       { label: "Homework", href: "#assigned-homework" },
-      { label: "History", href: "#learning-history" },
+      { label: "Activity", href: "#learning-history" },
       { label: "AI helper", href: "#assistant" },
     ],
     accent: "from-[#3B6CFF] via-[#4F7CFF] to-[#7C5CFF]",
@@ -40,11 +40,11 @@ const workspaceRoleConfig = {
   parent: {
     brand: "Parent hub",
     nav: [
-      { label: "Overview", href: "#overview" },
+      { label: "This week", href: "#overview" },
       { label: "Progress", href: "#progress-overview" },
-      { label: "Reports", href: "#weekly-summary" },
+      { label: "Summary", href: "#weekly-summary" },
       { label: "Homework", href: "#homework-feedback" },
-      { label: "History", href: "#learning-history" },
+      { label: "Activity", href: "#learning-history" },
     ],
     accent: "from-[#20C997] via-[#12CFF3] to-[#3B6CFF]",
     status: "Reports live",
@@ -57,7 +57,7 @@ const workspaceRoleConfig = {
   tutor: {
     brand: "Tutor hub",
     nav: [
-      { label: "Overview", href: "#overview" },
+      { label: "Today", href: "#overview" },
       { label: "Live class", href: "#live-workspace" },
       { label: "Reviews", href: "#homework-reviews" },
       { label: "Approvals", href: "#approval-center" },
@@ -69,6 +69,23 @@ const workspaceRoleConfig = {
     railStats: [
       { label: "Queue", value: "Live" },
       { label: "Follow-up", value: "Today" },
+    ],
+  },
+  admin: {
+    brand: "Admin hub",
+    nav: [
+      { label: "Today", href: "#overview" },
+      { label: "Intake", href: "#intake-funnel" },
+      { label: "Class health", href: "#class-health" },
+      { label: "Hotspots", href: "#curriculum-hotspots" },
+      { label: "Approvals", href: "#approval-workflow" },
+    ],
+    accent: "from-[#0F766E] via-[#14B8A6] to-[#3B82F6]",
+    status: "Ops active",
+    supportCopy: "Triage intake, clear blockers, and watch learning risk from one view.",
+    railStats: [
+      { label: "Ops", value: "Live" },
+      { label: "Queues", value: "Today" },
     ],
   },
 } as const;

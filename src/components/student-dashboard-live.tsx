@@ -220,6 +220,63 @@ export function StudentDashboardLive({
     return null;
   }
 
+  const activeHomeworkCount = state.data.assignedHomework.filter(
+    (item) => item.canSubmit || item.canResubmit,
+  ).length;
+  const nextHomework = state.data.assignedHomework.find(
+    (item) => item.canSubmit || item.canResubmit,
+  ) ?? state.data.assignedHomework[0] ?? null;
+  const priorityTopic =
+    state.data.subjectProgress.find((topic) => topic.status !== "strong") ??
+    state.data.subjectProgress[0] ??
+    null;
+  const todayMissionSteps = [
+    {
+      id: "warmup",
+      label: "Step 1",
+      title: "Do your class warm-up",
+      detail:
+        "Finish the short check before class so your tutor knows where you need help.",
+      status: "2 mins",
+      href: "/student/diagnostic",
+      cta: "Start Warm-up",
+      tone: "from-[#3B6CFF] to-[#12CFF3]",
+    },
+    {
+      id: "homework",
+      label: "Step 2",
+      title: nextHomework ? `Finish ${nextHomework.title}` : "Finish your homework",
+      detail: nextHomework
+        ? `${nextHomework.dueDate} · ${nextHomework.curriculumTopicName ?? nextHomework.scope}`
+        : "Homework will show up here as soon as your tutor sends it.",
+      status:
+        activeHomeworkCount > 0
+          ? `${activeHomeworkCount} task${activeHomeworkCount === 1 ? "" : "s"}`
+          : "Clear",
+      href: "#assigned-homework",
+      cta: nextHomework ? "Open Homework" : "View Homework",
+      tone: "from-[#7C5CFF] to-[#3B6CFF]",
+    },
+    {
+      id: "revision",
+      label: "Step 3",
+      title: priorityTopic
+        ? `Fix ${priorityTopic.title}`
+        : "Fix one weak topic",
+      detail: priorityTopic
+        ? `${priorityTopic.mastery}% mastery · ${priorityTopic.note}`
+        : "Revision will show up here after your tutor sets your first focus plan.",
+      status: priorityTopic ? priorityTopic.status : "Pending",
+      href: "#revision-focus",
+      cta: "Open Revision",
+      tone: "from-[#20C997] to-[#12CFF3]",
+    },
+  ] as const;
+  const missionRemaining =
+    1 +
+    (activeHomeworkCount > 0 ? 1 : 0) +
+    (state.data.revisionTasks.length > 0 ? 1 : 0);
+
   function askStudentAssistant(message: string) {
     promptRoleAssistant({
       role: "student",
@@ -516,6 +573,82 @@ export function StudentDashboardLive({
         </section>
       ) : null}
 
+      <section
+        id="today-mission"
+        className="overflow-hidden rounded-[2.2rem] border border-[#dbe7ff] bg-[radial-gradient(circle_at_top_left,rgba(18,207,243,0.18),transparent_22%),radial-gradient(circle_at_top_right,rgba(124,92,255,0.14),transparent_20%),linear-gradient(145deg,#ffffff_0%,#eef4ff_52%,#f7f3ff_100%)] p-8 shadow-[0_24px_64px_rgba(59,108,255,0.12)]"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-5">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3B6CFF]">
+              Today&apos;s mission
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
+              Do these in order so you never have to guess what comes next
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-muted">
+              Start with the warm-up, clear the homework your tutor assigned, then
+              spend your energy on one weak topic only.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:min-w-[250px] sm:grid-cols-2">
+            <div className="rounded-[1.5rem] border border-white/80 bg-white/92 p-5 shadow-[0_14px_28px_rgba(59,108,255,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7b8597]">
+                Left today
+              </p>
+              <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
+                {missionRemaining}
+              </p>
+              <p className="mt-2 text-sm text-muted">
+                Focus on one step at a time.
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] border border-white/80 bg-white/92 p-5 shadow-[0_14px_28px_rgba(59,108,255,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7b8597]">
+                AI help
+              </p>
+              <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
+                Ready
+              </p>
+              <p className="mt-2 text-sm text-muted">
+                Use it when you get stuck, not as your first move.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          {todayMissionSteps.map((step) => (
+            <article
+              key={step.id}
+              className="overflow-hidden rounded-[1.7rem] border border-[#dbe7ff] bg-white/95 shadow-[0_14px_28px_rgba(59,108,255,0.06)]"
+            >
+              <div className={`bg-gradient-to-r ${step.tone} px-5 py-4 text-white`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/76">
+                      {step.label}
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold text-white">{step.title}</h3>
+                  </div>
+                  <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white">
+                    {step.status}
+                  </span>
+                </div>
+              </div>
+              <div className="p-5">
+                <p className="text-sm leading-7 text-muted">{step.detail}</p>
+                <Link
+                  href={step.href}
+                  className="mt-5 inline-flex rounded-full border border-[#d8e5ff] bg-[#f8fbff] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#3B6CFF] transition hover:border-[#3B6CFF] hover:bg-[#eef4ff]"
+                >
+                  {step.cta}
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section id="overview" className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {state.data.metrics.map((metric) => (
           <MetricCard
@@ -530,7 +663,7 @@ export function StudentDashboardLive({
 
       {state.data.welcomeMessage ? (
         <section className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#3B6CFF_0%,#4F7CFF_46%,#7C5CFF_100%)] p-8 text-white shadow-[0_24px_64px_rgba(59,108,255,0.22)]">
-          <p className="text-sm font-medium text-white/72">Welcome</p>
+          <p className="text-sm font-medium text-white/72">Good to see you</p>
           <h2 className="mt-2 text-2xl font-semibold text-white">
             {state.data.welcomeMessage.title}
           </h2>
@@ -550,7 +683,7 @@ export function StudentDashboardLive({
 
       {state.data.assistantUnlockNotice ? (
         <section className="overflow-hidden rounded-[2rem] border border-[#dbe7ff] bg-[linear-gradient(135deg,#eef4ff_0%,#f2edff_54%,#ffffff_100%)] p-8 shadow-[0_18px_44px_rgba(59,108,255,0.1)]">
-          <p className="text-sm font-medium text-[#3B6CFF]">AI Study Assistant</p>
+          <p className="text-sm font-medium text-[#3B6CFF]">Ask AI when you&apos;re stuck</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
             {state.data.assistantUnlockNotice.title}
           </h2>
@@ -573,7 +706,7 @@ export function StudentDashboardLive({
       <section className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_44%,#f2edff_100%)] p-8 shadow-[0_20px_52px_rgba(59,108,255,0.1)]">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-[#5B6472]">Your Class</p>
+              <p className="text-sm font-medium text-[#5B6472]">Your class</p>
             <h2 className="mt-2 text-3xl font-semibold text-foreground">
               {state.data.enrollmentStatus?.className ?? "Class assignment pending"}
             </h2>
@@ -608,7 +741,7 @@ export function StudentDashboardLive({
             </>
           ) : (
             <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted sm:col-span-3">
-              Your tutor-led class will appear here as soon as admin completes enrollment.
+              Your class details will show up here as soon as enrollment is confirmed.
             </div>
           )}
         </div>
@@ -618,9 +751,9 @@ export function StudentDashboardLive({
         <article id="progress-overview" className="glass-panel rounded-[2rem] p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-muted">Personal Progress Snapshot</p>
+              <p className="text-sm font-medium text-muted">Your progress this week</p>
               <h2 className="mt-2 text-2xl font-semibold text-foreground">
-                See your learning progress clearly
+                See what is getting stronger and what still needs help
               </h2>
             </div>
             <button
@@ -682,7 +815,7 @@ export function StudentDashboardLive({
             <div className="overflow-hidden rounded-[1.6rem] border border-[#ffe0a8] bg-[linear-gradient(180deg,#ffffff_0%,#fff8ea_100%)] p-0 shadow-[0_14px_30px_rgba(255,209,102,0.08)]">
               <div className="bg-[linear-gradient(135deg,#FFD166_0%,#FF9F1C_100%)] px-5 py-4 text-[#6b4100]">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6b4100]/78">
-                  Homework Completion
+                  Homework done
                 </p>
               </div>
               <div className="p-5">
@@ -709,7 +842,7 @@ export function StudentDashboardLive({
                   {state.data.progressSnapshot.reviewedTopics}
                 </p>
                 <p className="mt-3 text-sm text-muted">
-                  Tutor-reviewed topics currently tracked in your dashboard.
+                  Topics your tutor is actively tracking with you.
                 </p>
               </div>
             </div>
@@ -717,9 +850,9 @@ export function StudentDashboardLive({
         </article>
 
         <article id="learning-history" className="glass-panel rounded-[2rem] p-8">
-          <p className="text-sm font-medium text-muted">Learning History</p>
+          <p className="text-sm font-medium text-muted">Recent activity</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
-            Your recent class and homework timeline
+            A quick look at what you finished and learned lately
           </h2>
           <div className="mt-8 grid gap-4 lg:grid-cols-2">
             {state.data.learningHistory.length === 0 ? (
@@ -770,9 +903,9 @@ export function StudentDashboardLive({
       <section className="rounded-[2rem] border border-[#e6ecf5] bg-white/94 p-8 shadow-[0_20px_52px_rgba(59,108,255,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-muted">Progress Chart</p>
+            <p className="text-sm font-medium text-muted">Learning momentum</p>
             <h2 className="mt-2 text-2xl font-semibold text-foreground">
-              Your learning trend across the current cycle
+              How this learning cycle is moving
             </h2>
           </div>
           <button
@@ -805,7 +938,7 @@ export function StudentDashboardLive({
                   <span
                     className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${tone.chip}`}
                   >
-                    current cycle
+                    this cycle
                   </span>
                   <div className="mt-5 flex h-40 items-end">
                     <div className="relative w-full overflow-hidden rounded-[1.5rem] bg-[#eef4ff]">
@@ -827,7 +960,7 @@ export function StudentDashboardLive({
         <article id="assigned-homework" className="rounded-[2rem] border border-[#e6ecf5] bg-white/94 p-8 shadow-[0_20px_52px_rgba(59,108,255,0.08)]">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-muted">Upcoming Tutor-Led Class</p>
+              <p className="text-sm font-medium text-muted">Next class</p>
               <h2 className="mt-2 text-2xl font-semibold text-foreground">
                 {state.data.upcomingClass.className}
               </h2>
@@ -853,18 +986,18 @@ export function StudentDashboardLive({
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             <div id="teacher-notes" className="rounded-[1.5rem] border border-border bg-surface-strong p-5">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-medium text-muted">Assigned Homework</p>
+                <p className="text-sm font-medium text-muted">Homework to clear</p>
                 <Link
                   href="/student/diagnostic"
                   className="rounded-full bg-teal px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#09443c]"
                 >
-                  Readiness Check
+                  Warm-up
                 </Link>
               </div>
               <div className="mt-4 space-y-4">
                 {state.data.assignedHomework.length === 0 ? (
                   <div className="rounded-2xl bg-white/75 p-4 text-sm text-muted">
-                    No tutor-approved homework has been assigned yet.
+                    No homework is waiting yet. Your tutor will drop it here when it is ready.
                   </div>
                 ) : (
                   state.data.assignedHomework.map((item) => (
@@ -891,147 +1024,41 @@ export function StudentDashboardLive({
                         </div>
                       </div>
                       <div className="p-4">
-                      <p className="text-sm text-muted">{item.scope}</p>
-                      {item.curriculumTopicName ? (
-                        <div className="mt-3 rounded-2xl border border-[#dbe7ff] bg-[#f5f9ff] px-4 py-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#3B6CFF]">
-                            Mastery topic
-                          </p>
-                          <p className="mt-2 text-sm font-semibold text-foreground">
-                            {item.curriculumTopicCode
-                              ? `${item.curriculumTopicCode} ${item.curriculumTopicName}`
-                              : item.curriculumTopicName}
-                          </p>
-                          {item.masteryNodeTitles.length > 0 ? (
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {item.masteryNodeTitles.map((nodeTitle) => (
-                                <span
-                                  key={`${item.id}-${nodeTitle}`}
-                                  className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#3B6CFF]"
-                                >
-                                  {nodeTitle}
-                                </span>
-                              ))}
+                        <div className="space-y-4">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-[#eef4ff] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#3B6CFF]">
+                              {item.dueDate}
+                            </span>
+                            {item.curriculumTopicName ? (
+                              <span className="rounded-full bg-[#f5f9ff] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#3B6CFF]">
+                                {item.curriculumTopicCode
+                                  ? `${item.curriculumTopicCode} ${item.curriculumTopicName}`
+                                  : item.curriculumTopicName}
+                              </span>
+                            ) : null}
+                            {item.masteryNodeTitles.length > 0 ? (
+                              <span className="rounded-full bg-[#f8fbff] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#5B6472]">
+                                {item.masteryNodeTitles.length} focus point
+                                {item.masteryNodeTitles.length === 1 ? "" : "s"}
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <p className="text-sm leading-7 text-muted">{item.scope}</p>
+
+                          {item.submittedAt ? (
+                            <div className="rounded-2xl border border-[#ccefe6] bg-[#eefaf7] px-4 py-3">
+                              <p className="text-sm font-semibold text-[#0f9b74]">
+                                Submitted {item.submittedAt}
+                              </p>
+                              <p className="mt-1 text-sm text-muted">
+                                {item.tutorFeedback || item.score
+                                  ? "Tutor feedback is attached below."
+                                  : "Waiting for your tutor to review it."}
+                              </p>
                             </div>
                           ) : null}
                         </div>
-                      ) : null}
-                      <p className="mt-1 text-sm text-teal">{item.dueDate}</p>
-                      <div className="mt-4 rounded-2xl border border-border bg-surface-strong px-4 py-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal">
-                          Homework brief
-                        </p>
-                        <p className="mt-3 text-sm leading-7 text-foreground/88">
-                          {item.prompt}
-                        </p>
-                        <div className="mt-4 space-y-2">
-                          {item.checkpoints.map((checkpoint) => (
-                            <div
-                              key={`${item.id}-${checkpoint}`}
-                              className="rounded-2xl bg-white/80 px-4 py-3 text-sm leading-7 text-muted"
-                            >
-                              {checkpoint}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      {item.submittedAt ? (
-                        <p className="mt-2 text-xs font-medium text-muted">
-                          Submitted {item.submittedAt}
-                        </p>
-                      ) : null}
-                      {item.submissionDetails ? (
-                        <div className="mt-4 rounded-2xl border border-border bg-[#eefaf7] px-4 py-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal">
-                            Your submission
-                          </p>
-                          <div className="mt-3 space-y-2 text-sm leading-7 text-muted">
-                            {item.submissionDetails.completedQuestions ? (
-                              <p>{item.submissionDetails.completedQuestions}</p>
-                            ) : null}
-                            {item.submissionDetails.answerSummary ? (
-                              <p>
-                                <span className="font-semibold text-foreground">Answer summary:</span>{" "}
-                                {item.submissionDetails.answerSummary}
-                              </p>
-                            ) : null}
-                            {item.submissionDetails.answers.length > 0 ? (
-                              <div className="space-y-2">
-                                {item.submissionDetails.answers.map((answer) => (
-                                  <div
-                                    key={`${item.id}-${answer.questionId}`}
-                                    className="rounded-2xl bg-white/80 px-4 py-3"
-                                  >
-                                    <p className="font-semibold text-foreground">
-                                      {answer.prompt}
-                                    </p>
-                                    <p className="mt-1">{answer.answer}</p>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : null}
-                            {item.submissionDetails.workingNotes ? (
-                              <p>
-                                <span className="font-semibold text-foreground">Working notes:</span>{" "}
-                                {item.submissionDetails.workingNotes}
-                              </p>
-                            ) : null}
-                            {item.submissionDetails.reflection ? (
-                              <p>
-                                <span className="font-semibold text-foreground">Reflection:</span>{" "}
-                                {item.submissionDetails.reflection}
-                              </p>
-                            ) : null}
-                            {item.submissionDetails.confidenceLabel ? (
-                              <p>
-                                <span className="font-semibold text-foreground">Confidence:</span>{" "}
-                                {item.submissionDetails.confidenceLabel}
-                              </p>
-                            ) : null}
-                            <p>
-                              <span className="font-semibold text-foreground">Submission history:</span>{" "}
-                              {item.submissionDetails.versionCount === 1
-                                ? "First submission"
-                                : `${item.submissionDetails.versionCount} versions submitted`}
-                            </p>
-                          </div>
-                        </div>
-                      ) : null}
-                      {item.score ? (
-                        <p className="mt-2 text-xs font-semibold text-teal">
-                          Tutor score: {item.score}
-                        </p>
-                      ) : null}
-                      {item.tutorFeedback ? (
-                        <p className="mt-2 text-sm leading-6 text-muted">
-                          Tutor feedback: {item.tutorFeedback}
-                        </p>
-                      ) : null}
-                      {item.submissionDetails?.tutorReview.length ? (
-                        <div className="mt-4 rounded-2xl border border-border bg-[#eef4ff] px-4 py-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#3b6cff]">
-                            Per-question tutor feedback
-                          </p>
-                          <div className="mt-3 space-y-3">
-                            {item.submissionDetails.tutorReview.map((review) => (
-                              <div
-                                key={`${item.id}-${review.questionId}`}
-                                className="rounded-2xl bg-white/85 px-4 py-3"
-                              >
-                                <p className="font-semibold text-foreground">
-                                  {review.prompt}
-                                </p>
-                                <p className="mt-1 text-sm text-muted">
-                                  Your answer: {review.answer}
-                                </p>
-                                <p className="mt-2 text-sm leading-6 text-[#2f5bff]">
-                                  Tutor note: {review.feedback}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
                       {item.canSubmit || item.canResubmit ? (
                         <>
                           <div className="mt-4 flex flex-wrap gap-3">
@@ -1060,10 +1087,10 @@ export function StudentDashboardLive({
                               className="rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-foreground transition hover:border-teal hover:text-teal"
                             >
                               {openHomeworkId === item.id
-                                ? "Close homework"
+                                ? "Hide details"
                                 : item.canResubmit
-                                  ? "Redo homework"
-                                  : "Open homework"}
+                                  ? "Open redo"
+                                  : "Start homework"}
                             </button>
                             <button
                               type="button"
@@ -1085,15 +1112,33 @@ export function StudentDashboardLive({
                           {openHomeworkId === item.id ? (
                             <div className="mt-5 rounded-[1.5rem] border border-border bg-surface-strong p-5">
                               <p className="text-sm font-semibold text-foreground">
-                                Complete your homework before the next class
+                                Finish this before your next class
                               </p>
                               <p className="mt-2 text-sm leading-7 text-muted">
-                                Add a short answer summary, your working notes, and a reflection so your tutor can follow up properly.
+                                Answer the questions first. If you got stuck, leave a short note so your tutor knows where to help.
                               </p>
+                              <div className="mt-4 rounded-2xl border border-border bg-white px-4 py-4">
+                                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal">
+                                  Homework brief
+                                </p>
+                                <p className="mt-3 text-sm leading-7 text-foreground/88">
+                                  {item.prompt}
+                                </p>
+                                <div className="mt-4 space-y-2">
+                                  {item.checkpoints.map((checkpoint) => (
+                                    <div
+                                      key={`${item.id}-${checkpoint}`}
+                                      className="rounded-2xl bg-[#f8fbff] px-4 py-3 text-sm leading-7 text-muted"
+                                    >
+                                      {checkpoint}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
                               {item.masteryNodeTitles.length > 0 ? (
                                 <div className="mt-4 rounded-2xl border border-[#dbe7ff] bg-white px-4 py-4">
                                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#3B6CFF]">
-                                    Today&apos;s node focus
+                                    Focus for this homework
                                   </p>
                                   <div className="mt-3 flex flex-wrap gap-2">
                                     {item.masteryNodeTitles.map((nodeTitle) => (
@@ -1103,6 +1148,98 @@ export function StudentDashboardLive({
                                       >
                                         {nodeTitle}
                                       </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : null}
+                              {item.submissionDetails ? (
+                                <div className="mt-4 rounded-2xl border border-border bg-[#eefaf7] px-4 py-4">
+                                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal">
+                                    Your latest submission
+                                  </p>
+                                  <div className="mt-3 space-y-2 text-sm leading-7 text-muted">
+                                    {item.submissionDetails.completedQuestions ? (
+                                      <p>{item.submissionDetails.completedQuestions}</p>
+                                    ) : null}
+                                    {item.submissionDetails.answerSummary ? (
+                                      <p>
+                                        <span className="font-semibold text-foreground">Answer summary:</span>{" "}
+                                        {item.submissionDetails.answerSummary}
+                                      </p>
+                                    ) : null}
+                                    {item.submissionDetails.answers.length > 0 ? (
+                                      <div className="space-y-2">
+                                        {item.submissionDetails.answers.map((answer) => (
+                                          <div
+                                            key={`${item.id}-${answer.questionId}`}
+                                            className="rounded-2xl bg-white/80 px-4 py-3"
+                                          >
+                                            <p className="font-semibold text-foreground">
+                                              {answer.prompt}
+                                            </p>
+                                            <p className="mt-1">{answer.answer}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : null}
+                                    {item.submissionDetails.workingNotes ? (
+                                      <p>
+                                        <span className="font-semibold text-foreground">Working notes:</span>{" "}
+                                        {item.submissionDetails.workingNotes}
+                                      </p>
+                                    ) : null}
+                                    {item.submissionDetails.reflection ? (
+                                      <p>
+                                        <span className="font-semibold text-foreground">Reflection:</span>{" "}
+                                        {item.submissionDetails.reflection}
+                                      </p>
+                                    ) : null}
+                                    {item.submissionDetails.confidenceLabel ? (
+                                      <p>
+                                        <span className="font-semibold text-foreground">Confidence:</span>{" "}
+                                        {item.submissionDetails.confidenceLabel}
+                                      </p>
+                                    ) : null}
+                                    <p>
+                                      <span className="font-semibold text-foreground">Submission history:</span>{" "}
+                                      {item.submissionDetails.versionCount === 1
+                                        ? "First submission"
+                                        : `${item.submissionDetails.versionCount} versions submitted`}
+                                    </p>
+                                  </div>
+                                </div>
+                              ) : null}
+                              {item.score ? (
+                                <p className="mt-4 text-xs font-semibold text-teal">
+                                  Tutor score: {item.score}
+                                </p>
+                              ) : null}
+                              {item.tutorFeedback ? (
+                                <p className="mt-2 text-sm leading-6 text-muted">
+                                  Tutor feedback: {item.tutorFeedback}
+                                </p>
+                              ) : null}
+                              {item.submissionDetails?.tutorReview.length ? (
+                                <div className="mt-4 rounded-2xl border border-border bg-[#eef4ff] px-4 py-4">
+                                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#3b6cff]">
+                                    Per-question tutor feedback
+                                  </p>
+                                  <div className="mt-3 space-y-3">
+                                    {item.submissionDetails.tutorReview.map((review) => (
+                                      <div
+                                        key={`${item.id}-${review.questionId}`}
+                                        className="rounded-2xl bg-white/85 px-4 py-3"
+                                      >
+                                        <p className="font-semibold text-foreground">
+                                          {review.prompt}
+                                        </p>
+                                        <p className="mt-1 text-sm text-muted">
+                                          Your answer: {review.answer}
+                                        </p>
+                                        <p className="mt-2 text-sm leading-6 text-[#2f5bff]">
+                                          Tutor note: {review.feedback}
+                                        </p>
+                                      </div>
                                     ))}
                                   </div>
                                 </div>
@@ -1279,6 +1416,67 @@ export function StudentDashboardLive({
                             </div>
                           ) : null}
                         </>
+                      ) : item.tutorFeedback || item.score || item.submissionDetails?.tutorReview.length ? (
+                        <div className="mt-4">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOpenHomeworkId((current) =>
+                                current === item.id ? null : item.id,
+                              )
+                            }
+                            className="rounded-full border border-border bg-white px-4 py-2 text-xs font-semibold text-foreground transition hover:border-teal hover:text-teal"
+                          >
+                            {openHomeworkId === item.id ? "Hide review" : "Open review"}
+                          </button>
+                          {openHomeworkId === item.id ? (
+                            <div className="mt-4 space-y-4 rounded-[1.5rem] border border-border bg-surface-strong p-5">
+                              <div className="rounded-2xl border border-border bg-white px-4 py-4">
+                                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal">
+                                  Homework brief
+                                </p>
+                                <p className="mt-3 text-sm leading-7 text-foreground/88">
+                                  {item.prompt}
+                                </p>
+                              </div>
+                              {item.score ? (
+                                <p className="text-xs font-semibold text-teal">
+                                  Tutor score: {item.score}
+                                </p>
+                              ) : null}
+                              {item.tutorFeedback ? (
+                                <p className="text-sm leading-6 text-muted">
+                                  Tutor feedback: {item.tutorFeedback}
+                                </p>
+                              ) : null}
+                              {item.submissionDetails?.tutorReview.length ? (
+                                <div className="rounded-2xl border border-border bg-[#eef4ff] px-4 py-4">
+                                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#3b6cff]">
+                                    Per-question tutor feedback
+                                  </p>
+                                  <div className="mt-3 space-y-3">
+                                    {item.submissionDetails.tutorReview.map((review) => (
+                                      <div
+                                        key={`${item.id}-${review.questionId}`}
+                                        className="rounded-2xl bg-white/85 px-4 py-3"
+                                      >
+                                        <p className="font-semibold text-foreground">
+                                          {review.prompt}
+                                        </p>
+                                        <p className="mt-1 text-sm text-muted">
+                                          Your answer: {review.answer}
+                                        </p>
+                                        <p className="mt-2 text-sm leading-6 text-[#2f5bff]">
+                                          Tutor note: {review.feedback}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
                       ) : null}
                       </div>
                     </article>
@@ -1288,7 +1486,7 @@ export function StudentDashboardLive({
             </div>
             <div className="overflow-hidden rounded-[1.6rem] border border-[#e6d8ff] bg-[linear-gradient(180deg,#ffffff_0%,#f8f3ff_100%)] p-0 shadow-[0_14px_30px_rgba(124,92,255,0.08)]">
               <div className="bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)] px-5 py-4 text-white">
-                <p className="text-sm font-semibold text-white">Teacher Notes</p>
+                <p className="text-sm font-semibold text-white">Notes from your tutor</p>
               </div>
               <div className="p-5">
               <div className="mt-4 space-y-3">
@@ -1307,14 +1505,14 @@ export function StudentDashboardLive({
         </article>
 
         <article className="glass-panel rounded-[2rem] p-8">
-          <p className="text-sm font-medium text-muted">Progress by Subject</p>
+          <p className="text-sm font-medium text-muted">Topics you&apos;re fixing</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
-            Tutor-approved revision focus
+            Your main focus areas right now
           </h2>
           <div className="mt-8 grid gap-4">
             {state.data.subjectProgress.length === 0 ? (
               <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
-                Mastery data will appear after the tutor reviews the first learning cycle.
+                Progress by topic will show up after your tutor reviews the first learning cycle.
               </div>
             ) : (
               state.data.subjectProgress.map((topic) => (
@@ -1350,16 +1548,19 @@ export function StudentDashboardLive({
         </article>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+      <section
+        id="revision-focus"
+        className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]"
+      >
         <article className="glass-panel rounded-[2rem] p-8">
-          <p className="text-sm font-medium text-muted">Revision Tasks</p>
+          <p className="text-sm font-medium text-muted">What to revise today</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
-            Post-class learning linked to tutor guidance
+            Stay inside the plan your tutor already approved
           </h2>
           <div className="mt-8 grid gap-4">
             {state.data.revisionTasks.length === 0 ? (
               <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
-                Tutor-approved revision tasks will appear after the study plan is published.
+                Your revision list will show up after your tutor publishes your study plan.
               </div>
             ) : (
               state.data.revisionTasks.map((task) => (
@@ -1368,7 +1569,7 @@ export function StudentDashboardLive({
                   className="overflow-hidden rounded-[1.6rem] border border-[#ccefe6] bg-[linear-gradient(180deg,#ffffff_0%,#f1fffb_100%)] p-0 shadow-[0_12px_24px_rgba(32,201,151,0.05)]"
                 >
                   <div className="bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)] px-5 py-4 text-white">
-                    <p className="text-sm font-semibold text-white">Tutor-approved task</p>
+                    <p className="text-sm font-semibold text-white">Today&apos;s focus</p>
                   </div>
                   <p className="px-5 py-5 text-sm font-medium leading-7 text-foreground">{task}</p>
                 </article>
@@ -1380,19 +1581,26 @@ export function StudentDashboardLive({
         <article id="assistant" className="glass-panel rounded-[2rem] p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-muted">AI Study Assistant</p>
+              <p className="text-sm font-medium text-muted">Need help?</p>
               <h2 className="mt-2 text-2xl font-semibold text-foreground">
-                Limited to approved topics and study plans
+                Ask AI after you know what task or topic you are working on
               </h2>
             </div>
             <button
               type="button"
-              onClick={() => askStudentAssistant("What is my weakest topic?")}
+              onClick={() => askStudentAssistant("What should I do next today?")}
               className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#3B6CFF]"
             >
               Ask AI
             </button>
           </div>
+            <div className="mt-6 rounded-[1.5rem] border border-[#dbe7ff] bg-white/80 px-5 py-4">
+              <p className="text-sm leading-7 text-muted">
+                Best time to use it:
+                {" "}
+                after you open a homework task, while fixing a weak topic, or when you are unsure what to do next.
+              </p>
+            </div>
           <div className="mt-8 space-y-4">
             {state.data.approvedAssistantScope.map((scope) => (
               <div
@@ -1404,7 +1612,7 @@ export function StudentDashboardLive({
             ))}
           </div>
           <div className="mt-6 rounded-[1.75rem] bg-[#103b35] p-6 text-white">
-            <p className="text-sm font-medium text-white/70">Important Rule</p>
+            <p className="text-sm font-medium text-white/70">One important rule</p>
             <p className="mt-3 text-sm leading-7 text-white/90">
               The AI Study Assistant cannot unlock new subjects, create its own
               learning path, or act as your main teacher. It only supports the

@@ -32,19 +32,19 @@ export function promptRoleAssistant(detail: RoleAssistantPromptEventDetail) {
 
 const roleConfig = {
   student: {
-    badge: "AI Study Assistant",
-    title: "Ask about homework, weak topics, or your next class",
+    badge: "Stuck? Ask AI",
+    title: "Use AI when a question, topic, or class task slows you down",
     intro:
-      "I can help you understand tutor-approved homework, revision topics, and how to prepare for class.",
-    prompt: "Ask about your homework, weak topics, or next class…",
+      "I can explain tutor-approved homework, help with one weak topic at a time, and tell you what to do next when you feel stuck.",
+    prompt: "Ask about this question, this topic, or what to do next…",
     suggestions: [
-      "What homework should I do first?",
-      "What is my weakest topic?",
-      "How should I prepare for the next class?",
+      "Explain this homework question",
+      "What should I do next today?",
+      "What topic am I fixing right now?",
     ],
     accent: "text-[#3B6CFF]",
     shell:
-      "border-[#cfe0ff] bg-[radial-gradient(circle_at_18%_18%,rgba(18,207,243,0.18),transparent_24%),radial-gradient(circle_at_88%_12%,rgba(124,92,255,0.18),transparent_20%),linear-gradient(135deg,#ffffff_0%,#eef4ff_52%,#f5f2ff_100%)] shadow-[0_24px_70px_rgba(59,108,255,0.16)]",
+      "border-[#d9e6ff] bg-[radial-gradient(circle_at_18%_18%,rgba(18,207,243,0.12),transparent_24%),radial-gradient(circle_at_88%_12%,rgba(124,92,255,0.12),transparent_20%),linear-gradient(135deg,#ffffff_0%,#f5f9ff_58%,#f8f5ff_100%)] shadow-[0_20px_54px_rgba(59,108,255,0.12)]",
     panel: "border-[#dbe7ff] bg-white/94",
     userBubble:
       "border-transparent bg-[linear-gradient(135deg,#e7f0ff_0%,#efe8ff_100%)]",
@@ -53,13 +53,13 @@ const roleConfig = {
       "bg-[linear-gradient(135deg,#3B6CFF_0%,#7C5CFF_100%)] text-white shadow-[0_12px_28px_rgba(59,108,255,0.22)]",
   },
   parent: {
-    badge: "Parent AI Assistant",
-    title: "Ask about progress, reports, or how to support at home",
+    badge: "Need clarity? Ask AI",
+    title: "Use AI to understand progress, feedback, and what to support at home",
     intro:
-      "I can explain tutor-approved reports, homework feedback, and what the next support step means in plain language.",
-    prompt: "Ask about progress, reports, or home support…",
+      "I can explain tutor-approved reports in plain language, summarise feedback, and help you understand the next support step.",
+    prompt: "Ask what changed this week, what needs support, or what to do next…",
     suggestions: [
-      "Summarise my child's progress",
+      "What changed this week?",
       "Explain the latest homework feedback",
       "How should I support at home this week?",
     ],
@@ -74,15 +74,15 @@ const roleConfig = {
       "bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)] text-white shadow-[0_12px_28px_rgba(32,201,151,0.2)]",
   },
   tutor: {
-    badge: "AI Teaching Copilot",
-    title: "Ask what to prioritise, review, or follow up today",
+    badge: "Need a second brain? Ask AI",
+    title: "Use AI to prioritise students, reviews, and follow-up without losing the thread",
     intro:
-      "I can help you decide what to do first, which student needs attention, and which workflow queue matters most right now.",
-    prompt: "Ask what to prioritise, review, or follow up…",
+      "I can help you decide what to do first, which student needs attention, and what to close before the next class starts.",
+    prompt: "Ask what to prioritise, who needs attention, or what to close next…",
     suggestions: [
       "What should I do first today?",
       "Which student needs attention?",
-      "How should I handle follow-up after class?",
+      "What should I close after class?",
     ],
     accent: "text-[#7C5CFF]",
     shell:

@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
 import { seedCurriculumData } from "@/lib/server/curriculum-seed";
-import { resetDemoData } from "@/lib/server/demo-seed";
 
 const prisma = new PrismaClient();
 
@@ -17,19 +16,6 @@ async function main() {
   console.log(`Domains seeded: ${curriculumResult.domainCount}`);
   console.log(`Topics seeded: ${curriculumResult.topicCount}`);
   console.log(`Mastery nodes seeded: ${curriculumResult.masteryNodeCount}`);
-
-  if (process.env.ALLOW_DEMO_SEED !== "true") {
-    console.log(
-      "Skipping demo seed. Use `npm run db:seed:demo` only when you intentionally want demo data.",
-    );
-    return;
-  }
-
-  const result = await resetDemoData(prisma);
-
-  console.log("Demo seed complete.");
-  console.log(`Tutor ID: ${result.tutorId}`);
-  console.log(`Class ID: ${result.classId}`);
 }
 
 main()

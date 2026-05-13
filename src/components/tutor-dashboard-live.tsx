@@ -1365,6 +1365,53 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
         coreQuestions: selectedClassIntelligence.coreQuestions,
       }
     : null;
+  const todayPriorityCards = [
+    {
+      id: "live",
+      label: "Step 1",
+      title: selectedLiveWorkspace
+        ? `Run ${selectedLiveWorkspace.sessionTitle}`
+        : "Run the live class",
+      detail: selectedLiveWorkspace
+        ? `${selectedLiveWorkspace.supportCount} students need early attention · ${selectedLiveWorkspace.focusTopic}`
+        : "Open the live workspace and teach from one screen.",
+      status: selectedLiveWorkspace?.sessionStatus ?? "Pending",
+      href: "#live-workspace",
+      cta: "Open Live Class",
+      tone: "from-[#7C5CFF] to-[#3B6CFF]",
+    },
+    {
+      id: "queue",
+      label: "Step 2",
+      title: "Clear blocked approvals",
+      detail: `${state.data.summary.totalPendingApprovals} approval item${
+        state.data.summary.totalPendingApprovals === 1 ? "" : "s"
+      } are waiting for tutor action.`,
+      status: `${state.data.summary.totalPendingApprovals} waiting`,
+      href: "#approval-center",
+      cta: "Open Queue",
+      tone: "from-[#3B6CFF] to-[#12CFF3]",
+    },
+    {
+      id: "follow-up",
+      label: "Step 3",
+      title: "Close follow-up before you log off",
+      detail: selectedAfterClassFollowUp
+        ? selectedAfterClassFollowUp.summary
+        : "Handle mini revision, parent notes, and flagged students after class.",
+      status: selectedAfterClassFollowUp
+        ? `${selectedAfterClassFollowUp.flaggedStudents.length} flagged`
+        : "Review",
+      href: "#after-class-follow-up",
+      cta: "Open Follow-Up",
+      tone: "from-[#FF9F1C] to-[#FB7185]",
+    },
+  ] as const;
+  const priorityStudents = selectedLiveWorkspace
+    ? selectedLiveWorkspace.studentSignals.filter(
+        (student) => student.priority === "high" || student.priority === "medium",
+      )
+    : [];
 
   return (
     <>
@@ -1376,11 +1423,84 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
         </section>
       ) : null}
 
+      <section
+        id="tutor-priority"
+        className="overflow-hidden rounded-[2.2rem] border border-[#e4ddff] bg-[radial-gradient(circle_at_top_left,rgba(124,92,255,0.15),transparent_22%),radial-gradient(circle_at_top_right,rgba(59,108,255,0.12),transparent_20%),linear-gradient(145deg,#ffffff_0%,#f3f0ff_54%,#eef4ff_100%)] p-8 shadow-[0_24px_64px_rgba(124,92,255,0.1)]"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-5">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#7C5CFF]">
+              Today&apos;s priority
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
+              Start with the class, clear blockers second, then close follow-up fast
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-muted">
+              This screen should tell you what to do first before you dive into deeper
+              analytics or editing tools.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:min-w-[250px] sm:grid-cols-2">
+            <div className="rounded-[1.5rem] border border-white/80 bg-white/92 p-5 shadow-[0_14px_28px_rgba(124,92,255,0.06)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7b8597]">
+                Next class
+              </p>
+              <p className="mt-3 text-lg font-semibold tracking-tight text-foreground">
+                {selectedLiveWorkspace?.sessionTime ?? "Pending"}
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] border border-white/80 bg-white/92 p-5 shadow-[0_14px_28px_rgba(124,92,255,0.06)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7b8597]">
+                Students to watch
+              </p>
+              <p className="mt-3 text-lg font-semibold tracking-tight text-foreground">
+                {selectedLiveWorkspace?.supportCount ?? 0}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          {todayPriorityCards.map((card) => (
+            <article
+              key={card.id}
+              className="overflow-hidden rounded-[1.7rem] border border-[#e4ddff] bg-white/95 shadow-[0_14px_28px_rgba(124,92,255,0.05)]"
+            >
+              <div className={`bg-gradient-to-r ${card.tone} px-5 py-4 text-white`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/76">
+                      {card.label}
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold text-white">{card.title}</h3>
+                  </div>
+                  <span className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white">
+                    {card.status}
+                  </span>
+                </div>
+              </div>
+              <div className="p-5">
+                <p className="text-sm leading-7 text-muted">{card.detail}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.location.hash = card.href;
+                  }}
+                  className="mt-5 inline-flex rounded-full border border-[#ddd4ff] bg-[#faf8ff] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7C5CFF] transition hover:border-[#7C5CFF] hover:bg-[#f4efff]"
+                >
+                  {card.cta}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section id="overview" className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
         <article className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#3B6CFF_0%,#4F7CFF_42%,#7C5CFF_100%)] p-8 text-white shadow-[0_24px_64px_rgba(59,108,255,0.2)]">
-          <p className="text-sm font-medium text-white/72">Workspace Mode</p>
+          <p className="text-sm font-medium text-white/72">Workspace mode</p>
           <h2 className="mt-2 text-2xl font-semibold text-white">
-            Start in focus mode, open analytics only when you need them
+            Stay in focus mode until you need the deeper teaching view
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-white/84">
             Focus mode keeps the first screen centered on live teaching, follow-up,
@@ -1434,9 +1554,9 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
         <article className="rounded-[2rem] border border-[#e6ecf5] bg-white/94 p-8 shadow-[0_20px_52px_rgba(59,108,255,0.08)]">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-muted">Live Class Workspace</p>
+              <p className="text-sm font-medium text-muted">Live class</p>
               <h2 className="mt-2 text-2xl font-semibold text-foreground">
-                Everything the tutor needs during the session
+                Everything you need during the session
               </h2>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -1660,9 +1780,9 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
         </article>
 
         <article className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#ffffff_0%,#eef4ff_40%,#f3f7ff_100%)] p-8 shadow-[0_20px_52px_rgba(59,108,255,0.08)]">
-          <p className="text-sm font-medium text-muted">During Class Prompting</p>
+          <p className="text-sm font-medium text-muted">During class prompts</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
-            Tutor-facing prompts for the next 45 minutes
+            Questions and prompts to keep the session moving
           </h2>
           {selectedClassIntelligence ? (
             <div className="mt-8 space-y-4">
@@ -1692,191 +1812,306 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
         </article>
       </section>
 
-      <section id="homework-reviews" className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <article className="glass-panel rounded-[2rem] p-8">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-muted">Student Growth Panel</p>
-              <h2 className="mt-2 text-2xl font-semibold text-foreground">
-                Who is improving, steady, or stalled right now
-              </h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => askTutorAssistant("Which learner is improving and who is stalled?")}
-              className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]"
-            >
-              Ask AI
-            </button>
-          </div>
-
-          {selectedLiveWorkspace ? (
-            <div className="mt-8 grid gap-4">
-              {selectedLiveWorkspace.studentSignals.map((student) => (
-                <article
-                  key={`growth-${student.studentId}`}
-                  className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-0 shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3 bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)] px-5 py-4 text-white">
-                    <div>
-                      <p className="text-lg font-semibold text-white">
-                        {student.studentName}
-                      </p>
-                      <p className="mt-1 text-sm text-white/78">{student.coachNote}</p>
-                    </div>
-                    <span
-                      className="rounded-full bg-white/18 px-3 py-1 text-xs font-semibold text-white"
-                    >
-                      {student.priority === "high"
-                        ? "Needs intervention"
-                        : student.priority === "medium"
-                          ? "Watch this cycle"
-                        : "Steady progress"}
-                    </span>
-                  </div>
-                  <div className="p-5">
-                  <div className="mt-4 grid gap-3 text-sm text-muted sm:grid-cols-2">
-                    <div className="rounded-2xl bg-[#eef4ff] px-4 py-3 text-[#2f5bff]">
-                      {student.readinessLabel}
-                    </div>
-                    <div className="rounded-2xl bg-[#f3f7ff] px-4 py-3">
-                      {student.masteryLabel}
-                    </div>
-                    <div className="rounded-2xl bg-[#ecfdf5] px-4 py-3 text-[#0f9b74]">
-                      {student.attendanceLabel}
-                    </div>
-                    <div className="rounded-2xl bg-[#fff4dd] px-4 py-3 text-[#a86b00]">
-                      {student.homeworkLabel}
-                    </div>
-                  </div>
-                  {student.recentActionLabel ? (
-                    <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-teal">
-                      Latest tutor action: {student.recentActionLabel}
-                    </p>
-                  ) : null}
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-              Student growth signals will appear here once the tutor has a linked class with readiness,
-              attendance, homework, and mastery data.
-            </div>
-          )}
-        </article>
-
-        <article className="glass-panel rounded-[2rem] p-8">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-muted">Class Trend Panel</p>
-              <h2 className="mt-2 text-2xl font-semibold text-foreground">
-                What the whole class trend looks like this week
-              </h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => askTutorAssistant("Summarise the class trend for this week.")}
-              className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]"
-            >
-              Ask AI
-            </button>
-          </div>
-
-          {selectedClassIntelligence ? (
-            <>
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                <div className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-0 shadow-[0_14px_30px_rgba(59,108,255,0.08)]">
-                  <div className="bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)] px-5 py-4 text-white">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
-                      Readiness Trend
-                    </p>
-                  </div>
-                  <div className="p-5">
-                    <p className="text-3xl font-semibold text-foreground">
-                      {selectedClassIntelligence.readinessScore}%
-                    </p>
-                    <p className="mt-3 text-sm text-muted">
-                      Current tutor-approved pre-class baseline for the selected class.
-                    </p>
-                  </div>
-                </div>
-                <div className="overflow-hidden rounded-[1.6rem] border border-[#ccefe6] bg-[linear-gradient(180deg,#ffffff_0%,#f1fffb_100%)] p-0 shadow-[0_14px_30px_rgba(32,201,151,0.08)]">
-                  <div className="bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)] px-5 py-4 text-white">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
-                      Participation Trend
-                    </p>
-                  </div>
-                  <div className="p-5">
-                    <p className="text-3xl font-semibold text-foreground">
-                      {selectedClassIntelligence.participationScore}%
-                    </p>
-                    <p className="mt-3 text-sm text-muted">
-                      Class energy signal based on recent completed teaching cycles.
-                    </p>
-                  </div>
-                </div>
+      {workspaceMode === "focus" ? (
+        <section id="class-snapshot" className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+          <article className="glass-panel rounded-[2rem] p-8">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-muted">Quick class snapshot</p>
+                <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                  The few students worth checking again
+                </h2>
               </div>
+              <button
+                type="button"
+                onClick={() => setWorkspaceMode("full")}
+                className="rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF] transition hover:border-[#7C5CFF]"
+              >
+                Open Full View
+              </button>
+            </div>
 
-              <div className="mt-6 rounded-[1.75rem] border border-border bg-[#103b35] p-6 text-white">
-                <p className="text-sm font-medium text-white/70">Tutor takeaway</p>
-                <p className="mt-3 text-lg font-semibold text-white">
-                  {selectedClassIntelligence.teachingPattern}
-                </p>
-                <p className="mt-4 text-sm leading-7 text-white/88">
-                  {selectedClassIntelligence.aiInsight}
-                </p>
-                <p className="mt-3 text-sm leading-7 text-[#b8efe4]">
-                  Next move: {selectedClassIntelligence.nextMove}
-                </p>
-              </div>
-
-              <div className="mt-6 space-y-4">
-                {selectedClassHeatmap.length === 0 ? (
-                  <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
-                    Weak-topic trend cards will appear here when the class has enough mastery or readiness signals.
-                  </div>
-                ) : (
-                  selectedClassHeatmap.slice(0, 3).map((item) => (
-                    <div
-                      key={`${item.className}-${item.topic}-trend`}
-                      className="rounded-[1.5rem] border border-border bg-white/80 p-5"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-3">
+            {priorityStudents.length > 0 ? (
+              <div className="mt-8 space-y-4">
+                {priorityStudents.slice(0, 3).map((student) => (
+                  <article
+                    key={`focus-${student.studentId}`}
+                    className="rounded-[1.5rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-5"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
                         <p className="text-base font-semibold text-foreground">
-                          {item.topic}
+                          {student.studentName}
                         </p>
-                        <span className="rounded-full bg-[#fff0f3] px-3 py-1 text-xs font-semibold text-[#e25575]">
-                          {item.intensity}% risk
-                        </span>
+                        <p className="mt-2 text-sm leading-7 text-muted">{student.coachNote}</p>
                       </div>
-                      <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#eef4ff]">
-                        <div
-                          className="h-full rounded-full bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)]"
-                          style={{ width: `${item.intensity}%` }}
-                        />
-                      </div>
-                      <p className="mt-3 text-sm leading-7 text-muted">{item.note}</p>
+                      <span className="rounded-full bg-[#f4efff] px-3 py-1 text-xs font-semibold text-[#7C5CFF]">
+                        {student.priority === "high" ? "Support first" : "Watch closely"}
+                      </span>
                     </div>
-                  ))
-                )}
+                    <div className="mt-4 grid gap-2 text-sm text-muted">
+                      <p>{student.readinessLabel}</p>
+                      <p>{student.masteryLabel}</p>
+                    </div>
+                  </article>
+                ))}
               </div>
-            </>
-          ) : (
-            <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-              Class trend data will appear here once the selected class has live intelligence and weak-topic signals.
+            ) : (
+              <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
+                Once a class starts sending warm-up, mastery, or homework signals, the top students to re-check will show here.
+              </div>
+            )}
+          </article>
+
+          <article className="glass-panel rounded-[2rem] p-8">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-muted">Whole-class drag</p>
+                <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                  The topics slowing this class down
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => askTutorAssistant("Summarise the class trend for this week.")}
+                className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]"
+              >
+                Ask AI
+              </button>
             </div>
-          )}
-        </article>
-      </section>
+
+            {selectedClassIntelligence ? (
+              <>
+                <div className="mt-8 rounded-[1.75rem] border border-border bg-[#103b35] p-6 text-white">
+                  <p className="text-sm font-medium text-white/70">Tutor takeaway</p>
+                  <p className="mt-3 text-lg font-semibold text-white">
+                    {selectedClassIntelligence.teachingPattern}
+                  </p>
+                  <p className="mt-4 text-sm leading-7 text-white/88">
+                    {selectedClassIntelligence.aiInsight}
+                  </p>
+                  <p className="mt-3 text-sm leading-7 text-[#b8efe4]">
+                    Next move: {selectedClassIntelligence.nextMove}
+                  </p>
+                </div>
+
+                <div className="mt-6 space-y-4">
+                  {selectedClassHeatmap.length === 0 ? (
+                    <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
+                      Topic drag cards will show up here when the class has enough mastery or warm-up signals.
+                    </div>
+                  ) : (
+                    selectedClassHeatmap.slice(0, 3).map((item) => (
+                      <div
+                        key={`${item.className}-${item.topic}-trend`}
+                        className="rounded-[1.5rem] border border-border bg-white/80 p-5"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <p className="text-base font-semibold text-foreground">
+                            {item.topic}
+                          </p>
+                          <span className="rounded-full bg-[#fff0f3] px-3 py-1 text-xs font-semibold text-[#e25575]">
+                            {item.intensity}% risk
+                          </span>
+                        </div>
+                        <p className="mt-3 text-sm leading-7 text-muted">{item.note}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
+                Class trend data will appear here once the selected class has live intelligence and weak-topic signals.
+              </div>
+            )}
+          </article>
+        </section>
+      ) : (
+        <section id="homework-reviews" className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+          <article className="glass-panel rounded-[2rem] p-8">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-muted">Student signals</p>
+                <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                  Who is improving, steady, or stalled right now
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => askTutorAssistant("Which learner is improving and who is stalled?")}
+                className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]"
+              >
+                Ask AI
+              </button>
+            </div>
+
+            {selectedLiveWorkspace ? (
+              <div className="mt-8 grid gap-4">
+                {selectedLiveWorkspace.studentSignals.map((student) => (
+                  <article
+                    key={`growth-${student.studentId}`}
+                    className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f7fbff_100%)] p-0 shadow-[0_12px_24px_rgba(59,108,255,0.05)]"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3 bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)] px-5 py-4 text-white">
+                      <div>
+                        <p className="text-lg font-semibold text-white">
+                          {student.studentName}
+                        </p>
+                        <p className="mt-1 text-sm text-white/78">{student.coachNote}</p>
+                      </div>
+                      <span className="rounded-full bg-white/18 px-3 py-1 text-xs font-semibold text-white">
+                        {student.priority === "high"
+                          ? "Needs intervention"
+                          : student.priority === "medium"
+                            ? "Watch this cycle"
+                            : "Steady progress"}
+                      </span>
+                    </div>
+                    <div className="p-5">
+                      <div className="mt-4 grid gap-3 text-sm text-muted sm:grid-cols-2">
+                        <div className="rounded-2xl bg-[#eef4ff] px-4 py-3 text-[#2f5bff]">
+                          {student.readinessLabel}
+                        </div>
+                        <div className="rounded-2xl bg-[#f3f7ff] px-4 py-3">
+                          {student.masteryLabel}
+                        </div>
+                        <div className="rounded-2xl bg-[#ecfdf5] px-4 py-3 text-[#0f9b74]">
+                          {student.attendanceLabel}
+                        </div>
+                        <div className="rounded-2xl bg-[#fff4dd] px-4 py-3 text-[#a86b00]">
+                          {student.homeworkLabel}
+                        </div>
+                      </div>
+                      {student.recentActionLabel ? (
+                        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-teal">
+                          Latest tutor action: {student.recentActionLabel}
+                        </p>
+                      ) : null}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
+                Student growth signals will appear here once the tutor has a linked class with readiness,
+                attendance, homework, and mastery data.
+              </div>
+            )}
+          </article>
+
+          <article className="glass-panel rounded-[2rem] p-8">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-muted">Class trend</p>
+                <h2 className="mt-2 text-2xl font-semibold text-foreground">
+                  What the whole class looks like this week
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => askTutorAssistant("Summarise the class trend for this week.")}
+                className="solace-soft-pill rounded-full border border-[#dbe7ff] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#7C5CFF]"
+              >
+                Ask AI
+              </button>
+            </div>
+
+            {selectedClassIntelligence ? (
+              <>
+                <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                  <div className="overflow-hidden rounded-[1.6rem] border border-[#dbe7ff] bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] p-0 shadow-[0_14px_30px_rgba(59,108,255,0.08)]">
+                    <div className="bg-[linear-gradient(135deg,#3B6CFF_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
+                        Readiness Trend
+                      </p>
+                    </div>
+                    <div className="p-5">
+                      <p className="text-3xl font-semibold text-foreground">
+                        {selectedClassIntelligence.readinessScore}%
+                      </p>
+                      <p className="mt-3 text-sm text-muted">
+                        Current tutor-approved pre-class baseline for the selected class.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="overflow-hidden rounded-[1.6rem] border border-[#ccefe6] bg-[linear-gradient(180deg,#ffffff_0%,#f1fffb_100%)] p-0 shadow-[0_14px_30px_rgba(32,201,151,0.08)]">
+                    <div className="bg-[linear-gradient(135deg,#20C997_0%,#12CFF3_100%)] px-5 py-4 text-white">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
+                        Participation Trend
+                      </p>
+                    </div>
+                    <div className="p-5">
+                      <p className="text-3xl font-semibold text-foreground">
+                        {selectedClassIntelligence.participationScore}%
+                      </p>
+                      <p className="mt-3 text-sm text-muted">
+                        Class energy signal based on recent completed teaching cycles.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 rounded-[1.75rem] border border-border bg-[#103b35] p-6 text-white">
+                  <p className="text-sm font-medium text-white/70">Tutor takeaway</p>
+                  <p className="mt-3 text-lg font-semibold text-white">
+                    {selectedClassIntelligence.teachingPattern}
+                  </p>
+                  <p className="mt-4 text-sm leading-7 text-white/88">
+                    {selectedClassIntelligence.aiInsight}
+                  </p>
+                  <p className="mt-3 text-sm leading-7 text-[#b8efe4]">
+                    Next move: {selectedClassIntelligence.nextMove}
+                  </p>
+                </div>
+
+                <div className="mt-6 space-y-4">
+                  {selectedClassHeatmap.length === 0 ? (
+                    <div className="rounded-[1.5rem] border border-dashed border-border bg-surface-strong p-5 text-sm leading-7 text-muted">
+                      Weak-topic trend cards will appear here when the class has enough mastery or readiness signals.
+                    </div>
+                  ) : (
+                    selectedClassHeatmap.slice(0, 3).map((item) => (
+                      <div
+                        key={`${item.className}-${item.topic}-trend`}
+                        className="rounded-[1.5rem] border border-border bg-white/80 p-5"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <p className="text-base font-semibold text-foreground">
+                            {item.topic}
+                          </p>
+                          <span className="rounded-full bg-[#fff0f3] px-3 py-1 text-xs font-semibold text-[#e25575]">
+                            {item.intensity}% risk
+                          </span>
+                        </div>
+                        <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#eef4ff]">
+                          <div
+                            className="h-full rounded-full bg-[linear-gradient(135deg,#7C5CFF_0%,#3B6CFF_100%)]"
+                            style={{ width: `${item.intensity}%` }}
+                          />
+                        </div>
+                        <p className="mt-3 text-sm leading-7 text-muted">{item.note}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
+                Class trend data will appear here once the selected class has live intelligence and weak-topic signals.
+              </div>
+            )}
+          </article>
+        </section>
+      )}
 
       <section id="after-class-follow-up" className="grid gap-6 xl:grid-cols-[1fr]">
         <article className="glass-panel rounded-[2rem] p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-muted">After Class Follow-Up</p>
+              <p className="text-sm font-medium text-muted">After class follow-up</p>
               <h2 className="mt-2 text-2xl font-semibold text-foreground">
-                The items the tutor should close right after class
+                The items to close before the next class starts
               </h2>
             </div>
             {selectedAfterClassFollowUp ? (
@@ -1979,6 +2214,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
         </article>
       </section>
 
+      {workspaceMode === "full" ? (
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-7">
         <article className="glass-panel rounded-[1.75rem] p-6">
           <p className="text-sm font-medium text-muted">Live Lesson Drafts</p>
@@ -2027,12 +2263,12 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           </p>
         </article>
         <article className="glass-panel rounded-[1.75rem] p-6">
-          <p className="text-sm font-medium text-muted">Readiness Queue</p>
+          <p className="text-sm font-medium text-muted">Warm-up queue</p>
           <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
             {state.data.summary.readinessQueue}
           </p>
           <p className="mt-5 text-sm leading-7 text-muted">
-            Student pre-class submissions waiting for tutor review.
+            Student warm-ups waiting for tutor review before class starts.
           </p>
         </article>
         <article className="glass-panel rounded-[1.75rem] p-6">
@@ -2045,12 +2281,14 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           </p>
         </article>
       </section>
+      ) : null}
 
+      {workspaceMode === "full" ? (
       <section className="grid gap-6 xl:grid-cols-[1fr]">
         <article className="glass-panel rounded-[2rem] p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm font-medium text-muted">AI Teaching Copilot</p>
+              <p className="text-sm font-medium text-muted">AI teaching copilot</p>
               <h2 className="mt-2 text-2xl font-semibold text-foreground">
                 Trigger real tutor-facing actions
               </h2>
@@ -2173,17 +2411,18 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           </div>
         </article>
       </section>
+      ) : null}
 
       <section id="approval-center" className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <article className="glass-panel rounded-[2rem] p-8">
-          <p className="text-sm font-medium text-muted">AI Teaching Copilot</p>
+          <p className="text-sm font-medium text-muted">AI teaching copilot</p>
           <h2 className="mt-2 text-2xl font-semibold text-foreground">
             Live lesson suggestion panel
           </h2>
           <div className="mt-8 space-y-4">
             {state.data.lessonSuggestions.length === 0 ? (
               <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-                No lesson drafts are in the approval queue yet.
+                No lesson drafts are waiting right now.
               </div>
             ) : (
               state.data.lessonSuggestions.map((item) => (
@@ -2229,8 +2468,8 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
         </article>
 
         <QueueSection
-          title="Enrollment Plans"
-          subtitle="Starter study plan queue"
+          title="Study plan setup"
+          subtitle="Starter study plans waiting for review"
           items={state.data.studyPlanQueue}
           emptyMessage="No starter study plans are waiting right now."
           busyId={state.busyId}
@@ -2246,8 +2485,8 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <QueueSection
-          title="Post-Class Queue"
-          subtitle="Assignment approval queue"
+          title="Homework approvals"
+          subtitle="Assignments waiting for review"
           items={state.data.assignmentQueue}
           emptyMessage="No homework approvals are waiting right now."
           busyId={state.busyId}
@@ -2260,8 +2499,8 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           onSaveStudyPlanTopics={saveStudyPlanTopics}
         />
         <QueueSection
-          title="Parent Communication"
-          subtitle="Parent report draft queue"
+          title="Parent updates"
+          subtitle="Parent report drafts waiting for review"
           items={state.data.parentReportQueue}
           emptyMessage="No parent reports are waiting right now."
           busyId={state.busyId}
@@ -2277,8 +2516,8 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <QueueSection
-          title="Pre-Class Readiness"
-          subtitle="Readiness submissions queue"
+          title="Pre-class warm-ups"
+          subtitle="Warm-up submissions waiting for review"
           items={state.data.readinessQueue}
           emptyMessage="No readiness submissions are waiting right now."
           busyId={state.busyId}
@@ -2294,8 +2533,8 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
 
       <section className="grid gap-6 xl:grid-cols-[1fr]">
         <QueueSection
-          title="Post-Class Summaries"
-          subtitle="Class summary draft queue"
+          title="Class summaries"
+          subtitle="Post-class summaries waiting for review"
           items={state.data.classSummaryQueue}
           emptyMessage="No class summaries are waiting right now."
           busyId={state.busyId}
@@ -2327,7 +2566,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           <div className="mt-8 space-y-4">
             {state.data.todaysClasses.length === 0 ? (
               <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-                No active tutor-led classes are connected yet.
+                No active classes are connected yet.
               </div>
             ) : (
               state.data.todaysClasses.map((classItem) => (
@@ -2373,7 +2612,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           <div className="mt-8 space-y-5">
             {state.data.weakTopicHeatmap.length === 0 ? (
               <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-                Heatmap data will appear once mastery or readiness signals are available.
+                Weak-topic heat will show up once mastery or warm-up signals start coming in.
               </div>
             ) : (
               state.data.weakTopicHeatmap.map((item) => (
@@ -2491,8 +2730,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
             </>
           ) : (
             <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-              Classroom intelligence will appear once a tutor-led class has attendance, readiness,
-              or mastery signals.
+              Class intelligence will show up once a live class has attendance, warm-up, or mastery signals.
             </div>
           )}
         </article>
@@ -2540,8 +2778,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
             </>
           ) : (
             <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-              Pulse mapping becomes available after the platform sees participation and readiness
-              signals from a tutor-led class.
+              Pulse mapping will show up after the platform sees enough participation and warm-up signals from a live class.
             </div>
           )}
         </article>
@@ -2575,7 +2812,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
             </div>
           ) : (
             <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-              Focus checkpoints will appear after the tutor has at least one live class signal.
+              Focus checkpoints will show up after the class has at least one live signal.
             </div>
           )}
         </article>
@@ -2618,7 +2855,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
             </div>
           ) : (
             <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-              Teaching balance will appear once a tutor-led class has enough session data.
+              Teaching balance will show up once a live class has enough session data.
             </div>
           )}
         </article>
@@ -2876,8 +3113,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
             </div>
           ) : (
             <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-              Teaching slices will appear once the selected tutor-led class has enough class
-              context to build a timeline.
+              Teaching slices will show up once the selected class has enough context to build a timeline.
             </div>
           )}
         </article>
@@ -2916,7 +3152,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
             </div>
           ) : (
             <div className="mt-8 rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-              Core questions will appear once the system can build a tutor-facing class plan.
+              Core questions will show up once the system can build a tutor-facing class plan.
             </div>
           )}
         </article>
@@ -2944,7 +3180,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           <div className="mt-8 space-y-4">
             {state.data.submissionReviewQueue.length === 0 ? (
               <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-                No student homework submissions are waiting for tutor review.
+                No student homework is waiting for review right now.
               </div>
             ) : (
               state.data.submissionReviewQueue.map((item) => {
@@ -3111,7 +3347,7 @@ export function TutorDashboardLive({ tutorId }: TutorDashboardLiveProps) {
           <div className="mt-8 space-y-4">
             {state.data.riskAlerts.length === 0 ? (
               <div className="rounded-[1.75rem] border border-dashed border-border bg-surface-strong p-6 text-sm leading-7 text-muted">
-                No high-priority risk alerts are active right now.
+                No high-priority student alerts are active right now.
               </div>
             ) : (
               state.data.riskAlerts.map((alert) => (

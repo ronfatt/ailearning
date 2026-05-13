@@ -5,7 +5,6 @@ import { RoleAssistantChatbox } from "@/components/role-assistant-chatbox";
 import { TutorDashboardLive } from "@/components/tutor-dashboard-live";
 import { WorkspaceHeroVisual } from "@/components/workspace-hero-visual";
 import { canAccessRole, getCurrentSession } from "@/lib/auth-session";
-import { platformSummary } from "@/lib/mvp-data";
 import { redirect } from "next/navigation";
 
 export default async function TutorPage() {
@@ -18,23 +17,23 @@ export default async function TutorPage() {
   const tutorDashboardName = session.user.name;
   const quickStartSteps = [
     {
-      label: "Start here",
-      title: "Open the live class workspace",
+      label: "Step 1",
+      title: "Run the live class",
       detail:
-        "See who needs attention first, open the room, and run the class from one screen.",
+        "See who needs attention first, open the room, and teach from one screen.",
       href: "#live-workspace",
       cta: "Go to Live Class",
     },
     {
-      label: "Next",
-      title: "Clear today’s approval queue",
+      label: "Step 2",
+      title: "Clear the approval queue",
       detail:
-        "Review lesson drafts, homework, and parent updates that are blocking follow-up.",
+        "Review lesson drafts, homework, and parent updates that are blocking the next step.",
       href: "#approval-center",
       cta: "Open Approvals",
     },
     {
-      label: "Finish strong",
+      label: "Step 3",
       title: "Close the loop after class",
       detail:
         "Handle follow-up students, mini revision tasks, and parent notes before you log off.",
@@ -65,26 +64,36 @@ export default async function TutorPage() {
 
   return (
     <PageShell
-      title={`Tutor Dashboard for ${tutorDashboardName}`}
-      description="Plan lessons, run live classes, approve follow-up, and keep parents informed from one workspace."
+      title={`Hi ${tutorDashboardName}, here’s what needs your attention today`}
+      description="Teach, review, and follow up in a clear order so nothing important gets buried under analytics."
       variant="workspace"
       workspaceRole="tutor"
       workspaceUserName={tutorDashboardName}
-      workspaceTabs={["Overview", "Live", "Reviews", "Approvals"]}
+      workspaceTabs={["Today", "Live", "Reviews", "Approvals"]}
       workspaceSearchPlaceholder="Search classes, approvals, follow-up tasks, or student signals..."
       action={
-        <div className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#4F46E5] shadow-[0_14px_32px_rgba(255,255,255,0.16)]">
-          Next class: {platformSummary.className} at 8:00 PM
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <a
+            href="#tutor-priority"
+            className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#4F46E5] shadow-[0_14px_32px_rgba(255,255,255,0.16)]"
+          >
+            Open Today&apos;s Priority
+          </a>
+          <a
+            href="#live-workspace"
+            className="rounded-full border border-white/24 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/18"
+          >
+            Jump To Live Class
+          </a>
         </div>
       }
       visual={<WorkspaceHeroVisual role="tutor" />}
-      eyebrow="Tutor Command Workspace"
+      eyebrow="Tutor Daily Command"
       rightRail={
         <div className="space-y-6">
-          <RoleAssistantChatbox role="tutor" roleId={tutorDashboardId} />
           <section className="rounded-[1.8rem] border border-[#e6ecf5] bg-white/92 p-5 shadow-[0_18px_46px_rgba(79,124,255,0.08)]">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#7C5CFF]">
-              Quick actions
+              Today in order
             </p>
             <div className="mt-4 space-y-3">
               {quickStartSteps.map((step, index) => (
@@ -117,6 +126,7 @@ export default async function TutorPage() {
               ))}
             </div>
           </section>
+          <RoleAssistantChatbox role="tutor" roleId={tutorDashboardId} />
         </div>
       }
     >

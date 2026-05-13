@@ -16,26 +16,26 @@ export default async function ParentPage() {
   const parentDashboardId = session.user.id ?? "";
   const quickStartSteps = [
     {
-      label: "Start here",
+      label: "Step 1",
       title: "Read this week’s summary",
       detail:
-        "Begin with the latest tutor-approved report so you understand the current learning cycle.",
+        "Start with the latest tutor-approved summary so you know how this learning cycle is going.",
       href: "#weekly-summary",
       cta: "Open Summary",
     },
     {
-      label: "Then",
-      title: "Check recent homework feedback",
+      label: "Step 2",
+      title: "Check homework feedback",
       detail:
-        "See where your child is improving and what still needs support in plain language.",
+        "See what improved, what still needs support, and what the tutor noticed.",
       href: "#homework-feedback",
       cta: "View Feedback",
     },
     {
-      label: "Need help?",
-      title: "Book the next class",
+      label: "Step 3",
+      title: "Decide the next support step",
       detail:
-        "If you want to add more support, start the next booking from here without guessing the process.",
+        "If more support is needed, book the next class without guessing what to do.",
       href: "/book-class",
       cta: "Book a Class",
     },
@@ -63,26 +63,36 @@ export default async function ParentPage() {
 
   return (
     <PageShell
-      title="Parent Progress Portal"
-      description="Track attendance, tutor comments, homework follow-up, and approved progress updates in one place."
+      title="See your child’s progress clearly"
+      description="Start with this week’s summary, check feedback, and know exactly what support is needed next."
       variant="workspace"
       workspaceRole="parent"
       workspaceUserName={session.user.name}
-      workspaceTabs={["Overview", "Reports", "Progress", "Homework"]}
+      workspaceTabs={["This Week", "Reports", "Progress", "Homework"]}
       workspaceSearchPlaceholder="Search weekly reports, attendance, tutor notes, or next class..."
       action={
-        <div className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#15926b] shadow-[0_14px_32px_rgba(255,255,255,0.16)]">
-          Report delivery window: Sunday 7:30 PM
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <a
+            href="#parent-at-a-glance"
+            className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#15926b] shadow-[0_14px_32px_rgba(255,255,255,0.16)]"
+          >
+            Open This Week
+          </a>
+          <a
+            href="#weekly-summary"
+            className="rounded-full border border-white/24 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/18"
+          >
+            Read Summary
+          </a>
         </div>
       }
       visual={<WorkspaceHeroVisual role="parent" />}
-      eyebrow="Parent Transparency Layer"
+      eyebrow="Parent Weekly View"
       rightRail={
         <div className="space-y-6">
-          <RoleAssistantChatbox role="parent" roleId={parentDashboardId} />
           <section className="rounded-[1.8rem] border border-[#e6ecf5] bg-white/92 p-5 shadow-[0_18px_46px_rgba(79,124,255,0.08)]">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#20C997]">
-              Quick actions
+              This week in order
             </p>
             <div className="mt-4 space-y-3">
               {quickStartSteps.map((step, index) => (
@@ -115,6 +125,7 @@ export default async function ParentPage() {
               ))}
             </div>
           </section>
+          <RoleAssistantChatbox role="parent" roleId={parentDashboardId} />
         </div>
       }
     >

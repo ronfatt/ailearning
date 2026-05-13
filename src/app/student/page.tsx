@@ -17,28 +17,28 @@ export default async function StudentPage() {
   const studentDashboardId = session.user.id ?? "";
   const quickStartSteps = [
     {
-      label: "First",
-      title: "Finish the readiness check",
+      label: "Step 1",
+      title: "Do your 2-minute warm-up",
       detail:
-        "Start with the short pre-class check so your tutor knows what needs extra help.",
+        "Start with the short pre-class check so your tutor knows what needs extra help today.",
       href: "/student/diagnostic",
-      cta: "Start Check",
+      cta: "Start Warm-up",
     },
     {
-      label: "Then",
-      title: "Complete assigned homework",
+      label: "Step 2",
+      title: "Finish today’s homework",
       detail:
-        "Stay on top of tutor-approved work due this week before moving into extra revision.",
+        "Clear the work your tutor assigned before jumping into extra revision.",
       href: "#assigned-homework",
       cta: "Open Homework",
     },
     {
-      label: "After that",
-      title: "Revise weak topics only",
+      label: "Step 3",
+      title: "Fix one weak topic",
       detail:
-        "Use the AI Study Assistant only inside the topics your tutor has approved.",
-      href: "#assistant",
-      cta: "Open Assistant",
+        "Revise only the topics your tutor approved, and use AI when you get stuck.",
+      href: "#revision-focus",
+      cta: "Open Revision",
     },
   ] as const;
 
@@ -64,37 +64,36 @@ export default async function StudentPage() {
 
   return (
     <PageShell
-      title={`Welcome back, ${session.user.name}`}
-      description="See today’s tasks, finish assigned homework, and revise approved topics between tutor-led classes."
+      title={`Hi ${session.user.name}, here’s your plan for today`}
+      description="Warm up for class, finish your homework, and fix one weak topic without guessing what to do next."
       variant="workspace"
       workspaceRole="student"
       workspaceUserName={session.user.name}
-      workspaceTabs={["Overview", "Progress", "Homework", "History"]}
+      workspaceTabs={["Today", "Progress", "Homework", "History"]}
       workspaceSearchPlaceholder="Search homework, weak topics, class notes, or revision..."
       action={
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/student/diagnostic"
+          <a
+            href="#today-mission"
             className="rounded-full bg-white px-5 py-3 text-sm font-semibold !text-[#2f5bff] shadow-[0_14px_32px_rgba(255,255,255,0.16)] transition hover:bg-[#f8fbff] hover:!text-[#2448d8]"
           >
-            Open Readiness Check
-          </Link>
+            Open Today&apos;s Mission
+          </a>
           <a
-            href="#assistant"
+            href="#assigned-homework"
             className="rounded-full border border-white/24 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/18"
           >
-            Open AI Study Assistant
+            Go To Homework
           </a>
         </div>
       }
       visual={<WorkspaceHeroVisual role="student" />}
-      eyebrow="Student Revision Workspace"
+      eyebrow="Student Daily Mission"
       rightRail={
         <div className="space-y-6">
-          <RoleAssistantChatbox role="student" roleId={studentDashboardId} />
           <section className="rounded-[1.8rem] border border-[#e6ecf5] bg-white/92 p-5 shadow-[0_18px_46px_rgba(79,124,255,0.08)]">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#3B6CFF]">
-              Quick actions
+              Today in order
             </p>
             <div className="mt-4 space-y-3">
               {quickStartSteps.map((step, index) => (
@@ -127,6 +126,7 @@ export default async function StudentPage() {
               ))}
             </div>
           </section>
+          <RoleAssistantChatbox role="student" roleId={studentDashboardId} />
         </div>
       }
     >

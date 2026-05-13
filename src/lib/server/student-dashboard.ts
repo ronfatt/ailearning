@@ -432,8 +432,9 @@ export async function getStudentDashboardData(
     };
   }
 
+  const activeEnrollment = enrollment;
   const upcomingSession =
-    enrollment.class.sessions.find(
+    activeEnrollment.class.sessions.find(
       (session) =>
         session.status === ClassSessionStatus.SCHEDULED ||
         session.status === ClassSessionStatus.LIVE,
@@ -480,7 +481,7 @@ export async function getStudentDashboardData(
       prisma.studyPlan.findFirst({
         where: {
           studentId,
-          subjectId: enrollment.class.subjectId,
+          subjectId: activeEnrollment.class.subjectId,
           status: StudyPlanStatus.ACTIVE,
           approvalStatus: {
             in: [ApprovalStatus.APPROVED, ApprovalStatus.ASSIGNED],
@@ -497,32 +498,32 @@ export async function getStudentDashboardData(
       prisma.studyPlan.findFirst({
         where: {
           studentId,
-          subjectId: enrollment.class.subjectId,
-          classId: enrollment.class.id,
+          subjectId: activeEnrollment.class.subjectId,
+          classId: activeEnrollment.class.id,
         },
         orderBy: { updatedAt: "desc" },
       }),
       prisma.studentMastery.findMany({
         where: {
           studentId,
-          subjectId: enrollment.class.subjectId,
+          subjectId: activeEnrollment.class.subjectId,
         },
         orderBy: { masteryScore: "asc" },
         take: 6,
       }),
       prisma.subjectTopic.findMany({
         where: {
-          subjectId: enrollment.class.subjectId,
+          subjectId: activeEnrollment.class.subjectId,
           ...(resolveCurriculumLevelCodeForSubject(
-            enrollment.class.subject.code,
-            enrollment.class.subject.name,
+            activeEnrollment.class.subject.code,
+            activeEnrollment.class.subject.name,
             studentLevelHint,
           )
             ? {
                 level: {
                   code: resolveCurriculumLevelCodeForSubject(
-                    enrollment.class.subject.code,
-                    enrollment.class.subject.name,
+                    activeEnrollment.class.subject.code,
+                    activeEnrollment.class.subject.name,
                     studentLevelHint,
                   ),
                 },
@@ -557,7 +558,7 @@ export async function getStudentDashboardData(
       prisma.parentReport.findFirst({
         where: {
           studentId,
-          tutorId: enrollment.class.tutorId,
+          tutorId: activeEnrollment.class.tutorId,
           approvalStatus: ApprovalStatus.APPROVED,
         },
         orderBy: [{ approvedAt: "desc" }, { createdAt: "desc" }],
@@ -565,7 +566,7 @@ export async function getStudentDashboardData(
       prisma.readinessCheckSubmission.findFirst({
         where: {
           studentId,
-          classId: enrollment.class.id,
+          classId: activeEnrollment.class.id,
           approvalStatus: {
             in: [ApprovalStatus.APPROVED, ApprovalStatus.ASSIGNED, ApprovalStatus.TUTOR_REVIEWED],
           },
@@ -584,7 +585,7 @@ export async function getStudentDashboardData(
         where: {
           studentId,
           classSession: {
-            classId: enrollment.class.id,
+            classId: activeEnrollment.class.id,
           },
         },
         include: {
@@ -610,8 +611,8 @@ export async function getStudentDashboardData(
 
   function resolveSubjectTopic(topicId: string, topicLabel: string) {
     const aliasCode = resolveTopicAliasCodeForSubject(
-      enrollment.class.subject.code,
-      enrollment.class.subject.name,
+      activeEnrollment.class.subject.code,
+      activeEnrollment.class.subject.name,
       topicId,
       topicLabel,
     );
@@ -674,7 +675,7 @@ export async function getStudentDashboardData(
     studyPlan && resolvedApprovedTopics.length > 0
       ? {
           title: "New revision topics unlocked",
-          body: `${enrollment.class.tutor.fullName} has approved ${approvedTopics.length} topic${
+          body: `${activeEnrollment.class.tutor.fullName} has approved ${approvedTopics.length} topic${
             approvedTopics.length > 1 ? "s" : ""
           } for your AI Study Assistant.`,
           topics: resolvedApprovedTopics.map(
@@ -689,8 +690,10 @@ export async function getStudentDashboardData(
   const metrics: StudentMetric[] = [
     {
       label: "Next Tutor-Led Class",
-      value: upcomingSession ? formatDateTime(upcomingSession.startsAt) : enrollment.class.schedule,
-      detail: `Live teaching stays anchored to ${enrollment.class.tutor.fullName}.`,
+      value: upcomingSession
+        ? formatDateTime(upcomingSession.startsAt)
+        : activeEnrollment.class.schedule,
+      detail: `Live teaching stays anchored to ${activeEnrollment.class.tutor.fullName}.`,
       tone: "teal",
     },
     {
@@ -889,7 +892,7 @@ export async function getStudentDashboardData(
   const teacherNotes = [
     reportSummary,
     latestReport?.tutorNotes ??
-      `Teacher note: stay within ${enrollment.class.subject.name} and the current class plan.`,
+      `Teacher note: stay within ${activeEnrollment.class.subject.name} and the current class plan.`,
     studyPlan
       ? `${studyPlan.title} is the active tutor-approved revision plan.`
       : "A tutor-approved study plan will appear here once it is published.",
@@ -1079,8 +1082,8 @@ export async function getStudentDashboardData(
   ].slice(0, 6);
 
   const approvedAssistantScope = [
-    `Approved class: ${enrollment.class.title} with ${enrollment.class.tutor.fullName}.`,
-    `Approved subject: ${enrollment.class.subject.name}.`,
+    `Approved class: ${activeEnrollment.class.title} with ${activeEnrollment.class.tutor.fullName}.`,
+    `Approved subject: ${activeEnrollment.class.subject.name}.`,
     resolvedApprovedTopics.length > 0
       ? `Approved topics: ${resolvedApprovedTopics
           .map((topic) =>
@@ -1098,38 +1101,38 @@ export async function getStudentDashboardData(
     welcomeMessage: {
       title: "You are ready to start",
       body: studyPlan
-        ? `${enrollment.class.tutor.fullName} has prepared ${studyPlan.title}. ${
+        ? `${activeEnrollment.class.tutor.fullName} has prepared ${studyPlan.title}. ${
             upcomingSession
               ? `Your next class is ${formatDateTime(upcomingSession.startsAt)}.`
-              : `Class schedule: ${enrollment.class.schedule}.`
+              : `Class schedule: ${activeEnrollment.class.schedule}.`
           }`
         : latestAnyStudyPlan
-          ? `${enrollment.class.tutor.fullName} has scheduled your class and is reviewing your first study plan now. ${
+          ? `${activeEnrollment.class.tutor.fullName} has scheduled your class and is reviewing your first study plan now. ${
               upcomingSession
                 ? `Your next class is ${formatDateTime(upcomingSession.startsAt)}.`
-                : `Class schedule: ${enrollment.class.schedule}.`
+                : `Class schedule: ${activeEnrollment.class.schedule}.`
             }`
-          : `${enrollment.class.tutor.fullName} has scheduled your class. ${
+          : `${activeEnrollment.class.tutor.fullName} has scheduled your class. ${
               upcomingSession
                 ? `Your next class is ${formatDateTime(upcomingSession.startsAt)}.`
-                : `Class schedule: ${enrollment.class.schedule}.`
+                : `Class schedule: ${activeEnrollment.class.schedule}.`
             }`,
     },
     assistantUnlockNotice,
     enrollmentStatus: {
-      className: enrollment.class.title,
-      subject: enrollment.class.subject.name,
-      tutorName: enrollment.class.tutor.fullName,
-      schedule: enrollment.class.schedule,
+      className: activeEnrollment.class.title,
+      subject: activeEnrollment.class.subject.name,
+      tutorName: activeEnrollment.class.tutor.fullName,
+      schedule: activeEnrollment.class.schedule,
       statusLabel: "Enrolled and ready",
     },
     upcomingClass: {
-      className: enrollment.class.title,
-      subject: enrollment.class.subject.name,
+      className: activeEnrollment.class.title,
+      subject: activeEnrollment.class.subject.name,
       nextClassLabel: upcomingSession
         ? formatDateTime(upcomingSession.startsAt)
-        : enrollment.class.schedule,
-      tutorName: enrollment.class.tutor.fullName,
+        : activeEnrollment.class.schedule,
+      tutorName: activeEnrollment.class.tutor.fullName,
     },
     assignedHomework,
     teacherNotes,

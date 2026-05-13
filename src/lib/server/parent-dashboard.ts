@@ -328,8 +328,9 @@ export async function getParentDashboardData(
     };
   }
 
+  const activeEnrollment = enrollment;
   const nextSession =
-    [...enrollment.class.sessions]
+    [...activeEnrollment.class.sessions]
       .filter(
         (session) =>
           session.status === ClassSessionStatus.SCHEDULED ||
@@ -355,7 +356,7 @@ export async function getParentDashboardData(
       prisma.parentReport.findMany({
         where: {
           studentId: linkedStudentId,
-          tutorId: enrollment.class.tutorId,
+          tutorId: activeEnrollment.class.tutorId,
           approvalStatus: ApprovalStatus.APPROVED,
         },
         orderBy: [{ approvedAt: "desc" }, { createdAt: "desc" }],
@@ -394,14 +395,14 @@ export async function getParentDashboardData(
       prisma.studentMastery.findMany({
         where: {
           studentId: linkedStudentId,
-          subjectId: enrollment.class.subjectId,
+          subjectId: activeEnrollment.class.subjectId,
         },
       }),
       prisma.attendanceRecord.findMany({
         where: {
           studentId: linkedStudentId,
           classSession: {
-            classId: enrollment.classId,
+            classId: activeEnrollment.classId,
             status: {
               in: [ClassSessionStatus.COMPLETED],
             },
@@ -429,17 +430,17 @@ export async function getParentDashboardData(
         : Promise.resolve(null),
       prisma.subjectTopic.findMany({
         where: {
-          subjectId: enrollment.class.subjectId,
+          subjectId: activeEnrollment.class.subjectId,
           ...(resolveCurriculumLevelCodeForSubject(
-            enrollment.class.subject.code,
-            enrollment.class.subject.name,
+            activeEnrollment.class.subject.code,
+            activeEnrollment.class.subject.name,
             studentLevelHint,
           )
             ? {
                 level: {
                   code: resolveCurriculumLevelCodeForSubject(
-                    enrollment.class.subject.code,
-                    enrollment.class.subject.name,
+                    activeEnrollment.class.subject.code,
+                    activeEnrollment.class.subject.name,
                     studentLevelHint,
                   ),
                 },
@@ -473,8 +474,8 @@ export async function getParentDashboardData(
 
   function resolveSubjectTopic(topicId: string, topicLabel: string) {
     const aliasCode = resolveTopicAliasCodeForSubject(
-      enrollment.class.subject.code,
-      enrollment.class.subject.name,
+      activeEnrollment.class.subject.code,
+      activeEnrollment.class.subject.name,
       topicId,
       topicLabel,
     );
@@ -684,8 +685,10 @@ export async function getParentDashboardData(
     },
     {
       label: "Next live class",
-      value: nextSession ? formatDateTime(nextSession.startsAt) : enrollment.class.schedule,
-      note: `Class runs under ${enrollment.class.tutor.fullName}.`,
+      value: nextSession
+        ? formatDateTime(nextSession.startsAt)
+        : activeEnrollment.class.schedule,
+      note: `Class runs under ${activeEnrollment.class.tutor.fullName}.`,
     },
     {
       label: "Tutor guidance",
@@ -698,7 +701,9 @@ export async function getParentDashboardData(
     ? [
         `AI drafted report at ${formatDateTime(latestReport.generatedByAiAt ?? latestReport.createdAt)}.`,
         `Tutor reviewed report at ${formatDateTime(latestReport.reviewedByTutorAt)}.`,
-        `Approved by ${latestReport.approvedByTutorId ?? enrollment.class.tutor.fullName}.`,
+        `Approved by ${
+          latestReport.approvedByTutorId ?? activeEnrollment.class.tutor.fullName
+        }.`,
         ...getVersionHistory(latestReport.versionHistory),
       ]
     : [
@@ -724,7 +729,7 @@ export async function getParentDashboardData(
     learningHistory,
     reportTrace: traceability,
     reportWindow: "Sunday 7:30 PM",
-    studentName: enrollment.student.fullName,
+    studentName: activeEnrollment.student.fullName,
     latestWelcomeMessage: latestWelcomeMessage
       ? {
           title:
@@ -739,11 +744,11 @@ export async function getParentDashboardData(
         }
       : null,
     enrolledClass: {
-      classId: enrollment.classId,
-      className: enrollment.class.title,
-      subject: enrollment.class.subject.name,
-      tutorName: enrollment.class.tutor.fullName,
-      schedule: enrollment.class.schedule,
+      classId: activeEnrollment.classId,
+      className: activeEnrollment.class.title,
+      subject: activeEnrollment.class.subject.name,
+      tutorName: activeEnrollment.class.tutor.fullName,
+      schedule: activeEnrollment.class.schedule,
     },
     linkedStudent: linkedStudent
       ? {

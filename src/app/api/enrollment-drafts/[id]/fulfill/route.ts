@@ -302,7 +302,9 @@ export async function POST(
             startsAt: kickoff.startsAt,
             endsAt: kickoff.endsAt,
             status: ClassSessionStatus.SCHEDULED,
-            liveRoomUrl: `https://demo.ailearningos.my/class/${targetClass.id}-kickoff`,
+            liveRoomUrl: process.env.LIVE_ROOM_BASE_URL
+              ? `${process.env.LIVE_ROOM_BASE_URL.replace(/\/$/, "")}/class/${targetClass.id}-kickoff`
+              : null,
           },
         });
       }

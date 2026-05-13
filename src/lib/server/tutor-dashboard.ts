@@ -1022,6 +1022,18 @@ export async function getTutorDashboardData(
     }
   }
 
+  const weakestTopicByClass = new Map<
+    string,
+    {
+      classId: string;
+      className: string;
+      topic: string;
+      topicName: string;
+      intensity: number;
+      note: string;
+    }
+  >();
+
   const afterClassFollowUp = classes.map((classItem) => {
     const classStudentMap = new Map(
       classItem.enrollments.map((enrollment) => [
@@ -1250,9 +1262,9 @@ export async function getTutorDashboardData(
     .sort((left, right) => right.intensity - left.intensity)
     .slice(0, 4);
 
-  const weakestTopicByClass = new Map(
-    weakTopicHeatmap.map((item) => [item.classId, item]),
-  );
+  for (const item of weakTopicHeatmap) {
+    weakestTopicByClass.set(item.classId, item);
+  }
   const classById = new Map(classes.map((classItem) => [classItem.id, classItem]));
   const studentLevelById = new Map(
     classes.flatMap((classItem) =>

@@ -5,6 +5,7 @@ import {
   LessonModuleType,
   MasteryEdgeType,
   MasteryNodeType,
+  Prisma,
   PrismaClient,
   QuestionDifficulty,
   QuestionFormat,
@@ -15,6 +16,10 @@ import {
   authoredCurriculumContentByNodeId,
   type AuthoredNodeSeed,
 } from "@/lib/server/curriculum-authored-content";
+
+function asJsonInput(value: Record<string, unknown>): Prisma.InputJsonValue {
+  return value as Prisma.InputJsonObject;
+}
 
 const curriculumIds = {
   subjectMath: "curriculum_subject_math_kssm",
@@ -6201,7 +6206,7 @@ async function upsertAuthoredNodeContent(
       nodeId,
       moduleType: nodeSeed.lessonModule.moduleType ?? LessonModuleType.MICRO_LESSON,
       title: nodeSeed.lessonModule.title,
-      teachingScript: nodeSeed.lessonModule.teachingScript,
+      teachingScript: asJsonInput(nodeSeed.lessonModule.teachingScript),
       exampleCount: nodeSeed.lessonModule.exampleCount ?? 3,
       estimatedMinutes: nodeSeed.lessonModule.estimatedMinutes ?? 8,
       tutorVisible: nodeSeed.lessonModule.tutorVisible ?? true,
@@ -6213,7 +6218,7 @@ async function upsertAuthoredNodeContent(
       nodeId,
       moduleType: nodeSeed.lessonModule.moduleType ?? LessonModuleType.MICRO_LESSON,
       title: nodeSeed.lessonModule.title,
-      teachingScript: nodeSeed.lessonModule.teachingScript,
+      teachingScript: asJsonInput(nodeSeed.lessonModule.teachingScript),
       exampleCount: nodeSeed.lessonModule.exampleCount ?? 3,
       estimatedMinutes: nodeSeed.lessonModule.estimatedMinutes ?? 8,
       tutorVisible: nodeSeed.lessonModule.tutorVisible ?? true,
@@ -6257,9 +6262,9 @@ async function upsertAuthoredNodeContent(
         nodeId,
         questionFormat: questionSeed.questionFormat,
         difficulty: questionSeed.difficulty,
-        prompt: questionSeed.prompt,
-        answerKey: questionSeed.answerKey,
-        solutionSteps: questionSeed.solutionSteps,
+        prompt: asJsonInput(questionSeed.prompt),
+        answerKey: asJsonInput(questionSeed.answerKey),
+        solutionSteps: asJsonInput(questionSeed.solutionSteps),
         hintLevel1: questionSeed.hintLevel1,
         hintLevel2: questionSeed.hintLevel2,
         hintLevel3: questionSeed.hintLevel3,
@@ -6274,9 +6279,9 @@ async function upsertAuthoredNodeContent(
         nodeId,
         questionFormat: questionSeed.questionFormat,
         difficulty: questionSeed.difficulty,
-        prompt: questionSeed.prompt,
-        answerKey: questionSeed.answerKey,
-        solutionSteps: questionSeed.solutionSteps,
+        prompt: asJsonInput(questionSeed.prompt),
+        answerKey: asJsonInput(questionSeed.answerKey),
+        solutionSteps: asJsonInput(questionSeed.solutionSteps),
         hintLevel1: questionSeed.hintLevel1,
         hintLevel2: questionSeed.hintLevel2,
         hintLevel3: questionSeed.hintLevel3,
